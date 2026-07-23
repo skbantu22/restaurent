@@ -24,6 +24,10 @@ const productSchema = new mongoose.Schema(
       required: false,
       default: null,
     },
+    calories: {
+      type: Number,
+      default: null,
+    },
 
     mrp: { type: Number, required: true, min: 0 },
 
@@ -31,9 +35,16 @@ const productSchema = new mongoose.Schema(
 
     discountPercentage: { type: Number, min: 0, max: 100 },
 
+    // 🟢 1. isMostLoved ফিল্ড যুক্ত করা হলো (Default: false)
+    isMostLoved: { type: Boolean, default: false, index: true },
+
+    // 🟢 2. Dynamic Badge ফিল্ড যুক্ত করা হলো (e.g. "must try", "popular")
+    badge: { type: String, default: "", trim: true },
+
+    // রেস্তোরাঁর জন্য প্রমোশন বা ট্যাগ (যেমন: combo, chef-special, trending)
     offers: {
       type: [String],
-      enum: ["mega", "new", "top", "free", "valentine"],
+      enum: ["mega", "new", "top", "free", "combo", "chef-special"],
       default: [],
     },
 
@@ -44,19 +55,6 @@ const productSchema = new mongoose.Schema(
     ],
 
     description: { type: String, required: true },
-    color: { type: String },
-    size: { type: String }, // Or [String] if you allow multiple
-    sizeChart: { type: mongoose.Schema.Types.ObjectId, ref: "Media" }, // Links to the image ID
-    // ✅ Variants field with default empty array
-    variants: {
-      type: [
-        {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "ProductVariant",
-        },
-      ],
-      default: [],
-    },
 
     deletedAt: { type: Date, default: null, index: true },
   },
@@ -66,6 +64,7 @@ const productSchema = new mongoose.Schema(
 // Indexes
 productSchema.index({ category: 1, subcategory: 1 });
 productSchema.index({ offers: 1 });
+productSchema.index({ isMostLoved: 1 }); // Fast query execution for homepage/menu
 
 const ProductModel =
   mongoose.models.Product ||

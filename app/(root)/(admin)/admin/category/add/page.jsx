@@ -1,18 +1,24 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import slugify from "slugify";
 import axios from "axios";
-import { Layers, Link2 } from "lucide-react";
-
-import BreadCrumb from "@/components/ui/Application/Admin/Breadcrubm";
+import Image from "next/image";
+import { useQueryClient } from "@tanstack/react-query";
 import {
-  ADMIN_CATEGORY_EDIT,
-  ADMIN_CATEGORY_SHOW,
-  ADMIN_DASHBOARD,
-} from "@/Route/Adminpannelroute";
+  Layers,
+  Link2,
+  FileText,
+  ImageIcon,
+  LayoutGrid,
+  X,
+} from "lucide-react";
+
+// UI Components
+import BreadCrumb from "@/components/ui/Application/Admin/Breadcrubm";
+import { ADMIN_CATEGORY_SHOW, ADMIN_DASHBOARD } from "@/Route/Adminpannelroute";
 
 import {
   Form,
@@ -24,9 +30,13 @@ import {
 } from "@/components/ui/form";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
 import { Input } from "@/components/ui/input";
 import ButtonLoading from "@/components/ui/Application/ButtonLoading";
+import Editor from "@/components/ui/Application/Admin/Editor";
+import MediaModal from "@/components/ui/Application/Admin/MediaModel";
+import UploadMedia from "@/components/ui/Application/Admin/uploadmedia";
+
+// Utilities & Config
 import { zSchema } from "@/lib/zodschema";
 import { showToast } from "@/lib/showToast";
 
@@ -37,11 +47,18 @@ const breadcrumbData = [
 ];
 
 const AddCategory = () => {
-  const [loading, setloading] = useState(false);
+  const queryClient = useQueryClient();
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [selectedMedia, setSelectedMedia] = useState([]);
+  const [resetKey, setResetKey] = useState(0);
 
+  // Zod Schema (matching Product schema structure)
   const formSchema = zSchema.pick({
     name: true,
     slug: true,
+    description: true,
+    media: true,
   });
 
   const form = useForm({
@@ -49,23 +66,34 @@ const AddCategory = () => {
     defaultValues: {
       name: "",
       slug: "",
+      description: "",
+      media: [],
     },
   });
 
-  // Watch name to auto-generate slug
-  const watchedName = form.watch("name");
-
-  useEffect(() => {
-    if (watchedName) {
+  // Helper for Gallery / Media Selection
+  const handleSetSelectedMedia = (newMediaOrFn) => {
+    setSelectedMedia((prev) => {
+      const updated =
+        typeof newMediaOrFn === "function" ? newMediaOrFn(prev) : newMediaOrFn;
       form.setValue(
-        "slug",
-        slugify(watchedName, { lower: true, strict: true }),
+        "media",
+        updated.map((m) => m._id),
+        { shouldValidate: true },
       );
-    }
-  }, [watchedName, form]);
+      return updated;
+    });
+  };
 
   const onSubmit = async (values) => {
-    setloading(true);
+    // Clean text check for rich text editor
+    const cleanText = values.description.replace(/<[^>]*>/g, "").trim();
+    if (!cleanText) {
+      showToast("error", "Category description cannot be empty!");
+      return;
+    }
+
+    setLoading(true);
     try {
       const { data: response } = await axios.post(
         "/api/category/create",
@@ -76,18 +104,35 @@ const AddCategory = () => {
         throw new Error(response.message);
       }
 
-      showToast("success", response.message);
-      form.reset();
+      showToast(
+        "success",
+        response.message || "Category Created Successfully!",
+      );
+
+      // Reset Form & Media States
+      form.reset({
+        name: "",
+        slug: "",
+        description: "",
+        media: [],
+      });
+      setSelectedMedia([]);
+      setResetKey((p) => p + 1);
     } catch (error) {
-      showToast("error", error.response?.data?.message || error.message);
+      showToast(
+        "error",
+        error.response?.data?.message ||
+          error.message ||
+          "Something went wrong",
+      );
     } finally {
-      setloading(false);
+      setLoading(false);
     }
   };
 
   return (
     <div className="bg-[#f1f1f1] min-h-screen pb-20 font-sans">
-      <div className="max-w-[800px] mx-auto px-4 md:px-6 py-4 space-y-6">
+      <div className="max-w-[1000px] mx-auto px-4 md:px-6 py-4 space-y-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Header Section */}
@@ -106,7 +151,7 @@ const AddCategory = () => {
               />
             </div>
 
-            {/* Main Form Card */}
+            {/* Category Details Card */}
             <Card className="border-2 border-black rounded-none shadow-none bg-white">
               <CardHeader className="bg-black py-3 rounded-none">
                 <CardTitle className="text-xs font-bold text-white uppercase tracking-[0.2em] flex items-center gap-2">
@@ -114,7 +159,7 @@ const AddCategory = () => {
                 </CardTitle>
               </CardHeader>
 
-              <CardContent className="p-8 space-y-8">
+              <CardContent className="p-6 md:p-8 space-y-6">
                 {/* Category Name */}
                 <FormField
                   control={form.control}
@@ -127,8 +172,21 @@ const AddCategory = () => {
                       <FormControl>
                         <Input
                           placeholder="e.g. Summer Collection"
+                          className="h-12 border-2 border-black rounded-none focus-visible:ring-0 text-base font-bold placeholder:text-zinc-300"
                           {...field}
-                          className="h-14 border-2 border-black rounded-none focus-visible:ring-0 text-lg font-bold placeholder:text-zinc-300"
+                          onChange={(e) => {
+                            field.onChange(e);
+                            const nameVal = e.target.value;
+                            if (nameVal) {
+                              const baseSlug = slugify(nameVal, {
+                                lower: true,
+                                strict: true,
+                              });
+                              form.setValue("slug", baseSlug, {
+                                shouldValidate: true,
+                              });
+                            }
+                          }}
                         />
                       </FormControl>
                       <FormMessage className="text-[10px] uppercase font-bold" />
@@ -155,10 +213,34 @@ const AddCategory = () => {
                           className="h-11 border-2 border-zinc-200 bg-zinc-50 rounded-none focus-visible:ring-0 font-mono text-sm"
                         />
                       </FormControl>
-                      <p className="text-[9px] text-zinc-400 italic">
-                        The slug is used for SEO-friendly URLs. It updates
-                        automatically as you type the name.
-                      </p>
+                      <FormMessage className="text-[10px] uppercase font-bold" />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Category Description (Using Product Editor) */}
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-center gap-2 mb-1">
+                        <FileText className="w-3 h-3 text-zinc-400" />
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                          Category Description *
+                        </FormLabel>
+                      </div>
+                      <FormControl>
+                        <div className="border-2 border-black overflow-hidden bg-white">
+                          <Editor
+                            key={resetKey}
+                            initialData={field.value}
+                            onChange={(event, editor) =>
+                              field.onChange(editor.getData())
+                            }
+                          />
+                        </div>
+                      </FormControl>
                       <FormMessage className="text-[10px] uppercase font-bold" />
                     </FormItem>
                   )}
@@ -166,16 +248,78 @@ const AddCategory = () => {
               </CardContent>
             </Card>
 
+            {/* Media Gallery Card (Same as Product) */}
+            <Card className="border-2 border-black rounded-none shadow-none bg-white">
+              <CardHeader className="bg-black py-3 rounded-none">
+                <CardTitle className="text-xs font-bold text-white uppercase flex items-center gap-2 tracking-[0.2em]">
+                  <ImageIcon className="w-4 h-4" /> Category Banner / Media
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
+                  {selectedMedia.map((m) => (
+                    <div
+                      key={m._id}
+                      className="relative aspect-[3/4] border-2 border-black bg-zinc-50"
+                    >
+                      <Image
+                        src={m.url || m.secure_url}
+                        fill
+                        alt="Category Media"
+                        className="object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleSetSelectedMedia((p) =>
+                            p.filter((x) => x._id !== m._id),
+                          )
+                        }
+                        className="absolute top-1 right-1 bg-black text-white p-1"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setOpen(true)}
+                    className="aspect-[3/4] border-2 border-dashed border-black flex flex-col items-center justify-center gap-2 hover:bg-zinc-100 transition-colors"
+                  >
+                    <LayoutGrid className="w-6 h-6" />
+                    <span className="text-[10px] font-black uppercase">
+                      + ADD MEDIA
+                    </span>
+                  </button>
+                </div>
+                <div className="flex justify-between items-center pt-4 border-t border-black/10">
+                  <p className="text-[10px] font-black uppercase opacity-50">
+                    Cloud Upload:
+                  </p>
+                  <UploadMedia isMultiple={true} queryClient={queryClient} />
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Info Tip */}
             <div className="bg-white border-l-4 border-black p-4 shadow-sm">
               <p className="text-[11px] font-medium text-zinc-600 leading-relaxed uppercase tracking-tight">
-                Tip: Use broad category names for better product grouping. You
-                can add specific attributes in the product variants later.
+                Tip: High-quality banner images and clear descriptions
+                significantly improve category SEO and user navigation.
               </p>
             </div>
           </form>
         </Form>
       </div>
+
+      {/* Media Modal */}
+      <MediaModal
+        open={open}
+        setOpen={setOpen}
+        selectedMedia={selectedMedia}
+        setSelectedMedia={handleSetSelectedMedia}
+        isMultiple={true}
+      />
     </div>
   );
 };

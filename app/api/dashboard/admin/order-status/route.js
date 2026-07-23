@@ -3,39 +3,35 @@ import { connectDB } from "@/lib/databaseconnection";
 import { catchError, response } from "@/lib/helperfunction";
 import OrderModel from "@/models/Order.model";
 
-export async function GET(req) {
+export async function GET() {
   try {
-    // Check admin authentication
-    const auth = await isAuthenticated('admin');
+    const auth = await isAuthenticated("admin");
+
     if (!auth.isAuth) {
-      return response(false, 403, 'Unauthorized.');
+      return response(false, 403, "Unauthorized.");
     }
 
-    // Connect to DB
     await connectDB();
 
-    // Aggregate monthly sales
-    const OrderStatus = await OrderModel.aggregate([
+    const orderStatus = await OrderModel.aggregate([
       {
-        $match: {
-          deletedAt: null,
-        
+        $group: {
+          _id: {
+            $ifNull: ["$orderStatus", "pending"],
+          },
+          count: {
+            $sum: 1,
+          },
         },
       },
       {
-        $group: {
-          _id: "$status",
-          count: { $sum: 1 },
-        }
+        $sort: {
+          count: -1,
+        },
       },
-      {
-        $sort: { count: 1 }
-      }
-       
     ]);
 
-    return response(true, 200, 'Data found', OrderStatus);
-
+    return response(true, 200, "Data found", orderStatus);
   } catch (error) {
     return catchError(error);
   }

@@ -4,7 +4,6 @@ import { catchError, response } from "@/lib/helperfunction";
 import MediaModel from "@/models/Media.model";
 import OrderModel from "@/models/Order.model";
 import ProductModel from "@/models/Product.model";
-import ProductVariantModel from "@/models/ProductVariant.model ";
 
 export async function GET() {
   try {

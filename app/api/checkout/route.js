@@ -1,17 +1,31 @@
 import { NextResponse } from "next/server";
+import mongoose from "mongoose";
+import Stripe from "stripe";
 import { connectDB } from "@/lib/databaseconnection";
 import OrderModel from "@/models/Order.model";
 import ProductModel from "@/models/Product.model";
-import ProductVariantModel from "@/models/ProductVariant.model ";
 import CouponModel from "@/models/Coupon.model";
+// Explicit import to register the Media schema in Mongoose runtime
 import MediaModel from "@/models/Media.model";
-import mongoose from "mongoose";
 
-const shippingMap = { dhaka: 70, other: 120 };
+// Initialize Stripe
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+// Shipping rates in GBP (£)
+const shippingMap = {
+  london: 3.99,
+  uk_other: 5.99,
+};
 
 export async function POST(req) {
   try {
     await connectDB();
+
+    // Guarantee Media model registration before querying
+    if (!mongoose.models.Media) {
+      mongoose.model("Media", MediaModel.schema);
+    }
+
     const body = await req.json().catch(() => ({}));
     const { customer, items, coupon, userId } = body;
 
@@ -22,111 +36,127 @@ export async function POST(req) {
       );
     }
 
-    // --- 1. Map IDs & Fetch Data ---
-    const lookupIds = items
-      .map((i) => i.variantId || i.productId)
-      .filter(Boolean);
+    if (!items || items.length === 0) {
+      return NextResponse.json(
+        { success: false, message: "Cart empty" },
+        { status: 400 },
+      );
+    }
 
-    // 🛠️ POPULATE BOTH: We need secure_url from the Media model for both variants and products
-    const [dbVariants, dbProducts] = await Promise.all([
-      ProductVariantModel.find({ _id: { $in: lookupIds } })
-        .populate("product")
-        .populate("media", "secure_url")
-        .lean(),
-      ProductModel.find({ _id: { $in: lookupIds } })
-        .populate("media", "secure_url")
-        .lean(),
-    ]);
+    // ==============================
+    // FETCH PRODUCTS
+    // ==============================
+    const productIds = items.map((i) => i.productId).filter(Boolean);
 
-    const variantMap = new Map(dbVariants.map((v) => [String(v._id), v]));
+    const dbProducts = await ProductModel.find({
+      _id: { $in: productIds },
+    })
+      .populate("media", "secure_url")
+      .lean();
+
     const productMap = new Map(dbProducts.map((p) => [String(p._id), p]));
 
+    // ==============================
+    // CLEAN & VALIDATE ITEMS
+    // ==============================
     const clean = items
       .map((it) => {
-        const id = String(it.variantId || it.productId);
-        const v = variantMap.get(id);
-        const p = productMap.get(id);
-        const target = v || p;
+        const id = String(it.productId);
+        const product = productMap.get(id);
 
-        if (!target) return null;
+        if (!product) return null;
 
-        // 🛠️ EXTRACTOR: Handles cases where media is populated or just a string
-        const getMediaUrl = (obj) => {
-          if (!obj?.media || obj.media.length === 0) return "";
-          const first = obj.media[0];
-          // If populated, it's an object: { secure_url: "..." }
-          // If not populated, it's a string: "https://..."
-          return first?.secure_url || (typeof first === "string" ? first : "");
-        };
-
-        const itemMedia = v ? getMediaUrl(v) : getMediaUrl(p);
+        const unitPrice = Number(product.sellingPrice || product.price || 0);
 
         return {
-          productId: v ? v.product?._id : target._id,
-          variantId: v ? v._id : null,
-          name: v ? v.product?.name : target.name,
-          slug: v ? v.product?.slug : target.slug,
-          color: v?.color || "",
-          size: v?.size || it.size || "",
-          mrp: Number(v?.mrp || target.mrp || 0),
-          sellingPrice: Number(v?.sellingPrice || target.sellingPrice || 0),
-          discount: Number(
-            v?.discountPercentage || target.discountPercentage || 0,
-          ),
-          media: itemMedia, // 🚀 Now this will be the https URL
+          productId: product._id,
+          name: product.name,
+          image: product.media?.[0]?.secure_url || "",
+          price: unitPrice,
           quantity: Math.max(1, Number(it.quantity || 1)),
+          notes: it.notes || "",
         };
       })
       .filter(Boolean);
 
-    // --- 2. Totals & Coupon ---
-    const subtotal = clean.reduce((s, i) => s + i.sellingPrice * i.quantity, 0);
-    const city = String(customer.cityId || "other").toLowerCase();
-    const shippingFee = shippingMap[city] ?? 120;
+    if (clean.length === 0) {
+      return NextResponse.json(
+        { success: false, message: "No valid items found in cart" },
+        { status: 400 },
+      );
+    }
+
+    // ==============================
+    // CALCULATE TOTALS (GBP)
+    // ==============================
+    const subtotal = clean.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0,
+    );
+
+    const region = String(customer.cityId || "london").toLowerCase();
+    const deliveryFee = shippingMap[region] ?? 5.99;
 
     let discount = 0;
-    let couponData = { code: "", discountPercentage: 0 };
+    let couponData = {
+      code: "",
+      discountPercentage: 0,
+    };
+
     if (coupon?.code) {
-      const doc = await CouponModel.findOne({
-        code: { $regex: new RegExp(`^${coupon.code.trim()}$`, "i") },
+      const couponDoc = await CouponModel.findOne({
+        code: {
+          $regex: new RegExp(`^${coupon.code.trim()}$`, "i"),
+        },
         deletedAt: null,
       }).lean();
 
-      if (doc && subtotal >= (doc.minShoppingAmount || 0)) {
-        discount = Math.round((subtotal * (doc.discountPercentage || 0)) / 100);
+      if (couponDoc && subtotal >= (couponDoc.minShoppingAmount || 0)) {
+        discount = Number(
+          ((subtotal * couponDoc.discountPercentage) / 100).toFixed(2),
+        );
         couponData = {
-          code: doc.code,
-          discountPercentage: doc.discountPercentage,
+          code: couponDoc.code,
+          discountPercentage: couponDoc.discountPercentage,
         };
       }
     }
 
-    const total = Math.max(subtotal + shippingFee - discount, 0);
+    const total = Math.max(
+      Number((subtotal + deliveryFee - discount).toFixed(2)),
+      0,
+    );
 
     const tempId = new mongoose.Types.ObjectId();
-    const manualOrderNumber = `ORD-${tempId.toString().toUpperCase().slice(-6)}`;
+    const orderNumber = `ORD-${tempId.toString().slice(-6).toUpperCase()}`;
 
-    // --- 4. Save Order ---
+    // ==============================
+    // CREATE PENDING ORDER
+    // ==============================
     const orderDocs = await OrderModel.create(
       [
         {
-          orderNumber: manualOrderNumber,
+          _id: tempId,
+          orderNumber,
           userId: userId || null,
-          customer: { ...customer, cityId: city },
+          customer: {
+            ...customer,
+            cityId: region,
+          },
           items: clean,
           subtotal,
-          shippingFee,
+          deliveryFee,
           discount,
           total,
           coupon: couponData,
-          status: "pending",
-          paymentMethodSelected: "cod",
+          orderStatus: "pending",
+          paymentMethodSelected: "stripe",
+          paymentStatus: "unpaid",
           payments: [
             {
-              method: "cod",
-              status: "unpaid",
+              method: "stripe",
+              paymentStatus: "unpaid",
               amount: total,
-              merchantInvoiceNumber: manualOrderNumber,
               initiatedAt: new Date(),
             },
           ],
@@ -137,26 +167,79 @@ export async function POST(req) {
 
     const order = orderDocs[0];
 
-    // --- 5. Stock Update ---
-    await Promise.all(
-      clean.map((i) => {
-        const Model = i.variantId ? ProductVariantModel : ProductModel;
-        return Model.updateOne(
-          { _id: i.variantId || i.productId, stock: { $gte: i.quantity } },
-          { $inc: { stock: -i.quantity } },
-        );
-      }),
-    );
+    // ==============================
+    // CREATE STRIPE SESSION (GBP £)
+    // ==============================
+    const origin =
+      req.headers.get("origin") ||
+      process.env.NEXT_PUBLIC_APP_URL ||
+      "http://localhost:3000";
+
+    const lineItems = clean.map((item) => ({
+      price_data: {
+        currency: "gbp", // Set currency to GBP
+        product_data: {
+          name: item.name,
+          images: item.image ? [item.image] : [],
+        },
+        unit_amount: Math.round(item.price * 100), // convert to pence
+      },
+      quantity: item.quantity,
+    }));
+
+    if (deliveryFee > 0) {
+      lineItems.push({
+        price_data: {
+          currency: "gbp",
+          product_data: {
+            name: "UK Shipping Fee",
+          },
+          unit_amount: Math.round(deliveryFee * 100), // convert to pence
+        },
+        quantity: 1,
+      });
+    }
+
+    // Stripe coupon discount handling (if discount applied)
+    let discounts = [];
+    if (discount > 0) {
+      const stripeCoupon = await stripe.coupons.create({
+        amount_off: Math.round(discount * 100), // pence
+        currency: "gbp",
+        duration: "once",
+        name: `Discount (${couponData.code})`,
+      });
+      discounts.push({ coupon: stripeCoupon.id });
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      mode: "payment",
+      line_items: lineItems,
+      discounts: discounts.length > 0 ? discounts : undefined,
+      client_reference_id: order._id.toString(),
+      customer_email: customer.email || undefined,
+      success_url: `${origin}/order-success?orderId=${order._id.toString()}&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/checkout?canceled=true`,
+      metadata: {
+        orderId: order._id.toString(),
+        orderNumber: orderNumber,
+      },
+    });
 
     return NextResponse.json({
       success: true,
+      url: session.url,
       orderId: order._id.toString(),
-      orderNumber: manualOrderNumber,
+      orderNumber,
     });
   } catch (err) {
-    console.error("CRITICAL CHECKOUT ERROR:", err);
+    console.error("CHECKOUT ERROR:", err);
     return NextResponse.json(
-      { success: false, message: err.message },
+      {
+        success: false,
+        message: err?.message || "Something went wrong",
+      },
       { status: 500 },
     );
   }

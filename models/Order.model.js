@@ -1,7 +1,5 @@
 import mongoose from "mongoose";
 import crypto from "crypto";
-// This forces Mongoose to clear the cached "Order" model
-// and re-read your new Order.model.js file.
 
 const OrderItemSchema = new mongoose.Schema(
   {
@@ -10,45 +8,99 @@ const OrderItemSchema = new mongoose.Schema(
       ref: "Product",
       required: true,
     },
-    variantId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "ProductVariant",
 
-      required: false,
-      default: null,
+    name: {
+      type: String,
+      required: true,
     },
-    name: { type: String, default: "" },
-    slug: { type: String, default: "" },
-    color: { type: String, default: "" },
-    size: { type: String, default: "" },
-    mrp: { type: Number, default: 0 },
-    sellingPrice: { type: Number, default: 0 },
-    discount: { type: Number, default: 0 },
-    media: { type: String, default: "" },
-    quantity: { type: Number, default: 1 },
+
+    image: {
+      type: String,
+      default: "",
+    },
+
+    price: {
+      type: Number,
+      required: true,
+    },
+
+    quantity: {
+      type: Number,
+      default: 1,
+    },
+
+    notes: {
+      type: String,
+      default: "",
+    },
   },
-  { _id: false },
+  {
+    _id: false,
+  },
 );
 
 const PaymentSchema = new mongoose.Schema(
   {
     method: {
       type: String,
-      enum: ["cod"],
+      enum: ["cod", "stripe"],
       required: true,
     },
 
-    merchantInvoiceNumber: { type: String, default: "", index: true },
-    paymentId: { type: String, default: "" },
-    trxId: { type: String, default: "" },
-    valId: { type: String, default: "" },
-    amount: { type: Number, required: true, default: 0 },
-    currency: { type: String, default: "BDT" },
-    rawResponse: { type: Object, default: {} },
-    initiatedAt: { type: Date, default: Date.now },
-    paidAt: { type: Date, default: null },
+    paymentStatus: {
+      type: String,
+      enum: ["pending", "paid", "failed", "cancelled", "refunded"],
+      default: "pending",
+    },
+
+    amount: {
+      type: Number,
+      default: 0,
+    },
+
+    currency: {
+      type: String,
+      default: "BDT",
+    },
+
+    stripeSessionId: {
+      type: String,
+      default: "",
+    },
+
+    paymentIntentId: {
+      type: String,
+      default: "",
+    },
+
+    stripeCustomerId: {
+      type: String,
+      default: "",
+    },
+
+    transactionId: {
+      type: String,
+      default: "",
+    },
+
+    rawResponse: {
+      type: Object,
+      default: {},
+    },
+
+    initiatedAt: {
+      type: Date,
+      default: Date.now,
+    },
+
+    paidAt: {
+      type: Date,
+      default: null,
+    },
   },
-  { _id: false },
+  {
+    _id: false,
+  },
 );
 
 const OrderSchema = new mongoose.Schema(
@@ -58,41 +110,65 @@ const OrderSchema = new mongoose.Schema(
       ref: "User",
       default: null,
     },
-    orderNumber: { type: String, unique: true, index: true },
+
+    orderNumber: {
+      type: String,
+      unique: true,
+      index: true,
+    },
 
     customer: {
-      name: { type: String, default: "" },
-      phone: { type: String, default: "" },
-      email: { type: String, default: "" },
-      address: { type: String, default: "" },
-      cityId: { type: String, default: "" },
+      name: String,
+      phone: String,
+      email: String,
+      address: String,
     },
 
-    items: { type: [OrderItemSchema], default: [] },
-    subtotal: { type: Number, default: 0 },
-    shippingFee: { type: Number, default: 0 },
-    discount: { type: Number, default: 0 },
-    total: { type: Number, default: 0 },
-    currency: { type: String, default: "BDT" },
-
-    coupon: {
-      code: { type: String, default: "" },
-      discountPercentage: { type: Number, default: 0 },
+    items: {
+      type: [OrderItemSchema],
+      default: [],
     },
 
-    status: {
+    subtotal: {
+      type: Number,
+      default: 0,
+    },
+
+    tax: {
+      type: Number,
+      default: 0,
+    },
+
+    deliveryFee: {
+      type: Number,
+      default: 0,
+    },
+
+    discount: {
+      type: Number,
+      default: 0,
+    },
+
+    total: {
+      type: Number,
+      required: true,
+    },
+
+    currency: {
+      type: String,
+      default: "BDT",
+    },
+
+    orderStatus: {
       type: String,
       enum: [
-        "initiated",
         "pending",
-        "unpaid",
-        "success",
-        "failed",
-        "cancelled",
-        "processing",
-        "shipped",
+        "confirmed",
+        "preparing",
+        "ready",
+        "out_for_delivery",
         "delivered",
-        "unverified",
+        "cancelled",
       ],
       default: "pending",
       index: true,
@@ -100,21 +176,41 @@ const OrderSchema = new mongoose.Schema(
 
     paymentMethodSelected: {
       type: String,
-      enum: ["cod"],
+      enum: ["cod", "stripe"],
       default: "cod",
+    },
+
+    paymentStatus: {
+      type: String,
+      enum: ["pending", "paid", "failed", "cancelled", "refunded"],
+      default: "pending",
       index: true,
     },
 
-    payments: { type: [PaymentSchema], default: [] },
-    activePaymentIndex: { type: Number, default: 0 },
+    payments: {
+      type: [PaymentSchema],
+      default: [],
+    },
+
+    activePaymentIndex: {
+      type: Number,
+      default: 0,
+    },
+
+    notes: {
+      type: String,
+      default: "",
+    },
   },
-  { timestamps: true },
+  {
+    timestamps: true,
+  },
 );
 
 OrderSchema.pre("validate", function () {
   if (!this.orderNumber) {
-    const code = crypto.randomBytes(4).toString("hex").toUpperCase();
-    this.orderNumber = `ORD-${code}`;
+    this.orderNumber =
+      "ORD-" + crypto.randomBytes(4).toString("hex").toUpperCase();
   }
 });
 

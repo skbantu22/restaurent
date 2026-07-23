@@ -3,6 +3,7 @@ import { catchError, response } from "@/lib/helperfunction";
 import { zSchema } from "@/lib/zodschema";
 import ProductModel from "@/models/Product.model";
 import { encode } from "entities";
+import { z } from "zod";
 
 export async function POST(request) {
   try {
@@ -10,66 +11,73 @@ export async function POST(request) {
 
     const payload = await request.json();
 
-    // ✅ Zod validation schema
-    const schema = zSchema.pick({
-      name: true,
-      slug: true,
-      category: true,
-      subcategory: true,
-      mrp: true,
-      sellingPrice: true,
-      discountPercentage: true,
-      description: true,
-      media: true,
-      offers: true,
-      freeDelivery: true,
-      sizeChart: true,
-    });
+    // Product Validation Schema
+    const schema = zSchema
+      .pick({
+        name: true,
+        slug: true,
+        category: true,
+        calories: true, // ✅ NEW
+        mrp: true,
+        sellingPrice: true,
+        discountPercentage: true,
+        description: true,
+        media: true,
+        offers: true,
+        freeDelivery: true,
+      })
+      .extend({
+        subcategory: z
+          .string()
+          .optional()
+          .nullable()
+          .transform((val) => (val && val.trim() !== "" ? val : null)),
+
+        badge: z
+          .string()
+          .optional()
+          .nullable()
+          .transform((val) => (val && val.trim() !== "" ? val : null)),
+
+        isMostLoved: z
+          .preprocess(
+            (val) => val === true || val === "true" || val === 1 || val === "1",
+            z.boolean(),
+          )
+          .default(false),
+      });
 
     const validate = schema.safeParse(payload);
 
     if (!validate.success) {
-      return response(false, 400, "Invalid or missing fields.", validate.error);
+      return response(
+        false,
+        400,
+        "Invalid or missing fields.",
+        validate.error.flatten(),
+      );
     }
 
-    let productData = validate.data;
+    const productData = validate.data;
 
-    // ✅ CLEAN subcategory (IMPORTANT FIX)
-    productData.subcategory =
-      productData.subcategory && productData.subcategory !== ""
-        ? productData.subcategory
-        : null;
+    const newProduct = await ProductModel.create({
+      ...productData,
 
-    // ✅ Create product
-    const newProduct = new ProductModel({
-      name: productData.name,
-      slug: productData.slug,
-      category: productData.category,
+      description: encode(productData.description || ""),
 
-      // ✅ SAFE OPTIONAL FIELD
-      subcategory: productData.subcategory,
+      // ✅ Calories Save
+      calories: productData.calories || "",
 
-      mrp: productData.mrp,
-      sellingPrice: productData.sellingPrice,
-      discountPercentage: productData.discountPercentage,
+      freeDelivery: Boolean(productData.freeDelivery),
 
-      description: encode(productData.description),
-      media: productData.media,
+      badge: productData.badge,
 
-      sizeChart:
-        productData.sizeChart && productData.sizeChart !== ""
-          ? productData.sizeChart
-          : null,
-
-      freeDelivery: productData.freeDelivery || false,
+      isMostLoved: Boolean(productData.isMostLoved),
     });
 
-    await newProduct.save();
-
-    return response(true, 200, "Product added successfully.");
+    return response(true, 201, "Product added successfully.", newProduct);
   } catch (error) {
-    console.log("PRODUCT CREATE ERROR:");
-    console.log(error);
+    console.error("PRODUCT CREATE ERROR:", error);
     return catchError(error);
   }
 }

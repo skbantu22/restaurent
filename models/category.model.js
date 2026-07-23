@@ -4,34 +4,42 @@ const categorySchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: true,
+      required: [true, "Category name is required"],
       unique: true,
       trim: true,
     },
 
     slug: {
       type: String,
-      required: true,
+      required: [true, "Category slug is required"],
       unique: true,
       lowercase: true,
       trim: true,
+      index: true, // Fast lookup by slug in frontend routes
     },
-    
-     subcategories: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Subcategory",
+
+    description: {
+      type: String,
+      trim: true,
+      default: "",
     },
-  ],
+
+    // ✅ FIXED: Array of ObjectIds referencing your Media model
+    media: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Media",
+      },
+    ],
 
     // ✅ Soft Delete Support
     deletedAt: {
       type: Date,
       default: null,
-      index:true
+      index: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const CategoryModel =

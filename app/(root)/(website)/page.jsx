@@ -46,6 +46,7 @@ const Home = () => {
       <WhySmashed />
 
       <ShowCategoryList />
+
       <FooterPromo />
     </div>
   );

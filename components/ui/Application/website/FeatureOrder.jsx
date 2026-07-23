@@ -1,158 +1,234 @@
 "use client";
 
-import React from "react";
-import { useDispatch } from "react-redux";
-import { addIntoCart } from "@/store/reducer/cartReducer";
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { addIntoCart, removeFromCart } from "@/store/reducer/cartReducer";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+import Image from "next/image";
+import { Flame, Check, Plus } from "lucide-react";
 
-const menuItems = [
-  {
-    id: 1,
-    productId: "burger-1",
-    variantId: "regular",
-    title: "Classic Smashed",
-    description: "Double smashed beef with cheese, pickles, smash sauce.",
-    price: 8.49,
-    image:
-      "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=60",
-    badge: { text: "Must Try", type: "must-try" },
-  },
-  {
-    id: 2,
-    productId: "burger-2",
-    variantId: "regular",
-    title: "Smoky Bacon Smash",
-    description:
-      "Double smashed beef with cheese, bacon, jalapeños, smoky sauce.",
-    price: 9.49,
-    image:
-      "https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?w=500&auto=format&fit=crop&q=60",
-    badge: { text: "New", type: "new" },
-  },
-  {
-    id: 3,
-    productId: "burger-3",
-    variantId: "regular",
-    title: "BBQ Crunch",
-    description: "Crispy onions, BBQ sauce, cheddar cheese & smashed beef.",
-    price: 10.49,
-    image:
-      "https://images.unsplash.com/photo-1550547660-d9450f859349?w=500&auto=format&fit=crop&q=60",
-    badge: { text: "Hot", type: "new" },
-  },
-  {
-    id: 4,
-    productId: "burger-4",
-    variantId: "regular",
-    title: "Cheese Volcano",
-    description: "Loaded cheese burger with creamy sauce and crispy fries.",
-    price: 11.49,
-    image:
-      "https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=500&auto=format&fit=crop&q=60",
-    badge: { text: "Popular", type: "must-try" },
-  },
-  {
-    id: 5,
-    productId: "burger-5",
-    variantId: "regular",
-    title: "Mega Smash",
-    description:
-      "Triple beef patties, melted cheese, onions & signature sauce.",
-    price: 12.99,
-    image:
-      "https://images.unsplash.com/photo-1553979459-d2229ba7433b?w=500&auto=format&fit=crop&q=60",
-    badge: { text: "Mega", type: "must-try" },
-  },
-];
+// 🛠️ Safe Plain Text extraction from HTML & HTML Entities
+const getPlainText = (html) => {
+  if (!html) return "";
+
+  try {
+    const parser = new DOMParser();
+    const decodedString =
+      parser.parseFromString(html, "text/html").body.textContent || "";
+
+    return decodedString
+      .replace(/<[^>]*>/g, "")
+      .replace(/style="[^"]*"/gi, "")
+      .trim();
+  } catch (err) {
+    return html
+      .replace(/<[^>]*>/g, "")
+      .replace(/&[a-z0-9]+;/gi, " ")
+      .trim();
+  }
+};
 
 export default function MostLovedMenu() {
   const dispatch = useDispatch();
+  const cartProducts = useSelector((store) => store.cartStore?.products) || [];
 
-  const handleAddToCart = (item) => {
-    dispatch(
-      addIntoCart({
-        productId: item.productId,
-        variantId: item.variantId,
-        title: item.title,
-        price: item.price,
-        image: item.image,
-        quantity: 1,
-      }),
-    );
+  // ✅ Fetch products
+  const {
+    data: productsData,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["most-loved-products"],
+    queryFn: async () => {
+      console.log("Query running...");
+
+      const res = await axios.get("/api/product?isMostLoved=true&limit=10");
+      console.log(res);
+      console.log(res.data.data);
+
+      return res.data;
+    },
+  });
+
+  const products = productsData?.data || [];
+
+  useEffect(() => {
+    if (isError) {
+      console.error("❌ [MostLovedMenu] API Fetch Error:", error);
+    }
+  }, [isError, error]);
+
+  const isProductInCart = (prodId) => {
+    return cartProducts.some((item) => item.productId === prodId);
   };
+
+  const handleToggleCart = (item) => {
+    const isAdded = isProductInCart(item._id);
+
+    if (isAdded) {
+      dispatch(removeFromCart({ productId: item._id }));
+    } else {
+      const itemImage =
+        item.media && item.media.length > 0
+          ? item.media[0]?.url || item.media[0]?.secure_url || item.media[0]
+          : "/placeholder.png";
+
+      const payload = {
+        productId: item._id,
+        variantId: "default",
+        title: item.name,
+        price: item.sellingPrice || item.mrp,
+        image: itemImage,
+        quantity: 1,
+      };
+
+      dispatch(addIntoCart(payload));
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <section className="w-full bg-[#0c0c0c] px-3 py-8 sm:px-5 lg:px-8">
+        <div className="mx-auto w-full max-w-[1700px]">
+          <div className="mb-8 flex items-center justify-between border-b border-zinc-800 pb-4">
+            <h2 className="text-xl md:text-2xl font-extrabold uppercase tracking-wider text-zinc-100">
+              Our Most Loved 🔥
+            </h2>
+          </div>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            {[...Array(5)].map((_, i) => (
+              <div
+                key={i}
+                className="h-[360px] animate-pulse rounded-xl border border-zinc-800/70 bg-[#141414] p-4"
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (isError || !products.length) {
+    return null;
+  }
 
   return (
     <section className="w-full bg-[#0c0c0c] px-3 py-8 sm:px-5 lg:px-8">
       <div className="mx-auto w-full max-w-[1700px]">
-        {/* Header */}
         <div className="mb-8 flex items-center justify-between border-b border-zinc-800 pb-4">
           <div className="flex items-center gap-2">
             <h2 className="text-xl md:text-2xl font-extrabold uppercase tracking-wider text-zinc-100">
               Our Most Loved
             </h2>
-
             <span className="text-lg text-orange-500">🔥</span>
           </div>
         </div>
 
-        {/* Grid */}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          {menuItems.map((item) => (
-            <div
-              key={item.id}
-              className="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-zinc-800/70 bg-[#141414] p-4 transition-all duration-300 hover:border-orange-500/40"
-            >
-              {/* Badge */}
-              {item.badge && (
-                <span
-                  className={`absolute left-3 top-3 z-10 rounded px-2 py-0.5 text-[10px] font-bold uppercase text-white ${
-                    item.badge.type === "must-try"
-                      ? "bg-emerald-600"
-                      : "bg-red-600"
-                  }`}
-                >
-                  {item.badge.text}
-                </span>
-              )}
+          {products.map((item) => {
+            // 🔍 Check your browser console to verify if calories exists in item
+            console.log(`Product: ${item.name} | Calories:`, item.calories);
 
-              <div>
-                {/* Image */}
-                <div className="mb-4 aspect-square overflow-hidden rounded-lg bg-black">
-                  <img
-                    src={item.image}
-                    alt={item.title}
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                </div>
+            const imageUrl =
+              item.media && item.media.length > 0
+                ? item.media[0]?.url ||
+                  item.media[0]?.secure_url ||
+                  item.media[0]
+                : "/placeholder.png";
 
-                {/* Title */}
-                <h3 className="mb-1 text-base font-bold text-zinc-100">
-                  {item.title}
-                </h3>
+            const cleanDescription = getPlainText(item.description);
+            const added = isProductInCart(item._id);
 
-                {/* Description */}
-                <p className="min-h-[42px] text-xs leading-relaxed text-zinc-400">
-                  {item.description}
-                </p>
-              </div>
+            // 🟢 Extract Calories with Fallback
+            const caloriesValue = item.calories ?? item.cal ?? null;
 
-              {/* Footer */}
-              <div className="mt-4">
-                <div className="mb-3 flex justify-end">
-                  <span className="text-base font-bold text-orange-500">
-                    £{item.price}
+            return (
+              <div
+                key={item._id}
+                className="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-zinc-800/70 bg-[#141414] p-4 transition-all duration-300 hover:border-orange-500/40"
+              >
+                {item.badge && (
+                  <span
+                    className={`absolute left-3 top-3 z-10 rounded px-2 py-0.5 text-[10px] font-bold uppercase text-white shadow-md ${
+                      item.badge.toLowerCase() === "must try" ||
+                      item.badge.toLowerCase() === "popular"
+                        ? "bg-emerald-600"
+                        : "bg-red-600"
+                    }`}
+                  >
+                    {item.badge}
                   </span>
+                )}
+
+                <div>
+                  <div className="relative mb-4 aspect-square overflow-hidden rounded-lg bg-black">
+                    <Image
+                      src={imageUrl}
+                      alt={item.name}
+                      fill
+                      unoptimized
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+
+                    {/* 🟢 CALORIES BADGE - Always shows if available */}
+                    {caloriesValue && (
+                      <div className="absolute right-2 top-2 z-20 flex items-center gap-1 rounded-full bg-black/80 backdrop-blur-md px-2 py-1 text-[10px] font-semibold text-amber-400 border border-zinc-800 shadow-md">
+                        <Flame size={12} className="text-orange-400 shrink-0" />
+                        <span>{caloriesValue} kcal</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <h3 className="mb-1 text-base font-bold text-zinc-100 line-clamp-1">
+                    {item.name}
+                  </h3>
+
+                  <p className="min-h-[42px] text-xs leading-relaxed text-zinc-400 line-clamp-2">
+                    {cleanDescription ||
+                      "Delicious food item cooked fresh for you."}
+                  </p>
                 </div>
 
-                <button
-                  onClick={() => handleAddToCart(item)}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg border border-orange-500 py-2.5 text-xs font-bold uppercase tracking-wider text-orange-500 transition-all duration-300 hover:bg-orange-500 hover:text-white"
-                >
-                  <span className="text-sm">↗</span>
-                  ADD
-                </button>
+                <div className="mt-4">
+                  <div className="mb-3 flex items-center justify-between">
+                    {item.mrp && item.mrp > item.sellingPrice ? (
+                      <span className="text-xs text-zinc-500 line-through">
+                        £{item.mrp}
+                      </span>
+                    ) : (
+                      <div />
+                    )}
+                    <span className="text-base font-bold text-orange-500">
+                      £{item.sellingPrice || item.mrp}
+                    </span>
+                  </div>
+
+                  <button
+                    onClick={() => handleToggleCart(item)}
+                    className={`flex w-full items-center justify-center gap-1.5 rounded-lg border py-2.5 text-xs font-bold uppercase tracking-wider transition-all duration-300 ${
+                      added
+                        ? "border-red-600/50 bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white"
+                        : "border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white"
+                    }`}
+                  >
+                    {added ? (
+                      <>
+                        <Check size={14} />
+                        <span>ADDED</span>
+                      </>
+                    ) : (
+                      <>
+                        <Plus size={14} />
+                        <span>ADD</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

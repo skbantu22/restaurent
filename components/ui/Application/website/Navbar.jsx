@@ -48,6 +48,7 @@ const Navbar = () => {
 
       dispatch(logout());
       showToast("success", data.message);
+      setOpenMenu(false);
 
       router.push(WEBSITE_LOGIN);
     } catch (error) {
@@ -59,41 +60,35 @@ const Navbar = () => {
     "relative text-sm font-bold uppercase tracking-wide hover:text-[#ff6b00] transition duration-300";
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-black border-b border-[#1a1a1a]">
-      <div className="max-w-[1400px] mx-auto px-4 lg:px-8">
+    <header className="sticky top-0 z-50 w-full border-b border-[#1a1a1a] bg-black">
+      <div className="mx-auto max-w-[1400px] px-4 lg:px-8">
         {/* MAIN NAVBAR */}
-        <div className="h-[85px] flex items-center justify-between">
-          {/* LEFT */}
-          <div className="flex items-center gap-4">
-            {/* Mobile Menu */}
+        <div className="flex h-[80px] sm:h-[85px] items-center justify-between gap-2 sm:gap-4">
+          {/* LEFT: Mobile Menu Button & Logo */}
+          <div className="flex items-center gap-3 sm:gap-4">
             <button
-              className="lg:hidden text-white"
+              className="text-white lg:hidden p-1 focus:outline-none"
               onClick={() => setOpenMenu(true)}
+              aria-label="Toggle Menu"
             >
-              <Menu size={28} />
+              <Menu size={26} />
             </button>
 
-            {/* Logo */}
             <Link href={WEBSITE_HOME} className="flex items-center">
               <Image
                 src={logo}
                 alt="Logo"
-                width={120}
+                width={140}
                 height={100}
                 priority
-                className="
-      object-contain
-      w-[90px] h-auto
-      sm:w-[110px]
-      lg:w-[140px]
-    "
+                className="h-auto w-[85px] sm:w-[110px] lg:w-[130px] object-contain"
               />
             </Link>
           </div>
 
-          {/* CENTER MENU */}
-          <nav className="hidden lg:flex items-center gap-12 text-white">
-            <Link href="#" className={`${navItem} text-[#ff6b00]`}>
+          {/* CENTER MENU (Desktop) */}
+          <nav className="hidden lg:flex items-center gap-8 xl:gap-12 text-white">
+            <Link href={WEBSITE_HOME} className={`${navItem} text-[#ff6b00]`}>
               HOME
               <span className="absolute left-0 -bottom-2 h-[2px] w-full bg-[#ff6b00]" />
             </Link>
@@ -115,24 +110,24 @@ const Navbar = () => {
             </Link>
           </nav>
 
-          {/* RIGHT SIDE */}
-          <div className="flex items-center gap-4">
-            {/* Cart */}
-            <div className="hidden lg:flex items-center justify-center text-white hover:text-[#ff6b00] transition">
+          {/* RIGHT SIDE: Cart, User & Order Action */}
+          <div className="flex items-center gap-2.5 sm:gap-4">
+            {/* Cart Drawer Icon */}
+            <div className="flex items-center justify-center text-white transition hover:text-[#ff6b00]">
               <Cart />
             </div>
 
-            {/* User */}
+            {/* Desktop User Avatar/Login */}
             {!auth ? (
               <Link
                 href={WEBSITE_LOGIN}
-                className="w-11 h-11 rounded-full border border-[#2a2a2a] hidden lg:flex items-center justify-center text-white hover:border-[#ff6b00] hover:text-[#ff6b00] transition"
+                className="hidden lg:flex h-10 w-10 items-center justify-center rounded-full border border-[#2a2a2a] text-white transition hover:border-[#ff6b00] hover:text-[#ff6b00]"
               >
-                <User size={20} />
+                <User size={18} />
               </Link>
             ) : (
               <Link href={USER_DASHBOARD} className="hidden lg:flex">
-                <Avatar className="h-11 w-11 border border-[#2a2a2a]">
+                <Avatar className="h-10 w-10 border border-[#2a2a2a]">
                   <AvatarImage
                     src={auth?.avatar?.url || userIcon.src}
                     alt={auth?.name || "User Avatar"}
@@ -141,66 +136,74 @@ const Navbar = () => {
               </Link>
             )}
 
-            {/* Order Button */}
+            {/* Order Now Button */}
             <button
               className="
-    bg-[#ff6b00]
-    hover:bg-[#ff7e29]
-    transition-all duration-300
-    text-white font-bold uppercase
-    px-4 sm:px-5 lg:px-7
-    h-10 sm:h-11 lg:h-12
-    text-[11px] sm:text-sm lg:text-base
-    rounded-md
-    flex items-center justify-center gap-1.5 sm:gap-2
-    tracking-wide
-    shadow-lg shadow-orange-500/20
-    w-full sm:w-auto
-  "
+                flex h-9 sm:h-11 items-center justify-center gap-1.5 rounded-md bg-[#ff6b00] 
+                px-3 sm:px-5 lg:px-6 text-[11px] sm:text-xs lg:text-sm font-bold uppercase 
+                tracking-wider text-white shadow-lg shadow-orange-500/20 
+                transition-all duration-300 hover:bg-[#ff7e29] active:scale-95
+              "
             >
-              ORDER NOW
-              <ShoppingBag size={16} className="sm:w-[18px] sm:h-[18px]" />
+              <span className="hidden sm:inline">ORDER NOW</span>
+              <span className="sm:hidden">ORDER</span>
+              <ShoppingBag size={15} className="sm:w-[17px] sm:h-[17px]" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* MOBILE MENU */}
+      {/* MOBILE SIDEBAR MENU */}
       {openMenu && (
         <div className="fixed inset-0 z-[100] lg:hidden">
-          {/* Overlay */}
+          {/* Backdrop Overlay */}
           <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity"
             onClick={() => setOpenMenu(false)}
           />
 
-          {/* Sidebar */}
-          <div className="absolute left-0 top-0 h-full w-[300px] bg-black border-r border-[#1f1f1f] p-5 flex flex-col text-white">
-            {/* Header */}
+          {/* Drawer Sidebar */}
+          <div className="absolute left-0 top-0 flex h-full w-[280px] sm:w-[320px] flex-col border-r border-[#1f1f1f] bg-black p-5 text-white shadow-2xl transition-transform">
+            {/* Drawer Header */}
             <div className="flex items-center justify-between border-b border-[#1f1f1f] pb-4">
-              <span className="text-lg font-bold uppercase">Menu</span>
-
-              <button onClick={() => setOpenMenu(false)}>
-                <X size={24} />
+              <span className="text-base font-bold uppercase tracking-wider text-[#ff6b00]">
+                Navigation
+              </span>
+              <button
+                onClick={() => setOpenMenu(false)}
+                className="rounded-full p-1 hover:bg-[#1f1f1f]"
+              >
+                <X size={22} />
               </button>
             </div>
 
-            {/* Nav Links */}
-            <nav className="flex flex-col gap-5 py-6 border-b border-[#1f1f1f] text-sm font-semibold uppercase">
-              <Link href="#">Home</Link>
-              <Link href="#">Menu</Link>
-              <Link href="#">Build Your Own</Link>
-              <Link href="#">Our Story</Link>
-              <Link href="#">Contact</Link>
+            {/* Mobile Nav Links */}
+            <nav className="flex flex-col gap-4 border-b border-[#1f1f1f] py-6 text-sm font-semibold uppercase tracking-wide">
+              <Link href={WEBSITE_HOME} onClick={() => setOpenMenu(false)}>
+                Home
+              </Link>
+              <Link href="#" onClick={() => setOpenMenu(false)}>
+                Menu
+              </Link>
+              <Link href="#" onClick={() => setOpenMenu(false)}>
+                Build Your Own
+              </Link>
+              <Link href="#" onClick={() => setOpenMenu(false)}>
+                Our Story
+              </Link>
+              <Link href="#" onClick={() => setOpenMenu(false)}>
+                Contact
+              </Link>
             </nav>
 
-            {/* User Section */}
-            <div className="flex flex-col gap-5 py-6 text-sm">
+            {/* Mobile User & Utility Section */}
+            <div className="flex flex-col gap-4.5 py-6 text-sm">
               {!auth ? (
                 <>
                   <Link
                     href={WEBSITE_LOGIN}
-                    className="flex items-center gap-3"
+                    onClick={() => setOpenMenu(false)}
+                    className="flex items-center gap-3 hover:text-[#ff6b00]"
                   >
                     <User size={18} />
                     Sign In
@@ -208,7 +211,8 @@ const Navbar = () => {
 
                   <Link
                     href={WEBSITE_REGISTER}
-                    className="flex items-center gap-3"
+                    onClick={() => setOpenMenu(false)}
+                    className="flex items-center gap-3 hover:text-[#ff6b00]"
                   >
                     <User size={18} />
                     Create Account
@@ -218,7 +222,8 @@ const Navbar = () => {
                 <>
                   <Link
                     href={USER_DASHBOARD}
-                    className="flex items-center gap-3"
+                    onClick={() => setOpenMenu(false)}
+                    className="flex items-center gap-3 hover:text-[#ff6b00]"
                   >
                     <User size={18} />
                     My Account
@@ -226,7 +231,7 @@ const Navbar = () => {
 
                   <button
                     onClick={handleLogout}
-                    className="flex items-center gap-3 text-left"
+                    className="flex items-center gap-3 text-left text-red-500 hover:text-red-400"
                   >
                     <LogOutIcon size={18} />
                     Logout
@@ -234,12 +239,20 @@ const Navbar = () => {
                 </>
               )}
 
-              <Link href="/wishlist" className="flex items-center gap-3">
+              <Link
+                href="/wishlist"
+                onClick={() => setOpenMenu(false)}
+                className="flex items-center gap-3 hover:text-[#ff6b00]"
+              >
                 <Heart size={18} />
                 Wishlist
               </Link>
 
-              <Link href="/track-order" className="flex items-center gap-3">
+              <Link
+                href="/track-order"
+                onClick={() => setOpenMenu(false)}
+                className="flex items-center gap-3 hover:text-[#ff6b00]"
+              >
                 <Package size={18} />
                 Track Order
               </Link>

@@ -2,7 +2,6 @@ import { connectDB } from "@/lib/databaseconnection";
 import { catchError, response } from "@/lib/helperfunction";
 import ProductModel from "@/models/Product.model";
 import MediaModel from "@/models/Media.model";
-import ProductVariantModel from "@/models/ProductVariant.model ";
 
 export async function GET() {
   try {
