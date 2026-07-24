@@ -4,13 +4,11 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   count: 0,
-
   products: [],
 };
 
 const cartSlice = createSlice({
   name: "cartStore",
-
   initialState,
 
   reducers: {
@@ -18,25 +16,17 @@ const cartSlice = createSlice({
 
     addIntoCart: (state, action) => {
       const payload = action.payload;
-
-      const qty = payload.quantity || 1;
+      const qty = Number(payload.quantity || 1);
 
       const index = state.products.findIndex(
-        (product) =>
-          product.productId === payload.productId &&
-          product.variantId === payload.variantId,
+        (product) => String(product.productId) === String(payload.productId),
       );
 
-      // IF PRODUCT ALREADY EXISTS
       if (index >= 0) {
         state.products[index].quantity += qty;
-      }
-
-      // NEW PRODUCT
-      else {
+      } else {
         state.products.push({
           ...payload,
-
           quantity: qty,
         });
       }
@@ -47,16 +37,14 @@ const cartSlice = createSlice({
     // ---------------- INCREASE QUANTITY ----------------
 
     increaseQuantity: (state, action) => {
-      const { productId, variantId } = action.payload;
+      const { productId } = action.payload;
 
       const index = state.products.findIndex(
-        (product) =>
-          product.productId === productId && product.variantId === variantId,
+        (product) => String(product.productId) === String(productId),
       );
 
       if (index >= 0) {
         state.products[index].quantity += 1;
-
         state.count += 1;
       }
     },
@@ -64,47 +52,42 @@ const cartSlice = createSlice({
     // ---------------- DECREASE QUANTITY ----------------
 
     decreaseQuantity: (state, action) => {
-      const { productId, variantId } = action.payload;
+      const { productId } = action.payload;
 
       const index = state.products.findIndex(
-        (product) =>
-          product.productId === productId && product.variantId === variantId,
+        (product) => String(product.productId) === String(productId),
       );
 
-      if (index >= 0 && state.products[index].quantity > 1) {
-        state.products[index].quantity -= 1;
-
-        state.count -= 1;
+      if (index >= 0) {
+        if (state.products[index].quantity > 1) {
+          state.products[index].quantity -= 1;
+          state.count -= 1;
+        } else {
+          state.count -= 1;
+          state.products.splice(index, 1);
+        }
       }
     },
 
     // ---------------- REMOVE PRODUCT ----------------
 
     removeFromCart: (state, action) => {
-      const removed = state.products.find(
-        (product) =>
-          product.productId === action.payload.productId &&
-          product.variantId === action.payload.variantId,
+      const { productId } = action.payload;
+
+      const index = state.products.findIndex(
+        (product) => String(product.productId) === String(productId),
       );
 
-      if (removed) {
-        state.count -= removed.quantity;
+      if (index >= 0) {
+        state.count -= state.products[index].quantity;
+        state.products.splice(index, 1);
       }
-
-      state.products = state.products.filter(
-        (product) =>
-          !(
-            product.productId === action.payload.productId &&
-            product.variantId === action.payload.variantId
-          ),
-      );
     },
 
     // ---------------- CLEAR CART ----------------
 
     clearCart: (state) => {
       state.products = [];
-
       state.count = 0;
     },
 
@@ -115,29 +98,21 @@ const cartSlice = createSlice({
 
       state.products = items;
 
-      state.count = items.reduce((total, item) => {
-        return total + Number(item?.quantity || 1);
-      }, 0);
+      state.count = items.reduce(
+        (total, item) => total + Number(item.quantity || 1),
+        0,
+      );
     },
   },
 });
 
-// ---------------- EXPORT ACTIONS ----------------
-
 export const {
   addIntoCart,
-
   increaseQuantity,
-
   decreaseQuantity,
-
   removeFromCart,
-
   clearCart,
-
   setCart,
 } = cartSlice.actions;
-
-// ---------------- EXPORT REDUCER ----------------
 
 export default cartSlice.reducer;

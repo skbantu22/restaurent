@@ -33,6 +33,9 @@ const Cart = ({ active }) => {
   const { products, count } = useSelector((store) => store.cartStore);
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+  useEffect(() => {
+    console.log("Cart Products:", products);
+  }, [products]);
 
   // Route change হলে Cart Auto Close হবে
   useEffect(() => {
@@ -129,7 +132,7 @@ const Cart = ({ active }) => {
                         item.media?.[0]?.thumbnail ||
                         imgPlaceholder
                       }
-                      alt={item.name || "Product Image"}
+                      alt={item.title || "Product Image"}
                       fill
                       sizes="80px"
                       className="object-cover"
@@ -141,7 +144,7 @@ const Cart = ({ active }) => {
                     <div>
                       <div className="flex justify-between items-start gap-2">
                         <h3 className="font-semibold text-sm text-gray-100 line-clamp-1">
-                          {item.name}
+                          {item.name || item.title}
                         </h3>
                         <button
                           onClick={() =>

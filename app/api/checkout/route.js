@@ -11,11 +11,8 @@ import MediaModel from "@/models/Media.model";
 // Initialize Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-// Shipping rates in GBP (£)
-const shippingMap = {
-  london: 3.99,
-  uk_other: 5.99,
-};
+// Fixed Shipping rate in GBP (£) for all orders
+const FIXED_SHIPPING_FEE = 3.99;
 
 export async function POST(req) {
   try {
@@ -94,8 +91,7 @@ export async function POST(req) {
       0,
     );
 
-    const region = String(customer.cityId || "london").toLowerCase();
-    const deliveryFee = shippingMap[region] ?? 5.99;
+    const deliveryFee = FIXED_SHIPPING_FEE;
 
     let discount = 0;
     let couponData = {
@@ -141,7 +137,7 @@ export async function POST(req) {
           userId: userId || null,
           customer: {
             ...customer,
-            cityId: region,
+            cityId: "london",
           },
           items: clean,
           subtotal,
@@ -192,7 +188,7 @@ export async function POST(req) {
         price_data: {
           currency: "gbp",
           product_data: {
-            name: "UK Shipping Fee",
+            name: "Delivery Fee",
           },
           unit_amount: Math.round(deliveryFee * 100), // convert to pence
         },

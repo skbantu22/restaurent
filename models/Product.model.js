@@ -18,12 +18,6 @@ const productSchema = new mongoose.Schema(
       required: true,
     },
 
-    subcategory: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Subcategory",
-      required: false,
-      default: null,
-    },
     calories: {
       type: Number,
       default: null,
