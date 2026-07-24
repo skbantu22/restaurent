@@ -5,7 +5,6 @@ import { connectDB } from "@/lib/databaseconnection";
 
 import OrderModel from "@/models/Order.model";
 import ProductModel from "@/models/Product.model";
-import ProductVariantModel from "@/models/ProductVariant.model";
 
 export const runtime = "nodejs";
 
