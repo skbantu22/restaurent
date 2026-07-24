@@ -1,5 +1,4 @@
 import ProductModel from "@/models/Product.model";
-import ProductVariantModel from "@/models/ProductVariant.model ";
 import ShowroomModel from "@/models/ShowroomProductVariant.model";
 import { connectDB } from "@/lib/databaseconnection";
 import "@/models/Media.model";
