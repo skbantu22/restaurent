@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import stripe from "@/lib/stripe";
+import stripe from "@/lib/stripes";
 import { connectDB } from "@/lib/databaseconnection";
 
 import OrderModel from "@/models/Order.model";
