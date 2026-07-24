@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/databaseconnection";
 import OrderModel from "@/models/Order.model";
-import stripe from "@/lib/stripe";
+import { stripe } from "@/lib/stripe";
 
 export async function POST(req) {
   try {
