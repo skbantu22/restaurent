@@ -12,145 +12,156 @@ import {
 
 export default function FooterPromo() {
   const gallery = [
-    "/images/burger1.jpg",
-    "/images/burger2.jpg",
-    "/images/burger3.jpg",
-    "/images/burger4.jpg",
-    "/images/burger5.jpg",
+    "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=500&q=80",
+    "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?auto=format&fit=crop&w=500&q=80",
+    "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=500&q=80",
+    "https://images.unsplash.com/photo-1571091718767-18b5b1457add?auto=format&fit=crop&w=500&q=80",
   ];
 
   return (
-    <section className="w-full bg-black text-white px-4 py-6 md:px-6 lg:px-8">
-      <div className="mx-auto max-w-[1450px] overflow-hidden rounded-2xl border border-zinc-800 bg-[#0b0b0b]">
+    <section className="w-full bg-black text-white px-3 py-6 sm:px-3 lg:px-8">
+      <div className="mx-auto max-w-[1450px] overflow-hidden rounded-none border border-zinc-800 bg-[#0b0b0b]">
         <div className="grid grid-cols-1 lg:grid-cols-3">
-          {/* LEFT */}
-          <div className="relative overflow-hidden border-b border-zinc-800 p-6 sm:p-8 lg:border-b-0 lg:border-r min-h-[420px] flex flex-col justify-between">
+          {/* LEFT: Newsletter */}
+          <div className="relative overflow-hidden border-b border-zinc-800 p-6 sm:p-8 lg:border-b-0 lg:border-r  flex flex-col justify-between">
             <div className="relative z-10 max-w-md">
-              <h2 className="text-3xl sm:text-4xl lg:text-[44px] font-black uppercase leading-[1.05]">
+              <h2 className="text-2xl sm:text-3xl lg:text-[44px] font-black uppercase leading-[1.05]">
                 Get 20% Off
                 <br />
                 Your First Order!
               </h2>
 
-              <p className="mt-4 text-sm leading-relaxed text-zinc-400 sm:text-[15px]">
+              <p className="mt-3 sm:mt-4 text-xs sm:text-[15px] leading-relaxed text-zinc-400">
                 Sign up for early access, exclusive offers and opening day
                 treats.
               </p>
-
-              {/* INPUT */}
-              <div className="mt-7 flex w-full flex-col sm:flex-row">
+              <div className="mt-6 flex w-full">
                 <input
                   type="email"
                   placeholder="Enter your email"
-                  className="h-[54px] flex-1 border border-zinc-700 bg-transparent px-4 text-sm outline-none placeholder:text-zinc-500"
+                  className="flex-1 h-14 rounded-none border border-r-0 border-zinc-700 bg-transparent px-5 text-base text-white placeholder:text-zinc-500 focus:border-orange-500 focus:outline-none"
                 />
 
-                <button className="flex h-[54px] w-full sm:w-[70px] items-center justify-center bg-orange-500 transition hover:bg-orange-600">
-                  <FaArrowRight className="text-lg text-white" />
+                <button className="w-16 h-14 rounded-none bg-orange-500 hover:bg-orange-600 transition flex items-center justify-center">
+                  <FaArrowRight className="text-xl text-white" />
                 </button>
               </div>
 
-              <p className="mt-4 text-xs text-zinc-500">
+              <p className="mt-3 sm:mt-4 text-xs text-zinc-500">
                 We respect your privacy.
               </p>
             </div>
 
-            {/* PHONE */}
-            <div className="pointer-events-none absolute bottom-0 right-0 hidden md:block opacity-90">
+            {/* PHONE MOCKUP */}
+            <div className="pointer-events-none absolute -bottom-6 right-0 hidden md:block opacity-90">
               <Image
-                src="/images/phone.png"
-                alt="phone"
-                width={240}
-                height={340}
-                className="h-auto w-[180px] lg:w-[240px] object-contain"
+                src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=400&q=80"
+                alt="phone app mockup"
+                width={200}
+                height={300}
+                className="h-auto w-[150px] lg:w-[200px] object-contain rounded-none"
               />
             </div>
           </div>
 
-          {/* CENTER */}
+          {/* CENTER: Gallery & Socials */}
           <div className="border-b border-zinc-800 p-6 sm:p-8 lg:border-b-0 lg:border-r">
-            <h3 className="text-2xl sm:text-3xl font-black uppercase">
+            <h3 className="text-xl sm:text-2xl lg:text-3xl font-black uppercase">
               Follow Our Journey
             </h3>
 
-            <p className="mt-1 text-sm text-orange-500">@smashcoin</p>
+            <p className="mt-1 text-xs sm:text-sm text-orange-500 font-medium">
+              @smashcoin
+            </p>
 
-            {/* GALLERY */}
-            <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            {/* GALLERY GRID: Adaptive layout for mobile screens */}
+            <div className="mt-5 sm:mt-7 grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3">
               {gallery.map((img, index) => (
                 <div
                   key={index}
-                  className="group relative aspect-square overflow-hidden rounded-xl"
+                  className="group relative aspect-square overflow-hidden rounded-none bg-zinc-900"
                 >
                   <Image
                     src={img}
                     alt={`gallery-${index}`}
                     fill
+                    sizes="(max-width: 768px) 33vw, 20vw"
                     className="object-cover transition duration-500 group-hover:scale-110"
                   />
                 </div>
               ))}
             </div>
 
-            {/* SOCIAL */}
-            <div className="mt-7 flex items-center gap-5">
+            {/* SOCIAL ICONS */}
+            <div className="mt-5 sm:mt-7 flex items-center gap-4 sm:gap-5">
               <a
                 href="#"
-                className="flex h-12 w-12 items-center justify-center rounded-full border border-zinc-700 text-xl transition hover:border-orange-500 hover:text-orange-500"
+                aria-label="TikTok"
+                className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-none border border-zinc-700 text-lg sm:text-xl transition hover:border-orange-500 hover:text-orange-500"
               >
                 <FaTiktok />
               </a>
 
               <a
                 href="#"
-                className="flex h-12 w-12 items-center justify-center rounded-full border border-zinc-700 text-xl transition hover:border-orange-500 hover:text-orange-500"
+                aria-label="Instagram"
+                className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-none border border-zinc-700 text-lg sm:text-xl transition hover:border-orange-500 hover:text-orange-500"
               >
                 <FaInstagram />
               </a>
 
               <a
                 href="#"
-                className="flex h-12 w-12 items-center justify-center rounded-full border border-zinc-700 text-xl transition hover:border-orange-500 hover:text-orange-500"
+                aria-label="Threads"
+                className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-none border border-zinc-700 text-lg sm:text-xl transition hover:border-orange-500 hover:text-orange-500"
               >
                 <FaThreads />
               </a>
             </div>
           </div>
 
-          {/* RIGHT */}
+          {/* RIGHT: App Download */}
           <div className="flex flex-col justify-center p-6 sm:p-8">
-            <h3 className="text-3xl sm:text-4xl font-black uppercase leading-tight">
+            <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black uppercase leading-tight">
               Download Our App
             </h3>
 
-            <p className="mt-2 text-zinc-400">Coming Soon</p>
+            <p className="mt-1.5 sm:mt-2 text-sm sm:text-base text-zinc-400">
+              Coming Soon
+            </p>
 
             {/* STORE BUTTONS */}
-            <div className="mt-8 flex flex-col gap-4">
-              <button className="flex items-center gap-4 rounded-2xl border border-zinc-700 px-5 py-4 transition hover:border-orange-500 hover:bg-zinc-900">
-                <FaGooglePlay className="text-3xl flex-shrink-0" />
+            <div className="mt-6 sm:mt-8 flex flex-col gap-3.5 sm:gap-4">
+              <button className="flex items-center gap-4 rounded-none border border-zinc-700 px-4 sm:px-5 py-3.5 sm:py-4 transition hover:border-orange-500 hover:bg-zinc-900">
+                <FaGooglePlay className="text-2xl sm:text-3xl flex-shrink-0" />
 
                 <div className="text-left">
-                  <p className="text-[11px] uppercase tracking-wide text-zinc-400">
+                  <p className="text-[10px] sm:text-[11px] uppercase tracking-wide text-zinc-400">
                     Get it on
                   </p>
-
-                  <h4 className="text-lg font-semibold">Google Play</h4>
+                  <h4 className="text-base sm:text-lg font-semibold">
+                    Google Play
+                  </h4>
                 </div>
               </button>
 
-              <button className="flex items-center gap-4 rounded-2xl border border-zinc-700 px-5 py-4 transition hover:border-orange-500 hover:bg-zinc-900">
-                <FaApple className="text-3xl flex-shrink-0" />
+              <button className="flex items-center gap-4 rounded-none border border-zinc-700 px-4 sm:px-5 py-3.5 sm:py-4 transition hover:border-orange-500 hover:bg-zinc-900">
+                <FaApple className="text-2xl sm:text-3xl flex-shrink-0" />
 
                 <div className="text-left">
-                  <p className="text-[11px] text-zinc-400">Download on the</p>
-
-                  <h4 className="text-lg font-semibold">App Store</h4>
+                  <p className="text-[10px] sm:text-[11px] text-zinc-400">
+                    Download on the
+                  </p>
+                  <h4 className="text-base sm:text-lg font-semibold">
+                    App Store
+                  </h4>
                 </div>
               </button>
             </div>
 
-            <p className="mt-6 text-sm text-zinc-500">Be the first to know!</p>
+            <p className="mt-5 sm:mt-6 text-xs sm:text-sm text-zinc-500">
+              Be the first to know!
+            </p>
           </div>
         </div>
       </div>
