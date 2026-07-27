@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState, useEffect } from "react";
 import axios from "axios";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/form";
 import { zSchema } from "@/lib/zodschema";
 import { showToast } from "@/lib/showToast";
+import { clearCart } from "@/store/reducer/cartReducer";
 
 const formatCurrency = (amount) =>
   `£${Number(amount || 0).toLocaleString("en-GB", {
@@ -62,6 +63,7 @@ const calculateDistanceInMiles = (lat1, lon1, lat2, lon2) => {
 };
 
 export default function CheckoutPage() {
+  const dispatch = useDispatch();
   const cartStore = useSelector((store) => store.cartStore);
   const authStore = useSelector((store) => store.authStore);
 
@@ -73,7 +75,15 @@ export default function CheckoutPage() {
   const [deliveryDistance, setDeliveryDistance] = useState(null);
   const [isOutOfRange, setIsOutOfRange] = useState(false);
 
-  // Foodpanda/Uber style auto-location permission modal state
+  const [paymentMethod, setPaymentMethod] = useState("stripe");
+  const [orderType, setOrderType] = useState("delivery");
+
+  useEffect(() => {
+    if (orderType === "delivery") {
+      setPaymentMethod("stripe");
+    }
+  }, [orderType]);
+
   const [showLocationModal, setShowLocationModal] = useState(false);
 
   // Coupon states
@@ -98,7 +108,7 @@ export default function CheckoutPage() {
     return (subtotal * Number(appliedCoupon.discountPercentage)) / 100;
   }, [subtotal, appliedCoupon]);
 
-  const shippingCost = 3.99;
+  const shippingCost = orderType === "pickup" ? 0 : 3.99;
   const total = Math.max(0, subtotal - discountAmount) + shippingCost;
 
   const orderForm = useForm({
@@ -112,7 +122,6 @@ export default function CheckoutPage() {
     },
   });
 
-  // Page duklei (Mount hole) Foodpanda/Uber er moto location popup show korbe (yodi address age theke na thake)
   useEffect(() => {
     const currentAddress = orderForm.getValues("address");
     if (!currentAddress || currentAddress.trim() === "") {
@@ -132,7 +141,7 @@ export default function CheckoutPage() {
     );
     setDeliveryDistance(distance);
 
-    if (distance > 5) {
+    if (orderType === "delivery" && distance > 5) {
       setIsOutOfRange(true);
     } else {
       setIsOutOfRange(false);
@@ -204,7 +213,7 @@ export default function CheckoutPage() {
       const isLocalTest = /hackney|e8|e2|e9|n1|london/i.test(addressText);
 
       if (!apiKey) {
-        setIsOutOfRange(!isLocalTest);
+        setIsOutOfRange(orderType === "delivery" && !isLocalTest);
         setDeliveryDistance(isLocalTest ? 2.0 : 10.0);
         setCheckingDistance(false);
         return;
@@ -226,7 +235,7 @@ export default function CheckoutPage() {
         );
 
         setDeliveryDistance(distance);
-        if (distance > 5) {
+        if (orderType === "delivery" && distance > 5) {
           setIsOutOfRange(true);
         } else {
           setIsOutOfRange(false);
@@ -236,14 +245,14 @@ export default function CheckoutPage() {
           setIsOutOfRange(false);
           setDeliveryDistance(2.0);
         } else {
-          setIsOutOfRange(true);
+          setIsOutOfRange(orderType === "delivery");
           setDeliveryDistance(10.0);
         }
       }
     } catch (error) {
       console.error("Geocoding error", error);
       const isLocalTest = /hackney|e8|e2|e9|n1|london/i.test(addressText);
-      setIsOutOfRange(!isLocalTest);
+      setIsOutOfRange(orderType === "delivery" && !isLocalTest);
       setDeliveryDistance(isLocalTest ? 2.0 : 10.0);
     } finally {
       setCheckingDistance(false);
@@ -256,7 +265,7 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (isOutOfRange) {
+    if (orderType === "delivery" && isOutOfRange) {
       showToast(
         "error",
         "Delivery is only available within 5 miles of Hackney.",
@@ -267,7 +276,8 @@ export default function CheckoutPage() {
     setPlacingOrder(true);
     try {
       const payload = {
-        paymentMethod: "stripe",
+        paymentMethod,
+        orderType,
         userId: authStore?.auth?._id || null,
         customer: {
           name: formData.name,
@@ -293,8 +303,15 @@ export default function CheckoutPage() {
 
       if (!data.success) throw new Error(data.message);
 
+      // Clear the cart state in Redux and local storage
+      dispatch(clearCart());
+
       if (data.url) {
+        localStorage.setItem("live_order", data.orderId);
         window.location.href = data.url;
+      } else {
+        localStorage.setItem("live_order", data.orderId);
+        window.location.href = `/order/success?orderId=${data.orderId}`;
       }
     } catch (err) {
       showToast("error", err.response?.data?.message || "Payment failed");
@@ -303,23 +320,24 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div className="bg-[#FFFFFF] min-h-screen py-6 text-zinc-900 relative">
-      {/* Foodpanda / Uber style Auto Location Permission Popup Modal */}
+    <div className="bg-[#FFFFFF] min-h-screen py-10 text-zinc-900 relative">
+      {/* Location Modal */}
       {showLocationModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-xs">
-          <div className="bg-white border border-zinc-300 w-full max-w-md p-6 text-center shadow-2xl rounded-none relative">
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 backdrop-blur-none">
+          <div className="bg-white outline outline-1 outline-zinc-900 rounded-none w-full max-w-md p-8 text-center shadow-none relative">
             <button
+              type="button"
               onClick={() => setShowLocationModal(false)}
-              className="absolute right-4 top-4 text-zinc-400 hover:text-zinc-900"
+              className="absolute right-4 top-4 text-zinc-400 hover:text-zinc-900 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="w-12 h-12 bg-zinc-100 border border-zinc-300 flex items-center justify-center mx-auto mb-4">
+            <div className="w-12 h-12 bg-zinc-100 outline outline-1 outline-zinc-900 flex items-center justify-center mx-auto mb-4 rounded-none">
               <Navigation className="w-6 h-6 text-zinc-900 animate-pulse" />
             </div>
 
-            <h3 className="text-lg font-medium text-zinc-900 uppercase tracking-wide mb-2">
+            <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-widest mb-2">
               Enable Delivery Location
             </h3>
             <p className="text-xs text-zinc-600 mb-6 leading-relaxed">
@@ -327,12 +345,12 @@ export default function CheckoutPage() {
               delivery radius from Hackney and provide accurate delivery.
             </p>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               <Button
                 type="button"
                 onClick={handleAutoDetectGPS}
                 disabled={gettingLocation}
-                className="w-full rounded-none bg-zinc-900 hover:bg-zinc-800 text-white h-11 text-xs uppercase font-bold tracking-wider"
+                className="w-full bg-zinc-900 hover:bg-zinc-800 text-white rounded-none h-11 text-xs uppercase font-bold tracking-widest shadow-none"
               >
                 {gettingLocation ? (
                   <>
@@ -347,7 +365,7 @@ export default function CheckoutPage() {
                 type="button"
                 variant="outline"
                 onClick={() => setShowLocationModal(false)}
-                className="w-full rounded-none border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-100 h-11 text-xs uppercase"
+                className="w-full outline outline-1 outline-zinc-900 bg-white text-zinc-900 hover:bg-zinc-100 rounded-none h-11 text-xs uppercase font-semibold tracking-widest shadow-none"
               >
                 Enter Manually
               </Button>
@@ -357,21 +375,19 @@ export default function CheckoutPage() {
       )}
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Minimalist Header Section */}
-        <div className="mb-6 text-center">
-          <h1 className="text-2xl font-light tracking-tight text-zinc-900 uppercase">
+        <div className="mb-8 text-center">
+          <h1 className="text-xl font-light tracking-[0.2em] text-zinc-900 uppercase">
             Checkout
           </h1>
-          <div className="w-10 h-[1px] bg-zinc-300 mx-auto mt-2"></div>
+          <div className="w-12 h-[1px] bg-zinc-900 mx-auto mt-3"></div>
         </div>
 
-        {/* Out of Range Notice Banner */}
-        {isOutOfRange && (
-          <div className="mb-6 p-5 bg-zinc-900 text-white border border-zinc-700 flex flex-col md:flex-row items-center justify-between gap-4">
+        {orderType === "delivery" && isOutOfRange && (
+          <div className="mb-6 p-5 bg-zinc-900 text-white outline outline-1 outline-zinc-900 rounded-none flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <AlertCircle className="w-6 h-6 text-amber-400 shrink-0" />
+              <AlertCircle className="w-5 h-5 text-zinc-400 shrink-0" />
               <div>
-                <p className="font-semibold text-sm uppercase tracking-wide">
+                <p className="font-bold text-xs uppercase tracking-widest">
                   Outside Delivery Radius (&gt;5 Miles)
                 </p>
                 <p className="text-xs text-zinc-400 mt-0.5">
@@ -383,7 +399,7 @@ export default function CheckoutPage() {
             </div>
             <a
               href="tel:+4466464654"
-              className="whitespace-nowrap rounded-none bg-white text-zinc-900 hover:bg-zinc-200 px-5 py-3 text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition"
+              className="whitespace-nowrap bg-white text-zinc-900 hover:bg-zinc-200 px-5 py-3 text-xs font-bold uppercase tracking-widest rounded-none flex items-center gap-2 transition"
             >
               <PhoneCall className="w-4 h-4" /> Contact: +4466464654
             </a>
@@ -391,11 +407,11 @@ export default function CheckoutPage() {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Left Form */}
-          <div className="lg:col-span-7 bg-[#FAFAFA] p-6 sm:p-8 border border-zinc-300 rounded-none shadow-sm">
-            <div className="flex items-center justify-between pb-4 border-b border-zinc-300 mb-6">
-              <h2 className="text-base font-medium text-zinc-900 tracking-wide">
-                Delivery Information
+          {/* Customer Form Column */}
+          <div className="lg:col-span-7 bg-[#FAFAFA] p-6 sm:p-8 outline outline-1 outline-zinc-900 rounded-none shadow-none">
+            <div className="flex items-center justify-between pb-4 outline-b outline-zinc-900 mb-6 border-b">
+              <h2 className="text-xs font-bold text-zinc-900 tracking-widest uppercase">
+                Customer Information
               </h2>
               <Button
                 type="button"
@@ -403,7 +419,7 @@ export default function CheckoutPage() {
                 size="sm"
                 onClick={handleAutoDetectGPS}
                 disabled={gettingLocation}
-                className="rounded-none border-zinc-400 bg-white text-zinc-800 hover:bg-zinc-900 hover:text-white h-9 text-xs uppercase"
+                className="outline outline-1 outline-zinc-900 bg-white text-zinc-900 hover:bg-zinc-900 hover:text-white rounded-none h-9 text-xs uppercase font-semibold tracking-wider transition-colors shadow-none"
               >
                 {gettingLocation ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" />
@@ -418,24 +434,24 @@ export default function CheckoutPage() {
               <form
                 id="checkout-form"
                 onSubmit={orderForm.handleSubmit(placeOrder)}
-                className="space-y-4"
+                className="space-y-5"
               >
                 <FormField
                   control={orderForm.control}
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <Label className="text-xs font-semibold uppercase text-zinc-700 tracking-wider">
+                      <Label className="text-[11px] font-bold uppercase text-zinc-900 tracking-widest">
                         Full Name *
                       </Label>
                       <FormControl>
                         <Input
                           placeholder="John Doe"
                           {...field}
-                          className="rounded-none border-zinc-400 bg-white text-zinc-900 placeholder:text-zinc-400 h-11 focus-visible:ring-1 focus-visible:ring-zinc-900"
+                          className="outline outline-1 outline-zinc-900 rounded-none bg-white text-zinc-900 placeholder:text-zinc-400 h-11 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
                         />
                       </FormControl>
-                      <FormMessage className="text-red-600 text-xs" />
+                      <FormMessage className="text-zinc-900 text-xs font-medium" />
                     </FormItem>
                   )}
                 />
@@ -445,17 +461,17 @@ export default function CheckoutPage() {
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <Label className="text-xs font-semibold uppercase text-zinc-700 tracking-wider">
+                      <Label className="text-[11px] font-bold uppercase text-zinc-900 tracking-widest">
                         UK Phone Number *
                       </Label>
                       <FormControl>
                         <Input
                           placeholder="+44 7123 456789"
                           {...field}
-                          className="rounded-none border-zinc-400 bg-white text-zinc-900 placeholder:text-zinc-400 h-11 focus-visible:ring-1 focus-visible:ring-zinc-900"
+                          className="outline outline-1 outline-zinc-900 rounded-none bg-white text-zinc-900 placeholder:text-zinc-400 h-11 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
                         />
                       </FormControl>
-                      <FormMessage className="text-red-600 text-xs" />
+                      <FormMessage className="text-zinc-900 text-xs font-medium" />
                     </FormItem>
                   )}
                 />
@@ -465,12 +481,12 @@ export default function CheckoutPage() {
                   name="address"
                   render={({ field }) => (
                     <FormItem>
-                      <Label className="text-xs font-semibold uppercase text-zinc-700 tracking-wider">
+                      <Label className="text-[11px] font-bold uppercase text-zinc-900 tracking-widest">
                         Street Address & UK Postcode *
                       </Label>
                       <FormControl>
                         <div className="relative">
-                          <MapPin className="absolute left-3.5 top-3.5 w-4 h-4 text-zinc-500" />
+                          <MapPin className="absolute left-3.5 top-3.5 w-4 h-4 text-zinc-900" />
                           <Input
                             placeholder="Type postcode e.g. E8 1EB or address to test"
                             {...field}
@@ -478,68 +494,135 @@ export default function CheckoutPage() {
                               field.onChange(e);
                               verifyTypedAddress(e.target.value);
                             }}
-                            className="rounded-none border-zinc-400 bg-white text-zinc-900 placeholder:text-zinc-400 h-11 pl-10 focus-visible:ring-1 focus-visible:ring-zinc-900"
+                            className="outline outline-1 outline-zinc-900 rounded-none bg-white text-zinc-900 placeholder:text-zinc-400 h-11 pl-10 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
                           />
                         </div>
                       </FormControl>
-                      <FormMessage className="text-red-600 text-xs" />
+                      <FormMessage className="text-zinc-900 text-xs font-medium" />
                     </FormItem>
                   )}
                 />
 
                 {checkingDistance && (
-                  <div className="text-xs text-zinc-500 flex items-center gap-2">
+                  <div className="text-xs text-zinc-900 flex items-center gap-2 font-medium">
                     <Loader2 className="w-3.5 h-3.5 animate-spin" /> Checking
                     distance from Hackney...
                   </div>
                 )}
-
-                <div className="pt-1">
-                  <Label className="text-xs font-semibold uppercase text-zinc-700 tracking-wider mb-2 block">
-                    Delivery Fee
-                  </Label>
-                  <div className="flex items-center justify-between p-3.5 border border-zinc-400 bg-white">
-                    <span className="text-sm font-medium text-zinc-800">
-                      Hackney Local Delivery (Within 5 Miles)
-                    </span>
-                    <span className="font-semibold text-zinc-900">£3.99</span>
-                  </div>
-                </div>
               </form>
             </Form>
           </div>
 
-          {/* Right Summary */}
-          <div className="lg:col-span-5 bg-[#FAFAFA] p-6 sm:p-8 border border-zinc-300 rounded-none shadow-sm h-fit">
-            <h3 className="text-base font-medium text-zinc-900 pb-4 border-b border-zinc-300 mb-5 flex justify-between tracking-wide">
-              <span>ORDER SUMMARY</span>
-              <span className="text-xs text-zinc-500 font-normal">
+          {/* Order Summary & Payment Column */}
+          <div className="lg:col-span-5 bg-[#FAFAFA] p-6 sm:p-8 outline outline-1 outline-zinc-900 rounded-none shadow-none h-fit">
+            {/* Order Type Selection */}
+            <div className="mb-6">
+              <h3 className="text-[11px] font-bold uppercase mb-3 text-zinc-900 tracking-widest">
+                Order Type
+              </h3>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setOrderType("delivery")}
+                  className={`outline outline-1 outline-zinc-900 rounded-none p-3 text-xs uppercase font-bold tracking-wider transition ${
+                    orderType === "delivery"
+                      ? "bg-black text-white"
+                      : "bg-white text-zinc-900"
+                  }`}
+                >
+                  Delivery
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOrderType("pickup")}
+                  className={`outline outline-1 outline-zinc-900 rounded-none p-3 text-xs uppercase font-bold tracking-wider transition ${
+                    orderType === "pickup"
+                      ? "bg-black text-white"
+                      : "bg-white text-zinc-900"
+                  }`}
+                >
+                  Pickup
+                </button>
+              </div>
+            </div>
+
+            {/* Payment Method Selection */}
+            <div className="mb-6">
+              <h3 className="text-[11px] font-bold uppercase mb-3 text-zinc-900 tracking-widest">
+                Payment Method
+              </h3>
+              {orderType === "delivery" ? (
+                <div className="p-3 bg-white outline outline-1 outline-zinc-900 rounded-none text-[11px] uppercase font-bold text-center text-zinc-900 tracking-wider">
+                  Card Payment (Online) — Cash is disabled for delivery
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("stripe")}
+                    className={`outline outline-1 outline-zinc-900 rounded-none p-3 text-xs uppercase font-bold tracking-wider transition ${
+                      paymentMethod === "stripe"
+                        ? "bg-black text-white"
+                        : "bg-white text-zinc-900"
+                    }`}
+                  >
+                    Card Payment
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("cod")}
+                    className={`outline outline-1 outline-zinc-900 rounded-none p-3 text-xs uppercase font-bold tracking-wider transition ${
+                      paymentMethod === "cod"
+                        ? "bg-black text-white"
+                        : "bg-white text-zinc-900"
+                    }`}
+                  >
+                    Cash
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <h3 className="text-xs font-bold text-zinc-900 pb-4 outline-b outline-zinc-900 mb-5 flex justify-between tracking-widest uppercase border-b">
+              <span>Order Summary</span>
+              <span className="text-xs text-zinc-900 font-bold">
                 {products.length} Items
               </span>
             </h3>
 
-            <div className="max-h-56 overflow-y-auto space-y-3 mb-5 pr-2">
+            {/* Products List */}
+            <div className="max-h-56 overflow-y-auto space-y-3 mb-6 pr-2">
               {products.map((item, index) => (
                 <div
                   key={index}
-                  className="flex justify-between items-center text-sm border-b border-zinc-200 pb-2.5"
+                  className="flex justify-between items-center text-sm outline-b outline-zinc-900 pb-3 border-b"
                 >
                   <div className="flex gap-3 items-center">
                     <img
-                      src={item.thumbnail || item.image}
-                      alt=""
-                      className="w-11 h-11 object-cover border border-zinc-300"
+                      src={
+                        item.thumbnail ||
+                        item.image ||
+                        item.img ||
+                        item.media?.[0]?.secure_url ||
+                        item.media?.[0]?.url ||
+                        item.media?.[0]?.thumbnail ||
+                        item.media?.secure_url ||
+                        item.media?.url ||
+                        imgPlaceholder
+                      }
+                      alt={item.title || item.name || "Product Image"}
+                      className="w-11 h-11 object-cover outline outline-1 outline-zinc-900 rounded-none"
                     />
                     <div>
-                      <p className="font-medium text-zinc-900 line-clamp-1">
+                      <p className="font-bold text-xs text-zinc-900 line-clamp-1 uppercase tracking-wider">
                         {item.title}
                       </p>
-                      <p className="text-xs text-zinc-500">
-                        Qty: {item.quantity}
+                      <p className="text-[11px] text-zinc-600 font-semibold mt-0.5">
+                        QTY: {item.quantity}
                       </p>
                     </div>
                   </div>
-                  <span className="font-medium text-zinc-900">
+                  <span className="font-bold text-xs text-zinc-900 tracking-wider">
                     {formatCurrency(
                       (item.sellingPrice || item.price || 0) * item.quantity,
                     )}
@@ -548,17 +631,18 @@ export default function CheckoutPage() {
               ))}
             </div>
 
-            {/* Coupon Box */}
-            <div className="mb-5">
+            {/* Coupon Section */}
+            <div className="mb-6">
               {appliedCoupon ? (
-                <div className="flex justify-between items-center bg-white border border-zinc-400 p-2.5 text-sm">
-                  <span className="text-xs uppercase text-zinc-900 font-semibold tracking-wider">
+                <div className="flex justify-between items-center bg-white outline outline-1 outline-zinc-900 rounded-none p-3 text-xs">
+                  <span className="uppercase text-zinc-900 font-bold tracking-widest">
                     {appliedCoupon.code} ({appliedCoupon.discountPercentage}%
                     OFF)
                   </span>
                   <button
+                    type="button"
                     onClick={() => setAppliedCoupon(null)}
-                    className="text-zinc-500 hover:text-red-600"
+                    className="text-zinc-900 hover:text-zinc-600 transition-colors"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -569,7 +653,7 @@ export default function CheckoutPage() {
                     placeholder="COUPON CODE"
                     value={couponCodeInput}
                     onChange={(e) => setCouponCodeInput(e.target.value)}
-                    className="uppercase rounded-none border-zinc-400 bg-white text-zinc-900 placeholder:text-zinc-400 h-10 text-xs"
+                    className="uppercase outline outline-1 outline-zinc-900 rounded-none bg-white text-zinc-900 placeholder:text-zinc-400 h-10 text-xs font-semibold tracking-wider focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
                   />
                   <Button
                     type="button"
@@ -600,7 +684,7 @@ export default function CheckoutPage() {
                         .finally(() => setValidatingCoupon(false));
                     }}
                     disabled={validatingCoupon}
-                    className="rounded-none border-zinc-400 bg-white text-zinc-800 hover:bg-zinc-900 hover:text-white h-10 text-xs uppercase px-4 font-semibold"
+                    className="outline outline-1 outline-zinc-900 rounded-none bg-white text-zinc-900 hover:bg-zinc-900 hover:text-white h-10 text-xs uppercase px-5 font-bold tracking-widest transition-colors shadow-none"
                   >
                     Apply
                   </Button>
@@ -608,55 +692,70 @@ export default function CheckoutPage() {
               )}
             </div>
 
-            <div className="space-y-2 text-sm text-zinc-700 mb-5">
+            {/* Totals Section */}
+            <div className="space-y-2.5 text-xs text-zinc-900 font-semibold mb-6 tracking-wider">
               <div className="flex justify-between">
-                <span>Subtotal</span>
-                <span className="text-zinc-900 font-medium">
+                <span>SUBTOTAL</span>
+                <span className="text-zinc-900">
                   {formatCurrency(subtotal)}
                 </span>
               </div>
               {appliedCoupon && (
-                <div className="flex justify-between text-zinc-900 font-semibold">
-                  <span>Discount</span>
+                <div className="flex justify-between text-zinc-900">
+                  <span>DISCOUNT</span>
                   <span>-{formatCurrency(discountAmount)}</span>
                 </div>
               )}
-              <div className="flex justify-between">
-                <span>Shipping</span>
-                <span className="text-zinc-900 font-medium">
-                  {formatCurrency(shippingCost)}
-                </span>
-              </div>
-              <Separator className="bg-zinc-300 my-2.5" />
-              <div className="flex justify-between font-bold text-base text-zinc-900">
-                <span>Total</span>
+              {orderType === "delivery" && (
+                <div className="flex justify-between">
+                  <span>SHIPPING</span>
+                  <span className="text-zinc-900">
+                    {formatCurrency(shippingCost)}
+                  </span>
+                </div>
+              )}
+              <Separator className="bg-zinc-900 my-3 h-[1px]" />
+              <div className="flex justify-between font-bold text-sm text-zinc-900 tracking-widest">
+                <span>TOTAL</span>
                 <span>{formatCurrency(total)}</span>
               </div>
             </div>
 
-            <div className="p-2.5 bg-white border border-zinc-300 flex items-center gap-3 mb-5">
-              <ShieldCheck className="text-zinc-900 w-5 h-5 shrink-0" />
-              <p className="text-[11px] text-zinc-600">
-                Secured & encrypted payment powered by Stripe.
+            {/* Security Notice */}
+            <div className="p-3 bg-white outline outline-1 outline-zinc-900 rounded-none flex items-center gap-3 mb-6">
+              <ShieldCheck className="text-zinc-900 w-4 h-4 shrink-0" />
+              <p className="text-[10px] text-zinc-900 font-semibold uppercase tracking-wider">
+                {paymentMethod === "stripe"
+                  ? "Secured & encrypted payment powered by Stripe."
+                  : "Pay with cash upon order preparation/pickup."}
               </p>
             </div>
 
+            {/* Place Order Button */}
             <Button
               form="checkout-form"
               type="submit"
-              className="w-full rounded-none bg-zinc-900 hover:bg-zinc-800 text-white h-11 text-xs uppercase font-bold tracking-widest flex items-center justify-center gap-2"
-              disabled={placingOrder || products.length === 0 || isOutOfRange}
+              className="w-full bg-zinc-900 hover:bg-zinc-800 text-white rounded-none h-11 text-xs uppercase font-bold tracking-[0.2em] flex items-center justify-center gap-2 shadow-none"
+              disabled={
+                placingOrder ||
+                products.length === 0 ||
+                (orderType === "delivery" && isOutOfRange)
+              }
             >
               {placingOrder ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" /> Processing...
                 </>
-              ) : isOutOfRange ? (
+              ) : orderType === "delivery" && isOutOfRange ? (
                 "Call: +4466464654 (Out of Range)"
-              ) : (
+              ) : paymentMethod === "stripe" ? (
                 <>
                   Pay Now — {formatCurrency(total)}{" "}
                   <ArrowRight className="w-4 h-4" />
+                </>
+              ) : (
+                <>
+                  Place Order <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </Button>

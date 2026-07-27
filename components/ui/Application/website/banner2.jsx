@@ -76,45 +76,43 @@ export default function WhySmashed() {
             </div>
 
             {/* RIGHT HALAL BADGE */}
+            {/* RIGHT HALAL BADGE */}
             <div className="w-full lg:w-[360px] flex items-center justify-center p-8 lg:p-10">
-              <div className="relative w-[240px] h-[240px] lg:w-[280px] lg:h-[280px] rounded-full border-[6px] border-[#6d9f2f] flex items-center justify-center">
-                {/* OUTER TEXT */}
-                <div className="absolute inset-0 rounded-full border border-[#6d9f2f]/40" />
+              <div className="relative w-[240px] h-[240px] lg:w-[280px] lg:h-[280px] rounded-full border-[6px] border-[#6d9f2f] flex items-center justify-center shadow-[0_0_25px_rgba(109,159,47,0.2)]">
+                {/* OUTER TEXT GLOW RING */}
+                <div className="absolute inset-2 rounded-full border border-[#6d9f2f]/40" />
 
-                {/* INNER CIRCLE */}
-                <div className="w-[180px] h-[180px] rounded-full border-[4px] border-[#6d9f2f] flex flex-col items-center justify-center">
+                {/* INNER CIRCLE (Containing all elements) */}
+                <div className="w-[200px] h-[200px] lg:w-[220px] lg:h-[220px] rounded-full border-[4px] border-[#6d9f2f] flex flex-col items-center justify-center text-center p-2 relative bg-zinc-950/40">
+                  {/* TOP TEXT */}
+                  <span className="text-[#85c441] text-[11px] lg:text-xs font-black uppercase tracking-[0.15em] mb-0.5">
+                    100% Halal
+                  </span>
+
                   {/* ARABIC */}
                   <span
                     lang="ar"
-                    className="text-[#85c441] text-6xl font-black"
+                    className="text-[#85c441] text-4xl lg:text-5xl font-black leading-none my-1"
                   >
                     حلال
                   </span>
 
-                  {/* TEXT */}
-                  <span className="mt-2 text-[#85c441] text-2xl font-black uppercase tracking-wide">
+                  {/* MAIN TEXT */}
+                  <span className="text-[#85c441] text-sm lg:text-base font-black uppercase tracking-wide leading-none mb-1">
                     Halal
                   </span>
+
+                  {/* BOTTOM TEXT */}
+                  <span className="text-[#85c441] text-[10px] lg:text-[11px] font-black uppercase tracking-[0.18em]">
+                    Certified
+                  </span>
+
+                  {/* STARS (Positioned symmetrically inside the inner ring) */}
+                  <div className="absolute w-full px-4 flex justify-between items-center pointer-events-none text-[#85c441] text-sm lg:text-base">
+                    <span>★</span>
+                    <span>★</span>
+                  </div>
                 </div>
-
-                {/* TOP */}
-                <span className="absolute top-6 text-[#85c441] text-xl font-black uppercase tracking-[0.2em]">
-                  100% Halal
-                </span>
-
-                {/* BOTTOM */}
-                <span className="absolute bottom-6 text-[#85c441] text-xl font-black uppercase tracking-[0.18em]">
-                  Certified
-                </span>
-
-                {/* STARS */}
-                <span className="absolute left-7 text-[#85c441] text-2xl">
-                  ★
-                </span>
-
-                <span className="absolute right-7 text-[#85c441] text-2xl">
-                  ★
-                </span>
               </div>
             </div>
           </div>

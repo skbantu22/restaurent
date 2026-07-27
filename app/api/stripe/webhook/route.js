@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { stripe } from "@/lib/stripe";
 
+import { stripe } from "@/lib/stripe";
 import { connectDB } from "@/lib/databaseconnection";
 
 import OrderModel from "@/models/Order.model";
@@ -9,20 +9,26 @@ import ProductModel from "@/models/Product.model";
 export const runtime = "nodejs";
 
 export async function POST(req) {
+  console.log("🔥 WEBHOOK API HIT");
+
   const body = await req.text();
 
   const signature = req.headers.get("stripe-signature");
 
   let event;
 
+  // ============================
+  // VERIFY STRIPE SIGNATURE
+  // ============================
+
   try {
     event = stripe.webhooks.constructEvent(
       body,
-
       signature,
-
       process.env.STRIPE_WEBHOOK_SECRET,
     );
+
+    console.log("✅ Stripe webhook:", event.type);
   } catch (error) {
     console.error("Webhook signature error:", error.message);
 
@@ -40,70 +46,106 @@ export async function POST(req) {
   try {
     await connectDB();
 
+    // ============================
+    // PAYMENT SUCCESS
+    // ============================
+
     if (event.type === "checkout.session.completed") {
       const session = event.data.object;
 
-      const orderId = session.metadata.orderId;
+      const orderId = session.metadata?.orderId;
+
+      console.log("Order ID:", orderId);
+
+      if (!orderId) {
+        return NextResponse.json({
+          received: true,
+        });
+      }
 
       const order = await OrderModel.findById(orderId);
 
       if (!order) {
+        console.log("Order not found");
+
         return NextResponse.json({
           received: true,
         });
       }
 
-      // Already paid protection
+      // ============================
+      // DUPLICATE PROTECTION
+      // ============================
 
-      if (order.paymentStatus === "paid") {
+      if (order.payment.status === "paid") {
+        console.log("Already processed");
+
         return NextResponse.json({
           received: true,
         });
       }
 
-      // =====================
-      // Update Payment
-      // =====================
+      // ============================
+      // UPDATE PAYMENT
+      // ============================
 
-      order.paymentStatus = "paid";
+      order.payment.status = "paid";
 
-      order.orderStatus = "confirmed";
+      order.payment.stripeSessionId = session.id;
 
-      if (order.payments.length) {
-        order.payments[0].paymentStatus = "paid";
+      order.payment.paymentIntentId = session.payment_intent || "";
 
-        order.payments[0].stripeSessionId = session.id;
+      order.payment.transactionId = session.payment_intent || "";
 
-        order.payments[0].paymentIntentId = session.payment_intent;
+      order.payment.paidAt = new Date();
 
-        order.payments[0].paidAt = new Date();
-      }
+      // ============================
+      // CUSTOMER FRIENDLY STATUS
+      // ============================
+
+      order.orderStatus = "placed";
+
+      order.statusHistory.push({
+        status: "placed",
+
+        updatedAt: new Date(),
+      });
 
       await order.save();
 
-      // =====================
-      // Reduce Stock
-      // =====================
+      console.log("✅ Payment completed - Order Placed");
+
+      // ============================
+      // REDUCE STOCK
+      // ============================
 
       await Promise.all(
         order.items.map(async (item) => {
-          const Model = item.variantId ? ProductVariantModel : ProductModel;
+          try {
+            const result = await ProductModel.updateOne(
+              {
+                _id: item.productId,
 
-          await Model.updateOne(
-            {
-              _id: item.variantId || item.productId,
-
-              stock: {
-                $gte: item.quantity,
+                stock: {
+                  $gte: item.quantity,
+                },
               },
-            },
 
-            {
-              $inc: {
-                stock: -item.quantity,
+              {
+                $inc: {
+                  stock: -item.quantity,
+                },
               },
-            },
-          );
+            );
+
+            if (result.modifiedCount) {
+              console.log(`Stock reduced: ${item.name}`);
+            } else {
+              console.log(`Stock not available: ${item.name}`);
+            }
+          } catch (error) {
+            console.error("Stock error:", error.message);
+          }
         }),
       );
     }
@@ -119,6 +161,7 @@ export async function POST(req) {
         success: false,
         message: error.message,
       },
+
       {
         status: 500,
       },

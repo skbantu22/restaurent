@@ -1,217 +1,273 @@
 "use client";
 
-import React from "react";
-import Link from "next/link";
-import { useSelector } from "react-redux";
+import React, { useEffect, useState } from "react";
+import Image from "next/image";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  Clock3,
+  PackageCheck,
+  CookingPot,
+  Bike,
+  CircleCheckBig,
+  XCircle,
+  History,
+  ShoppingBag,
+} from "lucide-react";
 
 import UserPanelLayout from "@/components/ui/Application/website/UserPannelLayout";
 import Breadcums from "@/components/ui/Application/Admin/Breadcums";
-import useFetch from "@/hooks/useFetch";
-import { WEBSITE_ORDER_DETAILS, WEBSITE_ORDERS_DETAILS } from "@/Route/Websiteroute";
+import { fetchGuestOrders } from "@/store/reducer/orderReducer";
 
-const breadCrumbData = [
-  { label: "Home", href: "/" },
-  { label: "Orders" },
-];
+const breadCrumbData = [{ label: "Home", href: "/" }, { label: "Orders" }];
 
-const money = (amount) =>
-  Number(amount || 0).toLocaleString("en-BD", {
-    style: "currency",
-    currency: "BDT",
-    maximumFractionDigits: 0,
-  });
-
-const statusStyles = {
-  pending: "bg-yellow-100 text-yellow-700",
-  placed: "bg-blue-100 text-blue-700",
-  confirmed: "bg-indigo-100 text-indigo-700",
-  processing: "bg-purple-100 text-purple-700",
-  shipped: "bg-cyan-100 text-cyan-700",
-  delivered: "bg-green-100 text-green-700",
-  cancelled: "bg-red-100 text-red-700",
+const STATUS = {
+  placed: {
+    label: "Order Placed",
+    color: "text-amber-500",
+    bg: "bg-amber-500",
+    icon: Clock3,
+    progress: 20,
+    animate: "animate-pulse",
+  },
+  preparing: {
+    label: "Preparing",
+    color: "text-orange-500",
+    bg: "bg-orange-500",
+    icon: CookingPot,
+    progress: 45,
+    animate: "animate-bounce",
+  },
+  ready: {
+    label: "Ready",
+    color: "text-sky-500",
+    bg: "bg-sky-500",
+    icon: PackageCheck,
+    progress: 70,
+    animate: "animate-pulse",
+  },
+  delivering: {
+    label: "On the way",
+    color: "text-blue-600",
+    bg: "bg-blue-600",
+    icon: Bike,
+    progress: 90,
+    animate: "animate-bounce",
+  },
+  delivered: {
+    label: "Delivered",
+    color: "text-green-600",
+    bg: "bg-green-600",
+    icon: CircleCheckBig,
+    progress: 100,
+    animate: "",
+  },
+  cancelled: {
+    label: "Cancelled",
+    color: "text-red-500",
+    bg: "bg-red-500",
+    icon: XCircle,
+    progress: 100,
+    animate: "",
+  },
 };
 
 const Orders = () => {
-  const { data: dashboardData, loading } = useFetch("/api/user-order");
+  const dispatch = useDispatch();
+  const { activeOrders = [], loading } = useSelector(
+    (state) => state.orderStore,
+  );
 
-  console.log("dashboardData:", dashboardData);
-  const cartStore = useSelector((store) => store.cartStore);
+  const [showHistory, setShowHistory] = useState(false);
 
-const recentOrders = dashboardData?.data?.orders || [];
-const totalOrder = recentOrders.length;
-  const cartCount = cartStore?.count || 0;
+  useEffect(() => {
+    dispatch(fetchGuestOrders());
+
+    const timer = setInterval(() => {
+      dispatch(fetchGuestOrders());
+    }, 5000);
+
+    return () => clearInterval(timer);
+  }, [dispatch]);
+
+  const ongoingOrders = activeOrders.filter(
+    (order) =>
+      order.orderStatus !== "delivered" && order.orderStatus !== "cancelled",
+  );
+
+  const historyOrders = activeOrders.filter(
+    (order) =>
+      order.orderStatus === "delivered" || order.orderStatus === "cancelled",
+  );
+
+  const displayedOrders = showHistory ? historyOrders : ongoingOrders;
 
   return (
     <div>
-     
-
-
       <UserPanelLayout>
         <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
           {/* Header */}
-          <div className="border-b px-4 py-4 sm:px-6">
-
-            {/* Breadcrumb */}
-  <div className="mb-4">
-    <Breadcums items={breadCrumbData} />
-  </div>
-            <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
-              Orders
-            </h1>
-
-            <div className="mt-3 flex flex-wrap gap-3">
-             
-
-             
+          <div className="border-b px-4 py-4 sm:px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <div className="mb-4">
+                <Breadcums items={breadCrumbData} />
+              </div>
+              <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
+                {showHistory ? "Order History" : "Live Ongoing Orders"} (
+                {displayedOrders.length})
+              </h1>
             </div>
+
+            <button
+              onClick={() => setShowHistory((prev) => !prev)}
+              className="flex items-center gap-2 text-xs font-semibold bg-zinc-100 hover:bg-zinc-200 text-zinc-800 px-4 py-2.5 rounded-xl transition-colors self-start sm:self-auto"
+            >
+              {showHistory ? (
+                <>
+                  <ShoppingBag size={15} />
+                  <span>Show Live Orders ({ongoingOrders.length})</span>
+                </>
+              ) : (
+                <>
+                  <History size={15} />
+                  <span>View History ({historyOrders.length})</span>
+                </>
+              )}
+            </button>
           </div>
 
           <div className="p-4 sm:p-6">
-            {loading ? (
-              <div className="text-center text-sm text-gray-500">Loading...</div>
+            {loading && activeOrders.length === 0 ? (
+              <div className="text-center text-sm text-gray-500 py-8">
+                Loading orders...
+              </div>
             ) : (
-              <>
-                {/* Desktop / tablet table */}
-                <div className="hidden md:block overflow-x-auto rounded-2xl border border-gray-200">
-                  <table className="w-full min-w-[700px]">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="p-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                          Sr. No.
-                        </th>
-                        <th className="p-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                          Order ID
-                        </th>
-                        <th className="p-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                          Total Item
-                        </th>
-                        <th className="p-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                          Amount
-                        </th>
-                        <th className="p-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                          Status
-                        </th>
-                      </tr>
-                    </thead>
+              <div className="space-y-6">
+                {displayedOrders.length > 0 ? (
+                  displayedOrders.map((order, i) => {
+                    const info = STATUS[order.orderStatus] || STATUS.placed;
+                    const Icon = info.icon;
 
-                    <tbody>
-                      {recentOrders.length > 0 ? (
-                        recentOrders.map((order, i) => (
-                          <tr
-                            key={order._id}
-                            className="border-t border-gray-200 hover:bg-gray-50 transition-colors"
-                          >
-                            <td className="p-4 text-sm font-medium text-gray-700">
-                              {i + 1}
-                            </td>
-
-                            <td className="p-4 text-sm">
-                              {order.orderNumber ? (
-                                <Link
-                                  href={WEBSITE_ORDER_DETAILS(order.orderNumber)}
-                                  className="font-semibold text-primary hover:underline"
-                                >
-                                  {order.orderNumber}
-                                </Link>
-                              ) : (
-                                <span className="text-gray-400">N/A</span>
-                              )}
-                            </td>
-
-                            <td className="p-4 text-sm text-gray-600">
-                              {order.items?.length || 0} Items
-                            </td>
-
-                            <td className="p-4 text-sm font-semibold text-gray-900">
-                              {money(order.total)}
-                            </td>
-
-                            <td className="p-4">
-                              <span
-                                className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                                  statusStyles[order.status?.toLowerCase()] ||
-                                  "bg-gray-100 text-gray-700"
-                                }`}
-                              >
-                                {order.status || "Placed"}
-                              </span>
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td
-                            colSpan={5}
-                            className="p-8 text-center text-sm text-gray-500"
-                          >
-                            No recent orders found.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Mobile cards */}
-                <div className="space-y-4 md:hidden">
-                  {recentOrders.length > 0 ? (
-                    recentOrders.map((order, i) => (
+                    return (
                       <div
                         key={order._id}
-                        className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm"
+                        className="rounded-2xl border border-zinc-200 bg-zinc-50 p-5 sm:p-6 shadow-sm transition-all space-y-5"
                       >
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                              Order {i + 1}
-                            </p>
+                        {/* Top Meta: Order ID & Live Status */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 pb-4">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+                                #{i + 1}
+                              </span>
+                              <h4 className="font-bold text-lg text-zinc-900">
+                                Order #{order.orderNumber}
+                              </h4>
+                            </div>
 
-                            {order.orderNumber ? (
-                              <Link
-                                href={WEBSITE_ORDER_DETAILS(order.orderNumber)}
-                                className="mt-1 inline-block text-sm font-semibold text-primary hover:underline break-all"
+                            <div
+                              className={`flex items-center gap-2 text-xs font-semibold ${info.color}`}
+                            >
+                              <div
+                                className={`p-1 rounded-full bg-white shadow-xs ${info.animate}`}
                               >
-                                {order.orderNumber}
-                              </Link>
-                            ) : (
-                              <p className="mt-1 text-sm text-gray-400">N/A</p>
-                            )}
+                                <Icon size={16} />
+                              </div>
+                              <span className="tracking-wide text-sm">
+                                {info.label}
+                              </span>
+                            </div>
                           </div>
 
-                          <span
-                            className={`inline-flex rounded-full px-3 py-1 text-[11px] font-semibold ${
-                              statusStyles[order.status?.toLowerCase()] ||
-                              "bg-gray-100 text-gray-700"
-                            }`}
-                          >
-                            {order.status || "Placed"}
-                          </span>
+                          <div className="text-left sm:text-right">
+                            <div className="font-extrabold text-xl text-zinc-900">
+                              £{Number(order.total || 0).toFixed(2)}
+                            </div>
+                            <div className="text-xs text-zinc-500">
+                              {order.items?.length || 0} Item
+                              {(order.items?.length || 0) > 1 ? "s" : ""}
+                            </div>
+                          </div>
                         </div>
 
-                        <div className="mt-4 grid grid-cols-2 gap-3 rounded-xl bg-gray-50 p-3">
-                          <div>
-                            <p className="text-xs text-gray-500">Items</p>
-                            <p className="mt-1 text-sm font-semibold text-gray-900">
-                              {order.items?.length || 0}
-                            </p>
+                        {/* Progress Bar */}
+                        <div className="space-y-1.5">
+                          <div className="flex justify-between text-xs font-medium text-zinc-500">
+                            <span>Progress</span>
+                            <span>{info.progress}%</span>
                           </div>
+                          <div className="h-2.5 w-full overflow-hidden rounded-full bg-zinc-200">
+                            <div
+                              className={`${info.bg} h-full transition-all duration-500`}
+                              style={{ width: `${info.progress}%` }}
+                            />
+                          </div>
+                        </div>
 
-                          <div>
-                            <p className="text-xs text-gray-500">Amount</p>
-                            <p className="mt-1 text-sm font-semibold text-gray-900">
-                              {money(order.total)}
-                            </p>
+                        {/* Direct Large Items List Section */}
+                        <div className="space-y-3 pt-2">
+                          <h5 className="text-xs font-bold uppercase tracking-wider text-zinc-500">
+                            Ordered Items ({order.items?.length || 0})
+                          </h5>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {order.items?.map((item, idx) => (
+                              <div
+                                key={idx}
+                                className="flex items-center justify-between bg-white p-3.5 rounded-xl border border-zinc-200 shadow-2xs gap-4"
+                              >
+                                <div className="flex items-center gap-3.5">
+                                  {item.product?.image || item.image ? (
+                                    <div className="relative h-16 w-16 overflow-hidden rounded-xl border border-zinc-100 bg-zinc-100 shrink-0">
+                                      <Image
+                                        src={item.product?.image || item.image}
+                                        alt={item.name || "Food Item"}
+                                        fill
+                                        className="object-cover"
+                                      />
+                                    </div>
+                                  ) : (
+                                    <div className="h-16 w-16 rounded-xl bg-zinc-100 flex items-center justify-center text-xs text-zinc-400 shrink-0 font-medium">
+                                      No Image
+                                    </div>
+                                  )}
+
+                                  <div>
+                                    <h6 className="font-bold text-sm text-zinc-900 line-clamp-1">
+                                      {item.name ||
+                                        item.product?.name ||
+                                        "Food Item"}
+                                    </h6>
+                                    <p className="text-xs text-zinc-500 mt-0.5">
+                                      Qty:{" "}
+                                      <span className="font-semibold text-zinc-700">
+                                        {item.quantity || 1}
+                                      </span>{" "}
+                                      × £{Number(item.price || 0).toFixed(2)}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <div className="text-right font-extrabold text-sm text-zinc-900 shrink-0">
+                                  £
+                                  {Number(
+                                    (item.price || 0) * (item.quantity || 1),
+                                  ).toFixed(2)}
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       </div>
-                    ))
-                  ) : (
-                    <div className="rounded-2xl border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500">
-                      No recent orders found.
-                    </div>
-                  )}
-                </div>
-              </>
+                    );
+                  })
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-gray-300 p-12 text-center text-sm text-gray-500">
+                    {showHistory
+                      ? "No past order history found."
+                      : "No active live orders right now."}
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>

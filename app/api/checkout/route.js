@@ -24,7 +24,14 @@ export async function POST(req) {
     }
 
     const body = await req.json().catch(() => ({}));
-    const { customer, items, coupon, userId } = body;
+    const {
+      customer,
+      items,
+      coupon,
+      userId,
+      orderType = "delivery",
+      paymentMethod = "stripe",
+    } = body;
 
     if (!customer?.name || !customer?.phone) {
       return NextResponse.json(
@@ -36,6 +43,17 @@ export async function POST(req) {
     if (!items || items.length === 0) {
       return NextResponse.json(
         { success: false, message: "Cart empty" },
+        { status: 400 },
+      );
+    }
+
+    // Validation: Delivery-তে ক্যাশ পেমেন্ট অফ রাখার জন্য সিকিউরিটি চেক
+    if (orderType === "delivery" && paymentMethod === "cod") {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Cash on delivery is not allowed for delivery orders.",
+        },
         { status: 400 },
       );
     }
@@ -91,7 +109,8 @@ export async function POST(req) {
       0,
     );
 
-    const deliveryFee = FIXED_SHIPPING_FEE;
+    // Pickup হলে ডেলিভারি ফি ০ হবে
+    const deliveryFee = orderType === "pickup" ? 0 : FIXED_SHIPPING_FEE;
 
     let discount = 0;
     let couponData = {
@@ -124,20 +143,28 @@ export async function POST(req) {
     );
 
     const tempId = new mongoose.Types.ObjectId();
-    const orderNumber = `ORD-${tempId.toString().slice(-6).toUpperCase()}`;
 
     // ==============================
     // CREATE PENDING ORDER
     // ==============================
+    const isStripe = paymentMethod === "stripe";
+
     const orderDocs = await OrderModel.create(
       [
         {
           _id: tempId,
-          orderNumber,
           userId: userId || null,
+          orderType: orderType, // Dynamic orderType (delivery / pickup)
           customer: {
-            ...customer,
-            cityId: "london",
+            name: customer.name,
+            phone: customer.phone,
+            email: customer.email || "",
+          },
+          deliveryAddress: {
+            address: customer.address || "",
+            city: customer.city || "",
+            postcode: customer.postcode || "",
+            notes: customer.notes || "",
           },
           items: clean,
           subtotal,
@@ -145,23 +172,37 @@ export async function POST(req) {
           discount,
           total,
           coupon: couponData,
-          orderStatus: "pending",
-          paymentMethodSelected: "stripe",
-          paymentStatus: "unpaid",
-          payments: [
+          payment: {
+            method: paymentMethod, // Dynamic payment method (stripe / cod)
+            status: "pending", // Payment status 'pending' স্কিমায় অ্যালাউড থাকলে ঠিক আছে, নতুবা 'unpaid' দিতে পারেন
+            stripeSessionId: "",
+            paymentIntentId: "",
+            transactionId: "",
+            paidAt: null,
+          },
+          orderStatus: "placed", // Schema enum অনুযায়ী 'pending'-এর বদলে 'placed' করা হলো
+          statusHistory: [
             {
-              method: "stripe",
-              paymentStatus: "unpaid",
-              amount: total,
-              initiatedAt: new Date(),
+              status: "placed", // Schema enum অনুযায়ী 'pending'-এর বদলে 'placed' করা হলো
             },
           ],
+          notes: customer.orderNotes || "",
         },
       ],
-      { validateBeforeSave: false },
+      { validateBeforeSave: true },
     );
 
     const order = orderDocs[0];
+    const orderNumber = order.orderNumber;
+
+    // যদি পেমেন্ট মেথড ক্যাশ (COD/Pickup Cash) হয়, তবে সরাসরি সাকসেস পেজে রিডাইরেক্ট করার রেসপন্স পাঠাবে
+    if (!isStripe) {
+      return NextResponse.json({
+        success: true,
+        orderId: order._id.toString(),
+        orderNumber,
+      });
+    }
 
     // ==============================
     // CREATE STRIPE SESSION (GBP £)
@@ -215,11 +256,18 @@ export async function POST(req) {
       discounts: discounts.length > 0 ? discounts : undefined,
       client_reference_id: order._id.toString(),
       customer_email: customer.email || undefined,
-      success_url: `${origin}/order-success?orderId=${order._id.toString()}&session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${origin}/order/success?orderId=${order._id.toString()}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/checkout?canceled=true`,
       metadata: {
         orderId: order._id.toString(),
         orderNumber: orderNumber,
+      },
+    });
+
+    // Update order with the generated Stripe Session ID
+    await OrderModel.findByIdAndUpdate(order._id, {
+      $set: {
+        "payment.stripeSessionId": session.id,
       },
     });
 

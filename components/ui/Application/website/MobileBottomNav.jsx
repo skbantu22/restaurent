@@ -61,42 +61,82 @@ export default function MobileBottomNav() {
         </div>
       )}
 
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t shadow-[0_-2px_10px_rgba(0,0,0,0.06)]">
-        <div className="pb-[env(safe-area-inset-bottom)]">
-          <div className="flex justify-around items-center h-14">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50">
+        <div className="relative bg-white border-t shadow-[0_-2px_12px_rgba(0,0,0,0.08)] rounded-t-2xl h-16">
+          {/* Floating Cart Button */}
+          <div className="absolute left-1/2 -translate-x-1/2 -top-6">
+            <div className="h-16 w-16 rounded-full bg-white shadow-lg border flex items-center justify-center">
+              <div className="h-12 w-12 rounded-full bg-red-500 flex items-center justify-center text-white">
+                <Cart active />
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-4 h-full">
             {/* Home */}
             <Link
               href="/"
-              className={`${navItem} ${isActive("/") ? "text-black" : "text-gray-500"}`}
+              className="flex flex-col items-center justify-center text-xs"
             >
-              <Home size={isActive("/") ? 24 : 22} />
-              <span>Home</span>
+              <Home
+                size={22}
+                className={
+                  isActive("/") ? "text-red-500 fill-red-500" : "text-gray-600"
+                }
+              />
+              <span
+                className={
+                  isActive("/") ? "text-red-500 font-semibold" : "text-gray-600"
+                }
+              >
+                Home
+              </span>
             </Link>
 
-            {/* Cart */}
-            <div className={navItem}>
-              <Cart active={isActive("/cart")} />
-              <span>Cart</span>
-            </div>
-
-            {/* Search */}
+            {/* Offers */}
             <button
               onClick={() => setShowMobileSearch(!showMobileSearch)}
-              className={navItem}
+              className="flex flex-col items-center justify-center text-xs text-gray-600"
             >
               <MessageCircle size={22} />
-              <span>Search</span>
+              <span>Offers</span>
             </button>
+
+            {/* Orders */}
+            <Link
+              href="/orders"
+              className="flex flex-col items-center justify-center text-xs text-gray-600"
+            >
+              <svg
+                width="22"
+                height="22"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <rect x="5" y="3" width="14" height="18" rx="2" />
+                <path d="M9 7h6M9 11h6M9 15h4" />
+              </svg>
+
+              <span>Orders</span>
+            </Link>
 
             {/* Account */}
             {!auth ? (
-              <Link href={WEBSITE_LOGIN} className={navItem}>
+              <Link
+                href={WEBSITE_LOGIN}
+                className="flex flex-col items-center justify-center text-xs text-gray-600"
+              >
                 <User size={22} />
-                <span>Profile</span>
+                <span>Account</span>
               </Link>
             ) : (
-              <Link href={USER_DASHBOARD} className={navItem}>
-                <Avatar className="h-5 w-5">
+              <Link
+                href={USER_DASHBOARD}
+                className="flex flex-col items-center justify-center text-xs text-gray-600"
+              >
+                <Avatar className="h-6 w-6">
                   <AvatarImage src={auth?.avatar?.url || userIcon.src} />
                 </Avatar>
                 <span>Account</span>

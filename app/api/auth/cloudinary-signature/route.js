@@ -10,15 +10,12 @@ export async function POST(request) {
 
     const signature = cloudinary.utils.api_sign_request(
       paramsToSign,
-      process.env.CLOUDINARY_API_SECRET
+      process.env.CLOUDINARY_API_SECRET,
     );
 
     return NextResponse.json({ signature });
   } catch (error) {
     console.error("Cloudinary signature error:", error);
-    return NextResponse.json(
-      { error: "Invalid signature" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Invalid signature" }, { status: 500 });
   }
 }

@@ -42,6 +42,10 @@ const Cart = ({ active }) => {
     setIsOpen(false);
   }, [pathname]);
 
+  useEffect(() => {
+    console.log(JSON.stringify(products, null, 2));
+  }, [products]);
+
   const subtotal = useMemo(() => {
     return products.reduce(
       (acc, item) => acc + getPrice(item.price) * Number(item.quantity || 0),
@@ -79,7 +83,7 @@ const Cart = ({ active }) => {
 
       <SheetContent
         side="right"
-        className="w-full sm:w-[420px] p-0 bg-[#121212] border-l border-[#222222] text-white flex flex-col shadow-2xl z-[150]"
+        className="w-72 !sm:w-60 md:w-[400px] lg:w-[400px] p-0 bg-[#121212] border-l border-[#222222] text-white flex flex-col shadow-2xl z-[150]"
       >
         {/* HEADER */}
         <SheetHeader className="px-6 py-4 border-b border-[#222222] flex flex-row items-center justify-between">
@@ -90,12 +94,6 @@ const Cart = ({ active }) => {
               {count} items
             </span>
           </SheetTitle>
-          <button
-            onClick={() => setIsOpen(false)}
-            className="p-1.5 text-gray-400 hover:text-white hover:bg-[#222222] rounded-full transition-colors"
-          >
-            <X size={18} />
-          </button>
         </SheetHeader>
 
         {/* CART ITEM LIST */}
@@ -128,8 +126,8 @@ const Cart = ({ active }) => {
                       src={
                         item.img ||
                         item.image ||
+                        item.media?.[0]?.secure_url ||
                         item.media?.[0]?.url ||
-                        item.media?.[0]?.thumbnail ||
                         imgPlaceholder
                       }
                       alt={item.title || "Product Image"}
@@ -159,7 +157,7 @@ const Cart = ({ active }) => {
                       </div>
 
                       <p className="text-[#ff6b00] font-bold text-sm mt-0.5">
-                        ৳{itemPrice.toLocaleString()}
+                        €{itemPrice.toLocaleString()}
                       </p>
                     </div>
 
@@ -192,7 +190,7 @@ const Cart = ({ active }) => {
                       </div>
 
                       <span className="text-xs text-gray-400 font-medium">
-                        Total: ৳{(itemPrice * item.quantity).toLocaleString()}
+                        Total: €{(itemPrice * item.quantity).toLocaleString()}
                       </span>
                     </div>
                   </div>
@@ -210,7 +208,7 @@ const Cart = ({ active }) => {
                 Subtotal
               </span>
               <span className="text-xl font-extrabold text-white">
-                ৳{subtotal.toLocaleString()}
+                €{subtotal.toLocaleString()}
               </span>
             </div>
 
