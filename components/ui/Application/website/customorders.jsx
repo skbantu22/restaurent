@@ -115,7 +115,11 @@ export default function PremiumMealBuilder() {
   const [drinks, setDrinks] = useState([]);
   const [activeModalBase, setActiveModalBase] = useState(null);
   const [cartProducts, setCartProducts] = useState([]);
-
+  function decodeHtml(html = "") {
+    const txt = document.createElement("textarea");
+    txt.innerHTML = html;
+    return txt.value;
+  }
   const [categoryProducts, setCategoryProducts] = useState({
     beef: [],
     chicken: [],
@@ -634,6 +638,12 @@ export default function PremiumMealBuilder() {
                             <h4 className="text-white font-bold text-sm truncate">
                               {prod.name}
                             </h4>
+                            <div
+                              className="mt-1 text-[11px] text-zinc-400 leading-relaxed line-clamp-2"
+                              dangerouslySetInnerHTML={{
+                                __html: decodeHtml(prod.description || ""),
+                              }}
+                            />
                             <div className="flex items-center gap-3 mt-1">
                               <p className="text-[#7ac943] font-black text-sm">
                                 £{prod.sellingPrice || prod.price}

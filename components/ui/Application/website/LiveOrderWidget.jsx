@@ -41,8 +41,8 @@ const STATUS = {
     progress: 70,
   },
 
-  delivering: {
-    label: "On the way",
+  out_for_delivery: {
+    label: "Out For Delivery",
     color: "text-blue-600",
     bg: "bg-blue-600",
     icon: Bike,
@@ -69,6 +69,7 @@ const STATUS = {
 export default function LiveOrderWidget() {
   const dispatch = useDispatch();
   const pathname = usePathname();
+
   const { activeOrders = [], loading } = useSelector(
     (state) => state.orderStore,
   );
@@ -85,27 +86,13 @@ export default function LiveOrderWidget() {
     return () => clearInterval(timer);
   }, [dispatch]);
 
-  console.log("Redux Active Orders =", activeOrders);
-
   useEffect(() => {
-    dispatch(fetchGuestOrders());
-
-    const timer = setInterval(() => {
-      dispatch(fetchGuestOrders());
-    }, 5000);
-
-    return () => clearInterval(timer);
-  }, [dispatch]);
-
-  useEffect(() => {
-    console.log("activeOrders changed =>", activeOrders);
+    console.log("Redux Active Orders =", activeOrders);
   }, [activeOrders]);
 
-  if (loading && activeOrders.length === 0) return null;
-
-  if (activeOrders.length === 0) return null;
-
   if (pathname === "/checkout") return null;
+  if (loading && activeOrders.length === 0) return null;
+  if (activeOrders.length === 0) return null;
 
   return (
     <div className="fixed bottom-20 right-4 z-50 w-[240px] max-w-[95vw]">
@@ -113,12 +100,11 @@ export default function LiveOrderWidget() {
         <div className="flex items-center justify-between bg-black px-4 py-3 text-white">
           <div>
             <h3 className="font-bold">Live Orders ({activeOrders.length})</h3>
-
             <p className="text-xs text-zinc-300">Tracking your orders</p>
           </div>
 
           <button
-            onClick={() => setCollapsed((p) => !p)}
+            onClick={() => setCollapsed((prev) => !prev)}
             className="rounded p-1 hover:bg-white/10"
           >
             {collapsed ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
@@ -126,10 +112,9 @@ export default function LiveOrderWidget() {
         </div>
 
         {!collapsed && (
-          <div className="max-h-[420px] overflow-y-auto p-3 space-y-3">
+          <div className="max-h-[420px] overflow-y-auto space-y-3 p-3">
             {activeOrders.map((order) => {
-              const info = STATUS[order.orderStatus] || STATUS.placed;
-
+              const info = STATUS[order.orderStatus] ?? STATUS.placed;
               const Icon = info.icon;
 
               return (
@@ -139,7 +124,7 @@ export default function LiveOrderWidget() {
                 >
                   <div className="flex justify-between">
                     <div>
-                      <h4 className="font-semibold text-sm">
+                      <h4 className="text-sm font-semibold">
                         #{order.orderNumber}
                       </h4>
 
@@ -147,7 +132,6 @@ export default function LiveOrderWidget() {
                         className={`mt-2 flex items-center gap-2 text-xs ${info.color}`}
                       >
                         <Icon size={15} />
-
                         <span>{info.label}</span>
                       </div>
                     </div>

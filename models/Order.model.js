@@ -144,16 +144,19 @@ const OrderSchema = new mongoose.Schema(
           default: "",
           trim: true,
         },
+
         city: {
           type: String,
           default: "",
           trim: true,
         },
+
         postcode: {
           type: String,
           default: "",
           trim: true,
         },
+
         notes: {
           type: String,
           default: "",
@@ -209,7 +212,7 @@ const OrderSchema = new mongoose.Schema(
     orderStatus: {
       type: String,
       enum: ORDER_STATUSES,
-      default: "pending",
+      default: "placed", // ✅ fixed
       index: true,
     },
 
@@ -220,10 +223,12 @@ const OrderSchema = new mongoose.Schema(
             type: String,
             enum: ORDER_STATUSES,
           },
+
           updatedAt: {
             type: Date,
             default: Date.now,
           },
+
           updatedBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
@@ -240,6 +245,7 @@ const OrderSchema = new mongoose.Schema(
         default: "",
         trim: true,
       },
+
       discountPercentage: {
         type: Number,
         default: 0,
@@ -252,6 +258,13 @@ const OrderSchema = new mongoose.Schema(
       default: "",
       trim: true,
     },
+
+    // ✅ Soft Delete
+    deletedAt: {
+      type: Date,
+      default: null,
+      index: true,
+    },
   },
   {
     timestamps: true,
@@ -260,18 +273,19 @@ const OrderSchema = new mongoose.Schema(
   },
 );
 
-// Virtual for Floating Live Order / Active status check
+// Active Order
 OrderSchema.virtual("isActive").get(function () {
-  return !["completed", "cancelled"].includes(this.orderStatus);
+  return !["delivered", "cancelled"].includes(this.orderStatus);
 });
 
-// Compound Index for fast queries like GET /api/orders/ongoing
+// Index
 OrderSchema.index({
   userId: 1,
   orderStatus: 1,
   createdAt: -1,
 });
 
+// Generate Order Number
 OrderSchema.pre("validate", function () {
   if (!this.orderNumber) {
     this.orderNumber =
@@ -279,7 +293,7 @@ OrderSchema.pre("validate", function () {
   }
 });
 
-// Pre Save Hook for Status History & Auto Update
+// Status History
 OrderSchema.pre("save", function () {
   if (this.isNew && this.statusHistory.length === 0) {
     this.statusHistory.push({

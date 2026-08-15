@@ -1,9 +1,6 @@
 import { connectDB } from "@/lib/databaseconnection";
 import { catchError, response } from "@/lib/helperfunction";
-import { zSchema } from "@/lib/zodschema";
-import CouponModel from "@/models/Coupon.model";
-
-
+import OrderModel from "@/models/Order.model";
 
 export async function PUT(request) {
   try {
@@ -11,72 +8,62 @@ export async function PUT(request) {
 
     const payload = await request.json();
 
-    console.log("PAYLOAD:", payload); // ✅ See incoming data
+    console.log("STATUS UPDATE PAYLOAD:", payload);
 
-      const schema = zSchema.pick({
-         _id: true,
-    code: true,
-    discountPercentage: true,
-    minShoppingAmount: true,
-    validity: true,
-  })
+    const { _id, status, orderStatus } = payload;
 
-    const validate = schema.safeParse(payload);
+    const newStatus = status || orderStatus;
 
-    // ✅ Zod error show
-    if (!validate.success) {
-      console.log("ZOD ERROR:", validate.error.format());
-
-      return response(
-        false,
-        400,
-        "Validation Error",
-        validate.error.format()
-      );
+    if (!_id) {
+      return response(false, 400, "Order ID is required");
     }
 
-    const validatedData = validate.data;
-
-    console.log("VALIDATED DATA:", validatedData);
-
-    // ✅ Check _id
-    if (!validatedData?._id) {
-      console.log("ID MISSING");
-      return response(false, 400, "_id missing");
+    if (!newStatus) {
+      return response(false, 400, "Order status is required");
     }
 
-    const  getCoupon = await CouponModel.findOne({
-      deletedAt: null,
-      _id: validatedData._id,
+    const allowedStatus = [
+      "placed",
+      "pending",
+      "processing",
+      "shipped",
+      "delivered",
+      "cancelled",
+      "unverified",
+    ];
+
+    if (!allowedStatus.includes(newStatus)) {
+      return response(false, 400, "Invalid order status");
+    }
+
+    const order = await OrderModel.findById(_id);
+
+    if (!order) {
+      return response(false, 404, "Order not found");
+    }
+
+    // update status
+    order.orderStatus = newStatus;
+
+    // create history if missing
+    if (!Array.isArray(order.statusHistory)) {
+      order.statusHistory = [];
+    }
+
+    order.statusHistory.push({
+      status: newStatus,
+      updatedAt: new Date(),
     });
 
-    console.log("FOUND PRODUCT:", getCoupon);
+    await order.save();
 
-   if (!getCoupon) {
-  return response(false, 404, "coupon not found");
-}
-
-     getCoupon.code = validatedData.code
-getCoupon.discountPercentage = validatedData.discountPercentage
-getCoupon.minShoppingAmount = validatedData.minShoppingAmount
-getCoupon.validity = validatedData.validity
-
-    await getCoupon.save();
-
-    return response(true, 200, "Coupon updated successfully.");
-
+    return response(true, 200, "Order status updated successfully", {
+      orderStatus: order.orderStatus,
+      statusHistory: order.statusHistory,
+    });
   } catch (error) {
+    console.log("UPDATE STATUS ERROR:", error);
 
-    // ✅ Full error log
-    console.log("SERVER ERROR:");
-    console.log(error);
-
-    // ✅ Axios readable error
-    return response(
-      false,
-      500,
-      error.message,
-      error
-    );
+    return catchError(error);
   }
 }

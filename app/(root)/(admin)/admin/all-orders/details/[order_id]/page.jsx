@@ -22,23 +22,23 @@ const OrderDetails = ({ params }) => {
 
   // fetch order data
   const { data, loading, error } = useFetch(
-    order_id ? `/api/orders/get/${order_id}` : null
+    order_id ? `/api/orders/get/${order_id}` : null,
   );
 
   useEffect(() => {
     if (data?.success) {
       setOrderData(data.data);
-      setOrderStatus(data.data.status);
+      setOrderStatus(data.data.orderStatus);
     }
   }, [data]);
 
   const statusOptions = [
-    { label: "Pending", value: "pending" },
-    { label: "Processing", value: "processing" },
-    { label: "Shipped", value: "shipped" },
+    { label: "Placed", value: "placed" },
+    { label: "Preparing", value: "preparing" },
+    { label: "Ready", value: "ready" },
+    { label: "Out For Delivery", value: "out_for_delivery" },
     { label: "Delivered", value: "delivered" },
     { label: "Cancelled", value: "cancelled" },
-    { label: "Unverified", value: "unverified" },
   ];
 
   const breadCrumbData = [
@@ -49,23 +49,35 @@ const OrderDetails = ({ params }) => {
 
   const handleOrderStatus = async () => {
     setUpdatingStatus(true);
+
     try {
+      console.log("SEND DATA:", {
+        _id: orderData?._id,
+        status: orderStatus,
+      });
+
       const { data: response } = await axios.put("/api/orders/update-status", {
         _id: orderData?._id,
         status: orderStatus,
       });
 
-      if (!response.success) throw new Error(response.message);
+      if (!response.success) {
+        throw new Error(response.message);
+      }
 
       showToast("success", response.message);
-      setOrderData((prev) => ({ ...prev, status: orderStatus }));
+
+      setOrderData((prev) => ({
+        ...prev,
+        orderStatus: orderStatus,
+      }));
     } catch (error) {
+      console.log(error);
       showToast("error", error.message);
     } finally {
       setUpdatingStatus(false);
     }
   };
-
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-10">
       <Breadcums items={breadCrumbData} />
@@ -86,9 +98,7 @@ const OrderDetails = ({ params }) => {
       {!loading && (!data || !data.success) && (
         <div className="flex justify-center items-center py-32">
           <div className="text-center">
-            <h4 className="text-red-500 text-2xl font-bold">
-              Order Not Found
-            </h4>
+            <h4 className="text-red-500 text-2xl font-bold">Order Not Found</h4>
             <p className="text-gray-500 mt-2">
               We couldn't find the order with ID: {order_id}
             </p>
@@ -114,7 +124,7 @@ const OrderDetails = ({ params }) => {
               <b>Transaction Id:</b> {orderData.payment_id || "N/A"}
             </p>
             <p className="capitalize">
-              <b>Status:</b> {orderData.status}
+              <b>Status:</b> {orderData.orderStatus}
             </p>
           </div>
 
@@ -131,48 +141,55 @@ const OrderDetails = ({ params }) => {
               </thead>
               <tbody>
                 {orderData.items?.map((item) => (
-                  <tr key={item.variantId?._id} className="border-b">
+                  <tr key={item.productId?._id} className="border-b">
                     <td className="p-3">
                       <div className="flex flex-col sm:flex-row gap-3 sm:gap-5 items-start sm:items-center">
                         <Image
                           src={
-                            item.variantId?.media?.[0]?.secure_url ||
+                            item.image ||
+                            item.productId?.media?.[0]?.secure_url ||
                             placeholderImg.src
                           }
                           width={60}
                           height={60}
-                          alt={item.productId?.name || "product"}
+                          alt={item.name || "product"}
                           className="rounded object-cover"
                         />
+
                         <div>
                           <Link
                             href={WEBSITE_PRODUCT_DETAILS(item.productId?.slug)}
                             className="font-medium line-clamp-1 hover:text-primary"
                           >
-                            {item.productId?.name}
+                            {item.name || item.productId?.name}
                           </Link>
-                          <p className="text-xs text-gray-500">
-                            Color: {item.color}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            Size: {item.size}
-                          </p>
+
+                          {item.color && (
+                            <p className="text-xs text-gray-500">
+                              Color: {item.color}
+                            </p>
+                          )}
+
+                          {item.size && (
+                            <p className="text-xs text-gray-500">
+                              Size: {item.size}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </td>
                     <td className="text-center p-3 text-sm">
-                      {item.sellingPrice?.toLocaleString("en-BD", {
+                      {item.price?.toLocaleString("en-GB", {
                         style: "currency",
-                        currency: "BDT",
-                        minimumFractionDigits: 0,
+                        currency: "GBP",
                       })}
                     </td>
                     <td className="text-center p-3">{item.quantity}</td>
                     <td className="text-center p-3 text-sm">
-                      {(item.quantity * item.sellingPrice).toLocaleString(
-                        "en-BD",
-                        { style: "currency", currency: "BDT" }
-                      )}
+                      {(item.quantity * item.price).toLocaleString("en-GB", {
+                        style: "currency",
+                        currency: "GBP",
+                      })}
                     </td>
                   </tr>
                 ))}
@@ -185,7 +202,7 @@ const OrderDetails = ({ params }) => {
                   <td className="text-center p-3">
                     {orderData.subtotal?.toLocaleString("en-BD", {
                       style: "currency",
-                      currency: "BDT",
+                      currency: "GBP",
                     })}
                   </td>
                 </tr>
@@ -196,7 +213,7 @@ const OrderDetails = ({ params }) => {
                   <td className="text-center p-3">
                     {orderData.shippingFee?.toLocaleString("en-BD", {
                       style: "currency",
-                      currency: "BDT",
+                      currency: "GBP",
                     })}
                   </td>
                 </tr>
@@ -206,9 +223,10 @@ const OrderDetails = ({ params }) => {
                       Discount:
                     </td>
                     <td className="text-center p-3">
-                      -{orderData.discount?.toLocaleString("en-BD", {
+                      -
+                      {orderData.discount?.toLocaleString("en-GB", {
                         style: "currency",
-                        currency: "BDT",
+                        currency: "GBP",
                       })}
                     </td>
                   </tr>
@@ -218,9 +236,9 @@ const OrderDetails = ({ params }) => {
                     Total:
                   </td>
                   <td className="text-center p-3 text-lg">
-                    {orderData.total?.toLocaleString("en-BD", {
+                    {orderData.total?.toLocaleString("en-GB", {
                       style: "currency",
-                      currency: "BDT",
+                      currency: "GBP",
                     })}
                   </td>
                 </tr>

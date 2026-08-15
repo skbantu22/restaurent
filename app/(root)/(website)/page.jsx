@@ -36,12 +36,15 @@ const Home = () => {
       {/* ✅ LCP element should load first */}
 
       <BurgerHero />
-
-      <MostLovedMenu />
+      <section id="Order-now">
+        <MostLovedMenu />
+      </section>
 
       <BurgerBanner />
 
-      <PremiumMealBuilder />
+      <section id="Order-now2">
+        <PremiumMealBuilder />
+      </section>
 
       <WhySmashed />
 

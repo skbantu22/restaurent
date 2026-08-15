@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/databaseconnection";
 import ProductModel from "@/models/Product.model";
 import CategoryModel from "@/models/category.model";
-
+import MediaModel from "@/models/Media.model";
 const CATEGORY_MAP = {
   beef: ["smash-burgers", "stack-burger"],
   chicken: ["chicken-smashed"],

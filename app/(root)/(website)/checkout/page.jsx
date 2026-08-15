@@ -67,6 +67,7 @@ export default function CheckoutPage() {
   const cartStore = useSelector((store) => store.cartStore);
   const authStore = useSelector((store) => store.authStore);
 
+  const isAdmin = authStore?.auth?.data?.user?.role === "admin";
   const products = Array.isArray(cartStore?.products) ? cartStore.products : [];
 
   const [placingOrder, setPlacingOrder] = useState(false);
@@ -553,9 +554,9 @@ export default function CheckoutPage() {
               </h3>
               {orderType === "delivery" ? (
                 <div className="p-3 bg-white outline outline-1 outline-zinc-900 rounded-none text-[11px] uppercase font-bold text-center text-zinc-900 tracking-wider">
-                  Card Payment (Online) — Cash is disabled for delivery
+                  Card Payment (Online)
                 </div>
-              ) : (
+              ) : isAdmin ? (
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
@@ -568,6 +569,7 @@ export default function CheckoutPage() {
                   >
                     Card Payment
                   </button>
+
                   <button
                     type="button"
                     onClick={() => setPaymentMethod("cod")}
@@ -579,6 +581,10 @@ export default function CheckoutPage() {
                   >
                     Cash
                   </button>
+                </div>
+              ) : (
+                <div className="p-3 bg-white outline outline-1 outline-zinc-900 rounded-none text-[11px] uppercase font-bold text-center text-zinc-900 tracking-wider">
+                  Card Payment Only
                 </div>
               )}
             </div>

@@ -1,35 +1,45 @@
-import { isAuthenticated } from "@/lib/auth.server";
 import { connectDB } from "@/lib/databaseconnection";
 import { catchError, response } from "@/lib/helperfunction";
 import OrderModel from "@/models/Order.model";
 
 export async function PUT(request) {
   try {
-//     const auth = await isAuthenticated('admin')
-// if (!auth.isAuth) {
-//   return response(false, 403, 'Unauthorized.')
-// }
-    await connectDB()
- const { _id, status } = await request.json()
+    await connectDB();
 
-if (!_id || !status) {
-  return response(false, 400, 'Order id and status are required.')
-}
+    const payload = await request.json();
 
-const orderData = await OrderModel.findById(_id)
+    console.log("UPDATE STATUS PAYLOAD:", payload);
 
-if (!orderData) {
-  return response(false, 404, 'Order not found.')
-}
+    const { _id, status } = payload;
 
-orderData.status = status
-await orderData.save()
+    if (!_id || !status) {
+      return response(false, 400, "Order id and status are required.");
+    }
 
-return response(true, 200, 'Order status updated successfully.', orderData)
-  }
+    const orderData = await OrderModel.findById(_id);
 
+    if (!orderData) {
+      return response(false, 404, "Order not found.");
+    }
 
-   catch (error) {
-    return catchError(error)
+    // Check same status
+    if (orderData.orderStatus === status) {
+      return response(false, 400, "Order already has this status.");
+    }
+
+    // Update status
+    orderData.orderStatus = status;
+
+    await orderData.save();
+
+    return response(true, 200, "Order status updated successfully.", {
+      _id: orderData._id,
+      orderStatus: orderData.orderStatus,
+      statusHistory: orderData.statusHistory,
+    });
+  } catch (error) {
+    console.log("STATUS UPDATE ERROR:", error);
+
+    return catchError(error);
   }
 }

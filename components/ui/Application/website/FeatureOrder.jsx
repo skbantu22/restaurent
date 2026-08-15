@@ -42,12 +42,7 @@ export default function MostLovedMenu() {
   } = useQuery({
     queryKey: ["most-loved-products"],
     queryFn: async () => {
-      console.log("Query running...");
-
       const res = await axios.get("/api/product?isMostLoved=true&limit=10");
-      console.log(res);
-      console.log(res.data.data);
-
       return res.data;
     },
   });
@@ -90,7 +85,8 @@ export default function MostLovedMenu() {
 
   if (isLoading) {
     return (
-      <section className="w-full bg-[#0c0c0c] px-3 py-8 sm:px-5 lg:px-8">
+      // 🟢 এখানে px মোবাইল এবং পিসির জন্য অ্যাড করা হয়েছে
+      <section className="w-full bg-[#0c0c0c] px-4 py-8 sm:px-6 lg:px-16">
         <div className="mx-auto w-full max-w-[1700px]">
           <div className="mb-8 flex items-center justify-between border-b border-zinc-800 pb-4">
             <h2 className="text-xl md:text-2xl font-extrabold uppercase tracking-wider text-zinc-100">
@@ -115,7 +111,8 @@ export default function MostLovedMenu() {
   }
 
   return (
-    <section className="w-full bg-[#0c0c0c] px-3 py-8 sm:px-5 lg:px-8">
+    // 🟢 মূল সেকশনে রেসপনসিভ প্যাডিং (px-4 sm:px-8 lg:px-16) দেওয়া হয়েছে যাতে পিসিতে ডান-বামে গ্যাপ থাকে
+    <section className="w-full bg-[#0c0c0c] px-4 py-8 sm:px-8 lg:px-16">
       <div className="mx-auto w-full max-w-[1700px]">
         <div className="mb-8 flex items-center justify-between border-b border-zinc-800 pb-4">
           <div className="flex items-center gap-2">
@@ -128,9 +125,6 @@ export default function MostLovedMenu() {
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {products.map((item) => {
-            // 🔍 Check your browser console to verify if calories exists in item
-            console.log(`Product: ${item.name} | Calories:`, item.calories);
-
             const imageUrl =
               item.media && item.media.length > 0
                 ? item.media[0]?.url ||
@@ -140,8 +134,6 @@ export default function MostLovedMenu() {
 
             const cleanDescription = getPlainText(item.description);
             const added = isProductInCart(item._id);
-
-            // 🟢 Extract Calories with Fallback
             const caloriesValue = item.calories ?? item.cal ?? null;
 
             return (
@@ -172,7 +164,6 @@ export default function MostLovedMenu() {
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
 
-                    {/* 🟢 CALORIES BADGE - Always shows if available */}
                     {caloriesValue && (
                       <div className="absolute right-2 top-2 z-20 flex items-center gap-1 rounded-full bg-black/80 backdrop-blur-md px-2 py-1 text-[10px] font-semibold text-amber-400 border border-zinc-800 shadow-md">
                         <Flame size={12} className="text-orange-400 shrink-0" />
@@ -220,7 +211,7 @@ export default function MostLovedMenu() {
                       </>
                     ) : (
                       <>
-                        <Plus size={14} />
+                        <Plus size1={14} />
                         <span>ADD</span>
                       </>
                     )}

@@ -1,5 +1,14 @@
 "use client";
+const scrollToSection = (id) => {
+  const element = document.getElementById(id);
 
+  if (element) {
+    element.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }
+};
 export default function BurgerHero() {
   return (
     <section className="relative bg-black lg:min-h-[500px] lg:h-[500px] flex items-center px-4 sm:px-8 md:px-12 lg:px-20 overflow-hidden lg:py-0">
@@ -81,11 +90,17 @@ export default function BurgerHero() {
 
           {/* Action Buttons Group */}
           <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 sm:gap-4 mt-6 sm:mt-8 w-full sm:w-auto">
-            <button className="w-auto px-5 py-2.5 sm:px-8 sm:py-4 bg-[#ff5a00] hover:bg-[#e04f00] text-white font-extrabold rounded-none text-xs md:text-sm tracking-wider flex items-center justify-center gap-2 transition-colors uppercase shadow-[0_4px_20px_rgba(255,90,0,0.2)]">
+            <button
+              onClick={() => scrollToSection("Order-now")}
+              className="w-auto px-5 py-2.5 sm:px-8 sm:py-4 bg-[#ff5a00] hover:bg-[#e04f00] text-white font-extrabold rounded-none text-xs md:text-sm tracking-wider flex items-center justify-center gap-2 transition-colors uppercase shadow-[0_4px_20px_rgba(255,90,0,0.2)]"
+            >
               ORDER NOW <span>→</span>
             </button>
 
-            <button className="w-full sm:w-auto px-6 py-3.5 sm:py-4 border border-[#262626] sm:border-[#333333] hover:border-gray-500 text-white font-extrabold rounded-none text-xs md:text-sm tracking-wider flex items-center justify-center gap-2 bg-white/[0.02] sm:bg-black/40 transition-colors uppercase">
+            <button
+              onClick={() => scrollToSection("Order-now2")}
+              className="w-full sm:w-auto px-6 py-3.5 sm:py-4 border border-[#262626] sm:border-[#333333] hover:border-gray-500 text-white font-extrabold rounded-none text-xs md:text-sm tracking-wider flex items-center justify-center gap-2 bg-white/[0.02] sm:bg-black/40 transition-colors uppercase"
+            >
               Build Your Meal
               <svg
                 className="w-4 h-4 text-gray-400"
