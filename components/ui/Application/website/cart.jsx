@@ -157,7 +157,7 @@ const Cart = ({ active }) => {
                       </div>
 
                       <p className="text-[#ff6b00] font-bold text-sm mt-0.5">
-                        €{itemPrice.toLocaleString()}
+                        £{itemPrice.toLocaleString()}
                       </p>
                     </div>
 
@@ -208,7 +208,7 @@ const Cart = ({ active }) => {
                 Subtotal
               </span>
               <span className="text-xl font-extrabold text-white">
-                €{subtotal.toLocaleString()}
+                £{subtotal.toLocaleString()}
               </span>
             </div>
 

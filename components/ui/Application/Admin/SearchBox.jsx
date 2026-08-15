@@ -175,7 +175,7 @@ const SearchBox = ({ onSelect }) => {
                     </span>
                     {p.sellingPrice && (
                       <span className="text-[10px] font-mono text-zinc-500 italic">
-                        ৳{p.sellingPrice}
+                        £{p.sellingPrice}
                       </span>
                     )}
                   </div>

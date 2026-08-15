@@ -63,7 +63,7 @@ Color: ${selectedColor || "N/A"}
 Size: ${selectedSize || "N/A"}
 Quantity: ${quantity}
 
-Price: ৳${displaySellingPrice}
+Price: ৳£{displaySellingPrice}
 
 Product Link:
 ${window.location.href}

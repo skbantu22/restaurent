@@ -42,7 +42,7 @@ export default function Appsidebar() {
       <SidebarHeader className="border-b h-14 p-0">
         <div className="flex justify-between items-center px-4">
           <h1 className="text-xl font-bold tracking-wide text-primary">
-            Priangon
+            smashedldn.uk
           </h1>
 
           <Button
@@ -85,7 +85,10 @@ export default function Appsidebar() {
                         </SidebarMenuButton>
                       </CollapsibleTrigger>
                     ) : (
-                      <SidebarMenuButton asChild className="flex items-center gap-2">
+                      <SidebarMenuButton
+                        asChild
+                        className="flex items-center gap-2"
+                      >
                         <Link href={href} onClick={handleNav}>
                           <menu.icon />
                           <span>{menu.title}</span>
