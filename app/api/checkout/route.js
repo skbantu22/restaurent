@@ -7,6 +7,7 @@ import ProductModel from "@/models/Product.model";
 import CouponModel from "@/models/Coupon.model";
 // Explicit import to register the Media schema in Mongoose runtime
 import MediaModel from "@/models/Media.model";
+import sendTelegramOrder from "@/lib/sendTelegramOrder";
 
 // Initialize Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -194,6 +195,9 @@ export async function POST(req) {
 
     const order = orderDocs[0];
     const orderNumber = order.orderNumber;
+
+    // Send Telegram notification
+    await sendTelegramOrder(order);
 
     // যদি পেমেন্ট মেথড ক্যাশ (COD/Pickup Cash) হয়, তবে সরাসরি সাকসেস পেজে রিডাইরেক্ট করার রেসপন্স পাঠাবে
     if (!isStripe) {

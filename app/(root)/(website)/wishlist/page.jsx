@@ -213,7 +213,7 @@ const Wishlist = () => {
                     {product?.name}
                   </p>
                   <p className="text-green-600 font-semibold mt-1">
-                    ৳{product?.sellingPrice?.toLocaleString("en-BD")}
+                    £{product?.sellingPrice?.toLocaleString("en-BD")}
                   </p>
                 </div>
 

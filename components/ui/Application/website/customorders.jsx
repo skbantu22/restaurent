@@ -90,7 +90,7 @@ const DRINK_OPTIONS = [
     id: "coke",
     label: "Coke Zero",
     price: 1.5,
-    img: "/assets/Custom/water.png",
+    img: "/assets/Custom/code.png",
   },
   { id: "water", label: "Water", price: 1.0, img: "/assets/Custom/water.png" },
   {
@@ -361,7 +361,7 @@ export default function PremiumMealBuilder() {
                     }`}
                   >
                     <div
-                      className={`relative w-20 h-28 flex items-center justify-center transition-all duration-300 rounded-none outline outline-1 ${
+                      className={`relative w-20 h-32 lg:w-24 lg:h-32 flex items-center justify-center transition-all duration-300 rounded-none outline outline-1 ${
                         isSelected
                           ? "bg-[#7ac943]/10 outline-[#7ac943] shadow-[0_0_20px_rgba(122,201,67,0.3)]"
                           : "outline-white/5"
@@ -375,13 +375,13 @@ export default function PremiumMealBuilder() {
                       />
                     </div>
                     <span
-                      className={`text-[11px] font-black uppercase leading-none tracking-wider text-center ${
+                      className={`text-[11px] lg:text-base font-black uppercase leading-none tracking-wider text-center ${
                         isSelected ? "text-[#7ac943]" : "text-white"
                       }`}
                     >
                       {item.label}
                     </span>
-                    <span className="text-[10px] text-orange-500 font-semibold">
+                    <span className="text-[10px] lg:text-base text-orange-500 font-semibold">
                       +£{item.price.toFixed(2)}
                     </span>
                   </button>
@@ -417,7 +417,7 @@ export default function PremiumMealBuilder() {
                     }`}
                   >
                     <div
-                      className={`relative w-16 h-16 flex items-center justify-center transition-all duration-300 ${
+                      className={`relative w-16 h-16 lg:w-18 lg:h-20 flex items-center justify-center transition-all duration-300 ${
                         active
                           ? "drop-shadow-[0_0_18px_rgba(122,201,67,0.7)]"
                           : ""
@@ -433,13 +433,13 @@ export default function PremiumMealBuilder() {
                     </div>
                     <div className="flex flex-col items-center gap-0.5">
                       <span
-                        className={`text-[10px] font-black uppercase tracking-wider text-center leading-tight ${
+                        className={`text-[10px] lg:text-base font-black uppercase tracking-wider text-center leading-tight ${
                           active ? "text-[#7ac943]" : "text-white"
                         }`}
                       >
                         {item.label}
                       </span>
-                      <span className="text-[10px] text-orange-500 font-semibold">
+                      <span className="text-[10px] lg:text-base text-orange-500 font-semibold">
                         +£{item.price.toFixed(2)}
                       </span>
                     </div>
@@ -645,7 +645,7 @@ export default function PremiumMealBuilder() {
                               }}
                             />
                             <div className="flex items-center gap-3 mt-1">
-                              <p className="text-[#7ac943] font-black text-sm">
+                              <p className="text-[#7ac943] font-black text-sm lg:text-lg">
                                 £{prod.sellingPrice || prod.price}
                               </p>
                               {prod.calories && (

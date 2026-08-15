@@ -79,7 +79,7 @@ export default function Login() {
       } else {
         registerResponse.data.role === "admin"
           ? router.push(ADMIN_DASHBOARD)
-          : router.push("/admin/pos");
+          : router.push("/admin/dashboard");
       }
 
       form.reset();
