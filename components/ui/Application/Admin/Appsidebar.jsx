@@ -42,7 +42,7 @@ export default function Appsidebar() {
       <SidebarHeader className="border-b h-14 p-0">
         <div className="flex justify-between items-center px-4">
           <h1 className="text-xl font-bold tracking-wide text-primary">
-            smashedldn.uk
+            Smashedldn.uk
           </h1>
 
           <Button
