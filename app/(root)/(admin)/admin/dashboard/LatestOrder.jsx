@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import {
   Table,
@@ -7,32 +7,32 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
 
-import useFetch from "@/hooks/useFetch"
-import { useEffect, useState } from "react"
-import Image from "next/image"
-import notFound from '@/public/assets/not-found.png'
-import { statusBadge } from "@/lib/helperfunction"
+import useFetch from "@/hooks/useFetch";
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import notFound from "@/public/assets/not-found.png";
+import { statusBadge } from "@/lib/helperfunction";
 
 const LatestOrder = () => {
-  const [latestOrder, setLatestOrder] = useState([])
-  const { data, loading } = useFetch('/api/dashboard/admin/latest-order')
+  const [latestOrder, setLatestOrder] = useState([]);
+  const { data, loading } = useFetch("/api/dashboard/admin/latest-order");
 
-  console.log(data)
+  console.log(data);
 
   useEffect(() => {
     if (data?.success) {
-      setLatestOrder(data.data)
+      setLatestOrder(data.data);
     }
-  }, [data])
+  }, [data]);
 
   if (loading)
     return (
       <div className="h-full w-full flex justify-center items-center">
         Loading...
       </div>
-    )
+    );
 
   if (!latestOrder.length)
     return (
@@ -40,7 +40,7 @@ const LatestOrder = () => {
         <Image src={notFound} alt="No order" width={120} />
         <p className="text-gray-500 mt-2">No latest orders found</p>
       </div>
-    )
+    );
 
   return (
     <Table>
@@ -57,7 +57,6 @@ const LatestOrder = () => {
       <TableBody>
         {latestOrder.map((order) => (
           <TableRow key={order._id} className="hover:bg-muted/50">
-            
             <TableCell>{order.orderNumber}</TableCell>
 
             <TableCell>
@@ -68,13 +67,12 @@ const LatestOrder = () => {
 
             <TableCell>{statusBadge(order.status)}</TableCell>
 
-            <TableCell>৳{order.total}</TableCell>
-
+            <TableCell>£{order.total}</TableCell>
           </TableRow>
         ))}
       </TableBody>
     </Table>
-  )
-}
+  );
+};
 
-export default LatestOrder
+export default LatestOrder;
