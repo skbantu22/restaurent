@@ -35,9 +35,15 @@ const getValidImageUrl = (mediaArray) => {
 };
 
 // 🟢 Strip HTML tags for clean card description preview
-const stripHtml = (htmlString) => {
+const stripHtml = (htmlString = "") => {
   if (!htmlString) return "";
-  return htmlString.replace(/<[^>]*>?/gm, "").trim();
+
+  // Decode HTML entities like &lt;p&gt; → <p>
+  const textarea = document.createElement("textarea");
+  textarea.innerHTML = htmlString;
+
+  // Remove HTML tags
+  return textarea.value.replace(/<[^>]*>/g, "").trim();
 };
 
 export default function CategoryGrid() {
@@ -260,6 +266,11 @@ export default function CategoryGrid() {
                           <h4 className="text-white font-bold text-sm sm:text-base line-clamp-1 mb-1">
                             {prod.name}
                           </h4>
+                          {prod.description && (
+                            <p className="text-zinc-400 text-[11px] sm:text-xs leading-relaxed line-clamp-2 mb-2">
+                              {stripHtml(prod.description)}
+                            </p>
+                          )}
 
                           <div className="flex items-center gap-3 flex-wrap">
                             <p className="text-orange-500 font-black text-sm sm:text-base">

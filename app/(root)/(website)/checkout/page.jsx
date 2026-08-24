@@ -288,7 +288,16 @@ export default function CheckoutPage() {
         },
         items: products.map((item) => ({
           productId: item.productId || item._id,
+          name: item.name || item.title || "",
+          price: Number(item.price ?? item.sellingPrice ?? 0),
+          sellingPrice: Number(item.sellingPrice ?? item.price ?? 0),
           quantity: Number(item.quantity || 1),
+          image:
+            item.image ||
+            item.img ||
+            item.thumbnail ||
+            item.media?.[0]?.secure_url ||
+            "",
           notes: item.notes || "",
         })),
         coupon: appliedCoupon

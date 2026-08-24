@@ -14,6 +14,23 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 // Fixed Shipping rate in GBP (£) for all orders
 const FIXED_SHIPPING_FEE = 3.99;
+const getAbsoluteImageUrl = (image, origin) => {
+  if (!image || typeof image !== "string") return "";
+
+  const value = image.trim();
+
+  try {
+    const url = new URL(value, origin);
+
+    if (url.protocol === "http:" || url.protocol === "https:") {
+      return url.toString();
+    }
+
+    return "";
+  } catch {
+    return "";
+  }
+};
 
 export async function POST(req) {
   try {
@@ -62,7 +79,19 @@ export async function POST(req) {
     // ==============================
     // FETCH PRODUCTS
     // ==============================
-    const productIds = items.map((i) => i.productId).filter(Boolean);
+    // ==============================
+    // FETCH REAL PRODUCTS ONLY
+    // ==============================
+
+    const productIds = items
+      .map((item) => item.productId)
+      .filter(
+        (id) =>
+          id &&
+          !String(id).startsWith("extra-") &&
+          !String(id).startsWith("drink-") &&
+          mongoose.Types.ObjectId.isValid(id),
+      );
 
     const dbProducts = await ProductModel.find({
       _id: { $in: productIds },
@@ -71,13 +100,53 @@ export async function POST(req) {
       .lean();
 
     const productMap = new Map(dbProducts.map((p) => [String(p._id), p]));
-
+    const origin =
+      req.headers.get("origin") ||
+      process.env.NEXT_PUBLIC_APP_URL ||
+      "http://localhost:3000";
     // ==============================
     // CLEAN & VALIDATE ITEMS
     // ==============================
     const clean = items
       .map((it) => {
-        const id = String(it.productId);
+        const id = String(it.productId || "");
+
+        // ==============================
+        // CUSTOM EXTRA / DRINK
+        // ==============================
+        // ==============================
+        // CUSTOM EXTRA / DRINK
+        // ==============================
+        if (id.startsWith("extra-") || id.startsWith("drink-")) {
+          const itemType = id.startsWith("extra-") ? "extra" : "drink";
+
+          // Frontend থেকে name না এলে productId থেকে name তৈরি করবে
+          const fallbackName = id
+            .replace(/^extra-/, "")
+            .replace(/^drink-/, "")
+            .replace(/-/g, " ")
+            .replace(/\b\w/g, (char) => char.toUpperCase());
+
+          const itemName = it.name || it.title || it.label || fallbackName;
+
+          const itemPrice = Number(
+            it.sellingPrice ?? it.price ?? it.amount ?? 0,
+          );
+
+          return {
+            itemType,
+            customId: id,
+            name: itemName,
+            image: getAbsoluteImageUrl(it.image, origin),
+            price: itemPrice,
+            quantity: Math.max(1, Number(it.quantity || 1)),
+            notes: it.notes || "",
+          };
+        }
+
+        // ==============================
+        // NORMAL PRODUCT
+        // ==============================
         const product = productMap.get(id);
 
         if (!product) return null;
@@ -85,6 +154,7 @@ export async function POST(req) {
         const unitPrice = Number(product.sellingPrice || product.price || 0);
 
         return {
+          itemType: "product",
           productId: product._id,
           name: product.name,
           image: product.media?.[0]?.secure_url || "",
@@ -94,6 +164,21 @@ export async function POST(req) {
         };
       })
       .filter(Boolean);
+    console.log("========== CHECKOUT DEBUG ==========");
+    console.log("ORIGIN:", origin);
+    console.log("RAW ITEMS:", JSON.stringify(items, null, 2));
+    console.log("CLEAN ITEMS:", JSON.stringify(clean, null, 2));
+
+    clean.forEach((item, index) => {
+      console.log(`ITEM ${index}:`, {
+        name: item.name,
+        itemType: item.itemType,
+        customId: item.customId,
+        image: item.image,
+        price: item.price,
+        quantity: item.quantity,
+      });
+    });
 
     if (clean.length === 0) {
       return NextResponse.json(
@@ -211,22 +296,35 @@ export async function POST(req) {
     // ==============================
     // CREATE STRIPE SESSION (GBP £)
     // ==============================
-    const origin =
-      req.headers.get("origin") ||
-      process.env.NEXT_PUBLIC_APP_URL ||
-      "http://localhost:3000";
 
-    const lineItems = clean.map((item) => ({
-      price_data: {
-        currency: "gbp", // Set currency to GBP
-        product_data: {
-          name: item.name,
-          images: item.image ? [item.image] : [],
+    const lineItems = clean.map((item) => {
+      const productData = {
+        name: item.name,
+      };
+
+      if (item.image && typeof item.image === "string") {
+        let imageUrl = item.image;
+
+        // Relative image URL হলে absolute URL বানাবে
+        if (imageUrl.startsWith("/")) {
+          imageUrl = `${origin}${imageUrl}`;
+        }
+
+        // Stripe শুধুমাত্র absolute http/https URL accept করে
+        if (/^https?:\/\//i.test(imageUrl)) {
+          productData.images = [imageUrl];
+        }
+      }
+
+      return {
+        price_data: {
+          currency: "gbp",
+          product_data: productData,
+          unit_amount: Math.round(item.price * 100),
         },
-        unit_amount: Math.round(item.price * 100), // convert to pence
-      },
-      quantity: item.quantity,
-    }));
+        quantity: item.quantity,
+      };
+    });
 
     if (deliveryFee > 0) {
       lineItems.push({

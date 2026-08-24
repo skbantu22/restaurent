@@ -14,10 +14,26 @@ const PAYMENT_STATUSES = ["pending", "paid", "failed", "cancelled", "refunded"];
 
 const OrderItemSchema = new mongoose.Schema(
   {
+    // Real MongoDB product
     productId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Product",
+      default: null,
+    },
+
+    // Item type
+    itemType: {
+      type: String,
+      enum: ["product", "extra", "drink"],
+      default: "product",
       required: true,
+    },
+
+    // Used for extra/drink items
+    customId: {
+      type: String,
+      default: "",
+      trim: true,
     },
 
     name: {

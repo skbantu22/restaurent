@@ -5,7 +5,7 @@ import CategoryModel from "@/models/category.model";
 import MediaModel from "@/models/Media.model";
 const CATEGORY_MAP = {
   beef: ["smash-burgers", "stack-burger"],
-  chicken: ["chicken-smashed"],
+  chicken: ["chicken-burgers"],
   plant: ["plant-based"],
 };
 

@@ -4,8 +4,8 @@ import React, { useMemo, useState, useEffect } from "react";
 import Image from "next/image";
 import { useDispatch } from "react-redux";
 import { addIntoCart } from "@/store/reducer/cartReducer";
-import { toast } from "sonner";
 import { X, Plus, Loader2, Flame, Check } from "lucide-react";
+import { showToast } from "@/lib/showToast";
 
 // ---------------- ICONS (Enlarged) ----------------
 const ICONS = {
@@ -90,7 +90,7 @@ const DRINK_OPTIONS = [
     id: "coke",
     label: "Coke Zero",
     price: 1.5,
-    img: "/assets/Custom/code.png",
+    img: "/assets/Custom/code2.png",
   },
   { id: "water", label: "Water", price: 1.0, img: "/assets/Custom/water.png" },
   {
@@ -212,13 +212,13 @@ export default function PremiumMealBuilder() {
           (item) => String(item.productId || item._id) !== String(prodId),
         ),
       );
-      toast.info(`Removed ${prod.name} from selection`);
+      showToast("info", `Removed ${prod.name} from selection`);
     } else {
       setCartProducts((prev) => [
         ...prev,
         { ...prod, productId: prodId, quantity: 1 },
       ]);
-      toast.success(`Added ${prod.name} to selection`);
+      showToast("success", `Added ${prod.name} to selection`);
     }
   };
 
@@ -264,12 +264,12 @@ export default function PremiumMealBuilder() {
       );
     });
 
-    toast.success("Items added to cart successfully!");
+    showToast("success", "Items added to cart successfully!");
   };
 
   const clearSelection = () => {
     if (!hasSelection) {
-      toast.error("Nothing to clear");
+      showToast("error", "Nothing to clear");
       return;
     }
 
