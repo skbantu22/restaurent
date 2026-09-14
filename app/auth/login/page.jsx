@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useDispatch } from "react-redux";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
+import { motion } from "framer-motion";
 
 // UI Components - Ensure these paths match your project structure
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -77,14 +78,18 @@ export default function Login() {
       if (searchParams.has("callback")) {
         router.push(searchParams.get("callback"));
       } else {
-        registerResponse.data.role === "admin"
-          ? router.push(ADMIN_DASHBOARD)
-          : router.push("/admin/dashboard");
+        // Staff/admin accounts land in the admin panel; everyone else
+        // (customers) goes to their own account page — this previously
+        // sent every role to /admin/dashboard regardless.
+        router.push(
+          registerResponse.data.role === "admin"
+            ? ADMIN_DASHBOARD
+            : WEBSITE_USER_DASHBOARD,
+        );
       }
 
       form.reset();
       showToast("success", registerResponse.message);
-      // router.push("/dashboard");
     } catch (error) {
       showToast("error", error.message);
       setServerMsg(error.message);
@@ -94,13 +99,20 @@ export default function Login() {
   };
 
   return (
-    <div className=" w-full flex items-start justify-center bg-slate-50/50 p-4 ">
-      <Card className="w-full max-w-[400px] shadow-lg border-slate-200">
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="w-full flex items-center justify-center"
+    >
+      <Card className="w-full max-w-[400px] border-[#262626] bg-[#0d0d0d] shadow-2xl shadow-black/50">
         <CardHeader className="pt-8 pb-4">
           <div className="text-center space-y-1">
-            <h1 className="text-2xl font-bold tracking-tight">Welcome back</h1>
-            <p className="text-sm text-muted-foreground">
-              Enter your credentials to access your account
+            <h1 className="text-2xl font-black uppercase tracking-wide text-white">
+              Welcome Back
+            </h1>
+            <p className="text-sm text-zinc-400">
+              Sign in to order, track, and save your favourites
             </p>
           </div>
         </CardHeader>
@@ -124,14 +136,14 @@ export default function Login() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs uppercase font-bold text-muted-foreground tracking-wider">
+                    <FormLabel className="text-xs uppercase font-bold text-zinc-400 tracking-wider">
                       Email Address
                     </FormLabel>
                     <FormControl>
                       <Input
                         placeholder="name@company.com"
                         {...field}
-                        className="h-11 focus-visible:ring-primary/20"
+                        className="h-11 bg-black/40 border-[#262626] text-white placeholder:text-zinc-600 focus-visible:ring-[#ff6b00]/30 focus-visible:border-[#ff6b00]/50"
                       />
                     </FormControl>
                     <FormMessage className="text-[11px]" />
@@ -144,7 +156,7 @@ export default function Login() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs uppercase font-bold text-muted-foreground tracking-wider">
+                    <FormLabel className="text-xs uppercase font-bold text-zinc-400 tracking-wider">
                       Password
                     </FormLabel>
                     <div className="relative">
@@ -153,11 +165,11 @@ export default function Login() {
                           type={isTypePassword ? "password" : "text"}
                           placeholder="••••••••"
                           {...field}
-                          className="h-11 pr-10 focus-visible:ring-primary/20"
+                          className="h-11 pr-10 bg-black/40 border-[#262626] text-white placeholder:text-zinc-600 focus-visible:ring-[#ff6b00]/30 focus-visible:border-[#ff6b00]/50"
                         />
                       </FormControl>
                       <button
-                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 transition-colors"
+                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-500 hover:text-[#ff6b00] transition-colors"
                         onClick={() => setisTypepassword(!isTypePassword)}
                         type="button"
                       >
@@ -173,7 +185,7 @@ export default function Login() {
                       <Link
                         href="/auth/reset-password"
                         name="password"
-                        className="text-xs font-medium text-primary hover:underline"
+                        className="text-xs font-medium text-[#ff6b00] hover:underline"
                       >
                         Forgot password?
                       </Link>
@@ -184,28 +196,28 @@ export default function Login() {
 
               <ButtonLoading
                 type="submit"
-                className="w-full h-11 text-sm font-semibold transition-all hover:opacity-90"
+                className="w-full h-11 text-sm font-bold uppercase tracking-wide bg-[#ff6b00] hover:bg-[#ff7e29] text-white transition-all"
                 loading={loading}
                 text="Sign In"
               />
 
               <div className="relative my-6">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-slate-200" />
+                  <span className="w-full border-t border-[#262626]" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-muted-foreground">
+                  <span className="bg-[#0d0d0d] px-2 text-zinc-500">
                     New here?
                   </span>
                 </div>
               </div>
 
               <div className="text-center">
-                <p className="text-sm text-muted-foreground">
-                  Don't have an account?{" "}
+                <p className="text-sm text-zinc-400">
+                  Don&apos;t have an account?{" "}
                   <Link
                     href={WEBSITE_REGISTER}
-                    className="font-semibold text-primary hover:underline"
+                    className="font-semibold text-[#ff6b00] hover:underline"
                   >
                     Create Account
                   </Link>
@@ -215,6 +227,6 @@ export default function Login() {
           </Form>
         </CardContent>
       </Card>
-    </div>
+    </motion.div>
   );
 }

@@ -43,10 +43,10 @@ export async function GET(request) {
         if (!catDoc) {
           return NextResponse.json({
             success: true,
-            data: [],
-            meta: {
-              totalRowCount: 0,
-            },
+            items: [],
+            total: 0,
+            start,
+            size,
           });
         }
 
@@ -76,14 +76,12 @@ export async function GET(request) {
       ProductModel.countDocuments(filter),
     ]);
 
-    console.log(data[0]); // 👈 এখানে calories আছে কিনা দেখুন
-
     return NextResponse.json({
       success: true,
-      data,
-      meta: {
-        totalRowCount,
-      },
+      items: data,
+      total: totalRowCount,
+      start,
+      size,
     });
   } catch (error) {
     console.error(error);

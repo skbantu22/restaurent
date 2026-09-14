@@ -5,15 +5,16 @@ import { ToastContainer } from "react-toastify";
 
 const layout = ({ children }) => {
   return (
-    <div className="min-h-screen flex flex-col ">
+    <div className="storefront-theme bg-background text-foreground min-h-screen flex flex-col">
       <Header />
-    
 
-      {children}
-         <ToastContainer/>
-          <Footer />
+      <main className="flex-1 flex items-center justify-center px-4 py-12">
+        {children}
+      </main>
+
+      <ToastContainer />
+      <Footer />
     </div>
-
   );
 };
 

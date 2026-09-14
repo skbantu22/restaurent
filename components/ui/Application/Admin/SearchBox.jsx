@@ -82,7 +82,7 @@ const SearchBox = ({ onSelect }) => {
       className="relative w-full max-w-2xl mx-auto px-4 sm:px-0"
     >
       <form onSubmit={handleSubmit} className="relative group">
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-black transition-colors">
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-[#ff6b00] transition-colors">
           <Search size={18} />
         </div>
 
@@ -92,14 +92,14 @@ const SearchBox = ({ onSelect }) => {
           value={query}
           onChange={(e) => handleChange(e.target.value)}
           onFocus={() => setShowDropdown(!!query)}
-          className="w-full bg-zinc-100 border-2 border-transparent focus:border-black focus:bg-white p-3 pl-10 pr-10 rounded-none transition-all duration-200 text-sm md:text-base outline-none font-medium uppercase tracking-tight"
+          className="w-full bg-[#0d0d0d] border-2 border-[#262626] focus:border-[#ff6b00] text-white placeholder:text-zinc-600 p-3 pl-10 pr-10 rounded-none transition-all duration-200 text-sm md:text-base outline-none font-medium uppercase tracking-tight"
         />
 
         {query && (
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-zinc-200 rounded-full transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-[#1a1a1a] rounded-full transition-colors"
           >
             <X size={16} className="text-zinc-500" />
           </button>
@@ -107,7 +107,7 @@ const SearchBox = ({ onSelect }) => {
 
         {isLoading && (
           <div className="absolute right-10 top-1/2 -translate-y-1/2">
-            <Loader2 size={16} className="animate-spin text-zinc-400" />
+            <Loader2 size={16} className="animate-spin text-zinc-500" />
           </div>
         )}
       </form>
@@ -115,11 +115,11 @@ const SearchBox = ({ onSelect }) => {
       {/* DROPDOWN */}
       {showDropdown &&
         (data.products.length > 0 || data.categories.length > 0) && (
-          <div className="absolute left-4 right-4 sm:left-0 sm:right-0 bg-white shadow-2xl mt-2 z-[100] max-h-[60vh] md:max-h-96 overflow-y-auto rounded-none border-2 border-black divide-y-2 divide-zinc-100">
+          <div className="absolute left-4 right-4 sm:left-0 sm:right-0 bg-[#0d0d0d] shadow-2xl shadow-black/60 mt-2 z-[100] max-h-[60vh] md:max-h-96 overflow-y-auto rounded-none border-2 border-[#262626] divide-y-2 divide-[#1a1a1a]">
             {/* Categories Section */}
             {data.categories.length > 0 && (
-              <div className="bg-zinc-50">
-                <div className="px-4 py-2 font-black text-[10px] uppercase tracking-widest text-zinc-400">
+              <div className="bg-[#0a0a0a]">
+                <div className="px-4 py-2 font-black text-[10px] uppercase tracking-widest text-zinc-500">
                   Found in Categories
                 </div>
                 {data.categories.map((cat) => (
@@ -132,12 +132,12 @@ const SearchBox = ({ onSelect }) => {
                       setShowDropdown(false);
                       if (onSelect) onSelect();
                     }}
-                    className="w-full text-left px-4 py-3 hover:bg-black hover:text-white transition-colors flex justify-between items-center group"
+                    className="w-full text-left px-4 py-3 hover:bg-[#ff6b00] hover:text-white text-zinc-200 transition-colors flex justify-between items-center group"
                   >
                     <span className="text-sm font-bold uppercase">
                       {cat.name}
                     </span>
-                    <span className="text-[10px] text-zinc-400 group-hover:text-zinc-300">
+                    <span className="text-[10px] text-zinc-500 group-hover:text-white/80">
                       ({cat.count})
                     </span>
                   </button>
@@ -146,8 +146,8 @@ const SearchBox = ({ onSelect }) => {
             )}
 
             {/* Products Section */}
-            <div className="bg-white">
-              <div className="px-4 py-2 font-black text-[10px] uppercase tracking-widest text-zinc-400">
+            <div className="bg-[#0d0d0d]">
+              <div className="px-4 py-2 font-black text-[10px] uppercase tracking-widest text-zinc-500">
                 Products
               </div>
               {data.products.map((p) => (
@@ -158,9 +158,9 @@ const SearchBox = ({ onSelect }) => {
                     setShowDropdown(false);
                     if (onSelect) onSelect();
                   }}
-                  className="w-full text-left px-4 py-3 hover:bg-zinc-50 border-b last:border-b-0 border-zinc-50 flex items-center gap-3 transition-colors"
+                  className="w-full text-left px-4 py-3 hover:bg-[#1a1a1a] border-b last:border-b-0 border-[#1a1a1a] flex items-center gap-3 transition-colors"
                 >
-                  <div className="w-8 h-10 bg-zinc-100 shrink-0 overflow-hidden">
+                  <div className="w-8 h-10 bg-[#1a1a1a] shrink-0 overflow-hidden">
                     {p.media?.[0]?.secure_url && (
                       <img
                         src={p.media[0].secure_url}
@@ -170,7 +170,7 @@ const SearchBox = ({ onSelect }) => {
                     )}
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-sm font-bold truncate max-w-[200px] sm:max-w-none">
+                    <span className="text-sm font-bold truncate max-w-[200px] sm:max-w-none text-white">
                       {p.name || p.title}
                     </span>
                     {p.sellingPrice && (

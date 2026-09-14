@@ -365,12 +365,12 @@ function ShopPageInner() {
     </div>
   );
   return (
-    <div className="min-h-screen ">
+    <div className="storefront-theme bg-background text-foreground min-h-screen">
       <div className="max-w-8xl mx-auto p-8">
         <div className="lg:hidden mb-5 flex items-center justify-between gap-3">
           <button
             onClick={() => setMobileOpen(true)}
-            className="lg:hidden px-4 py-2  font-extrabold text-sm border border-black bg-white hover:bg-gray-50 shadow-sm text-gray-950"
+            className="lg:hidden px-4 py-2 font-extrabold text-sm border border-[#262626] bg-[#0d0d0d] hover:bg-[#1a1a1a] shadow-sm text-white rounded-md"
           >
             Filters
           </button>
@@ -388,8 +388,8 @@ function ShopPageInner() {
                 className={`px-4 py-2 rounded-full border text-sm font-extrabold transition shadow-sm hover:shadow-md hover:-translate-y-[1px]
                   ${
                     active
-                      ? "bg-gray-950 text-white border-transparent"
-                      : "bg-white text-gray-950 border-gray-200 hover:bg-gray-50"
+                      ? "bg-[#ff6b00] text-white border-transparent"
+                      : "bg-[#0d0d0d] text-white border-[#262626] hover:bg-[#1a1a1a]"
                   }`}
               >
                 {c.name}
@@ -399,7 +399,7 @@ function ShopPageInner() {
 
           <button
             onClick={() => setCategory("")}
-            className="px-4 py-2 rounded-full text-sm font-extrabold border transition shadow-sm bg-white text-gray-950 border-gray-200 hover:bg-gray-50 hover:shadow-md"
+            className="px-4 py-2 rounded-full text-sm font-extrabold border transition shadow-sm bg-[#0d0d0d] text-white border-[#262626] hover:bg-[#1a1a1a] hover:shadow-md"
           >
             All
           </button>
@@ -417,8 +417,8 @@ function ShopPageInner() {
                     className={`px-4 py-2 rounded-full border text-sm font-extrabold transition shadow-sm hover:shadow-md
                       ${
                         active
-                          ? "bg-gray-950 text-white border-transparent"
-                          : "bg-white text-gray-950 border-gray-200 hover:bg-gray-50"
+                          ? "bg-[#ff6b00] text-white border-transparent"
+                          : "bg-[#0d0d0d] text-white border-[#262626] hover:bg-[#1a1a1a]"
                       }`}
                   >
                     {s.name}
@@ -435,14 +435,14 @@ function ShopPageInner() {
           {mobileOpen && (
             <div className="lg:hidden fixed inset-0 z-50">
               <div
-                className="absolute inset-0 bg-black/40"
+                className="absolute inset-0 bg-black/60"
                 onClick={() => setMobileOpen(false)}
               />
-              <div className="absolute left-0 top-0 h-full w-[360px] max-w-[90vw] bg-white p-4 overflow-auto">
+              <div className="absolute left-0 top-0 h-full w-[360px] max-w-[90vw] bg-[#050505] border-r border-[#262626] p-4 overflow-auto">
                 <div className="flex items-center justify-between mb-3">
-                  <div className=" text-gray-950">Filter</div>
+                  <div className="text-white font-bold">Filter</div>
                   <button
-                    className="text-sm font-extrabold underline decoration-2 underline-offset-4 text-gray-950"
+                    className="text-sm font-extrabold underline decoration-2 underline-offset-4 text-white"
                     onClick={() => setMobileOpen(false)}
                   >
                     Close
@@ -471,14 +471,14 @@ function ShopPageInner() {
 
             <div className="flex items-center justify-between mb-4 gap-3 flex-wrap mt-2">
               <div className="flex flex-wrap gap-2">
-                <span className="px-3 py-1 rounded-full bg-yellow-100 border border-yellow-300 text-sm font-extrabold text-gray-950">
+                <span className="px-3 py-1 rounded-full bg-[#ff6b00]/15 border border-[#ff6b00]/40 text-sm font-extrabold text-[#ff6b00]">
                   Category: {activeCategoryLabel}
                 </span>
 
                 {q ? (
                   <button
                     onClick={clearSearch}
-                    className="px-3 py-1 rounded-full bg-yellow-100 border border-yellow-300 text-sm flex items-center gap-2 font-extrabold text-gray-950 hover:opacity-90"
+                    className="px-3 py-1 rounded-full bg-[#ff6b00]/15 border border-[#ff6b00]/40 text-sm flex items-center gap-2 font-extrabold text-[#ff6b00] hover:opacity-90"
                     title="Remove search"
                   >
                     <span>Search: {q}</span>
@@ -489,7 +489,7 @@ function ShopPageInner() {
                 {subcategory ? (
                   <button
                     onClick={clearSubcategories}
-                    className="px-3 py-1 rounded-full bg-yellow-100 border border-yellow-300 text-sm flex items-center gap-2 font-extrabold text-gray-950 hover:opacity-90"
+                    className="px-3 py-1 rounded-full bg-[#ff6b00]/15 border border-[#ff6b00]/40 text-sm flex items-center gap-2 font-extrabold text-[#ff6b00] hover:opacity-90"
                     title="Remove sub filter"
                   >
                     <span>{subcategory}</span>
@@ -500,7 +500,7 @@ function ShopPageInner() {
 
               <button
                 onClick={clearAll}
-                className="text-sm font-extrabold underline decoration-2 underline-offset-4 text-red-700 hover:text-red-800"
+                className="text-sm font-extrabold underline decoration-2 underline-offset-4 text-red-500 hover:text-red-400"
               >
                 Reset all
               </button>
@@ -511,36 +511,28 @@ function ShopPageInner() {
                 Array.from({ length: 8 }).map((_, i) => (
                   <div
                     key={i}
-                    className="rounded-2xl border bg-white p-3 animate-pulse"
+                    className="rounded-2xl border border-[#262626] bg-[#0d0d0d] p-3 animate-pulse"
                   >
-                    <div className="aspect-square bg-gray-200 rounded mb-3" />
-                    <div className="h-4 bg-gray-200 rounded mb-2" />
-                    <div className="h-4 bg-gray-200 rounded w-2/3" />
+                    <div className="aspect-square bg-[#1a1a1a] rounded mb-3" />
+                    <div className="h-4 bg-[#1a1a1a] rounded mb-2" />
+                    <div className="h-4 bg-[#1a1a1a] rounded w-2/3" />
                   </div>
                 ))}
 
               {!isLoading &&
-                products.map((p) => {
-                  console.log(
-                    "Product:",
-                    p.name,
-                    "Variants:",
-                    p.allVariants || p.variants,
-                  );
-                  return (
-                    <ProductBox
-                      key={p._id}
-                      product={p}
-                      userId={null} // pass your userId if available
-                      allVariants={p.allVariants || p.variants || []} // ✅ pass variants
-                      refreshWishlist={() =>
-                        queryClient.invalidateQueries(["wishlistStatus"])
-                      }
-                    />
-                  );
-                })}
+                products.map((p) => (
+                  <ProductBox
+                    key={p._id}
+                    product={p}
+                    userId={null} // pass your userId if available
+                    allVariants={p.allVariants || p.variants || []} // ✅ pass variants
+                    refreshWishlist={() =>
+                      queryClient.invalidateQueries(["wishlistStatus"])
+                    }
+                  />
+                ))}
               {!isLoading && products.length === 0 ? (
-                <div className="col-span-2 lg:col-span-4 text-gray-900 font-extrabold">
+                <div className="col-span-2 lg:col-span-4 text-white font-extrabold">
                   No products found.
                 </div>
               ) : null}
@@ -550,7 +542,7 @@ function ShopPageInner() {
                 className="col-span-2 lg:col-span-4 flex justify-center items-center py-4"
               >
                 {isFetchingNextPage && (
-                  <span className="text-sm text-gray-400">
+                  <span className="text-sm text-zinc-500">
                     Loading more products...
                   </span>
                 )}

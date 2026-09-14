@@ -166,6 +166,33 @@
   --sidebar-ring: #f97316;
 }
 
+/* Storefront pages that still use default-light shadcn components
+   (sign in/register, shop) — scoped to .storefront-theme so Card/
+   Input/Form/Button/Accordion render in the site's dark/orange brand
+   instead of the default light theme, without per-element overrides.
+   Fixed dark palette (matches Navbar/Footer/meal-builder sections,
+   which are hardcoded dark regardless of any theme toggle). */
+.storefront-theme {
+  --background: #050505;
+  --foreground: #ffffff;
+  --card: #0d0d0d;
+  --card-foreground: #ffffff;
+  --popover: #0d0d0d;
+  --popover-foreground: #ffffff;
+  --primary: #ff6b00;
+  --primary-foreground: #ffffff;
+  --secondary: #1a1a1a;
+  --secondary-foreground: #ffffff;
+  --muted: #1a1a1a;
+  --muted-foreground: #a3a3a3;
+  --accent: #1a1a1a;
+  --accent-foreground: #ff6b00;
+  --destructive: #ef4444;
+  --border: #262626;
+  --input: #262626;
+  --ring: #ff6b00;
+}
+
 .admin-theme.dark,
 .dark .admin-theme {
   --background: #18181b;

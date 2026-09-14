@@ -1,32 +1,26 @@
-
-"use client"
+"use client";
 
 import {
   Card,
-  CardAction,
   CardContent,
-  CardDescription,
-  CardFooter,
   CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { useForm } from "react-hook-form"
+} from "@/components/ui/card";
+import { useForm } from "react-hook-form";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import React, { useState } from "react"
-// import { zSchema } from "@/lib/zodschema"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { Form } from "@/components/ui/form"
-import { FormField,FormLabel,FormItem ,FormControl,FormMessage} from "@/components/ui/form"
-import z from "zod"
-import ButtonLoading from "@/components/ui/Application/ButtonLoading"
-import { set } from "zod/v3"
-import { Eye, EyeOff } from "lucide-react"
-import Link from "next/link"
-import { WEBSITE_LOGIN, WEBSITE_REGISTER } from "@/Route/Websiteroute"
-import axios from "axios"
-import { zSchema } from "@/lib/zodschema"
+import { Input } from "@/components/ui/input";
+import React, { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Form } from "@/components/ui/form";
+import { FormField, FormLabel, FormItem, FormControl, FormMessage } from "@/components/ui/form";
+import z from "zod";
+import ButtonLoading from "@/components/ui/Application/ButtonLoading";
+import { Eye, EyeOff } from "lucide-react";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { WEBSITE_LOGIN } from "@/Route/Websiteroute";
+import axios from "axios";
+import { zSchema } from "@/lib/zodschema";
+import { showToast } from "@/lib/showToast";
 
 export const formSchema = zSchema
   .pick({
@@ -42,171 +36,170 @@ export const formSchema = zSchema
     path: ['confirmPassword'],
   });
 
-
-
 export default function Register() {
-    const [loading,setloading]=useState(false)
-    const [isTypePassword,setisTypepassword]=useState(true)
-    const [isTypeconfirmPassword,setisTypeconfirmPassword]=useState(true)
-const form = useForm({
-  resolver: zodResolver(formSchema),
-  
-  defaultValues :{
-  name : "",
-   email : "",
-   password : "" ,
-   confirmPassword : "",
-  }
-})
+  const [loading, setloading] = useState(false);
+  const [isTypePassword, setisTypepassword] = useState(true);
+  const [isTypeconfirmPassword, setisTypeconfirmPassword] = useState(true);
+  const form = useForm({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
 
-    const handleRegisterSubmit = async (values) => {
-        
-  try {
+  const handleRegisterSubmit = async (values) => {
+    try {
+      setloading(true);
+      const res = await axios.post("/api/auth/register", values);
+      const registerResponse = res.data;
 
- setloading(true)
-    const res = await axios.post("/api/auth/register", values)
-    const registerResponse = res.data
+      if (!registerResponse.success) {
+        throw new Error(registerResponse.message);
+      }
 
-    if (!registerResponse.success) {
-      throw new Error(registerResponse.message)
+      form.reset();
+      showToast("success", registerResponse.message);
+    } catch (error) {
+      const msg =
+        error?.response?.data?.message || error?.message || "Something went wrong";
+      showToast("error", msg);
+    } finally {
+      setloading(false);
     }
+  };
 
-    form.reset()
-    alert(registerResponse.message)
-    
-
-
-  } catch (error) {
-const msg =
-      error?.response?.data?.message || error?.message || "Something went wrong"
-    alert(msg)
-  }
-  finally {
-    setloading(false)
-  }
-}
+  const inputClass =
+    "bg-black/40 border-[#262626] text-white placeholder:text-zinc-600 focus-visible:ring-[#ff6b00]/30 focus-visible:border-[#ff6b00]/50";
+  const labelClass = "text-xs uppercase font-bold text-zinc-400 tracking-wider";
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4 ">
-      <Card className="w-full max-w-sm">
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="w-full flex items-center justify-center"
+    >
+      <Card className="w-full max-w-sm border-[#262626] bg-[#0d0d0d] shadow-2xl shadow-black/50">
         <CardHeader>
-            <div className="text-center space-y-2">
-    <h1 className="text-3xl font-bold">Create Account</h1>
-    <p className="text-muted-foreground">
-      Create new account by filling out the form below.
-    </p>
-  </div>
-
-
-
+          <div className="text-center space-y-1">
+            <h1 className="text-2xl font-black uppercase tracking-wide text-white">
+              Create Account
+            </h1>
+            <p className="text-sm text-zinc-400">
+              Sign up to start ordering with S&apos;Mashed LDN
+            </p>
+          </div>
         </CardHeader>
 
         <CardContent>
-            <div className="mb-5">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleRegisterSubmit)} className="space-y-2">
-                <div>
+            <form onSubmit={form.handleSubmit(handleRegisterSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Name</FormLabel>
+                    <FormLabel className={labelClass}>Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Prianka" {...field} />
+                      <Input placeholder="Your name" {...field} className={inputClass} />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-[11px]" />
                   </FormItem>
                 )}
               />
-              </div>
-                    <div className="mb-5">
-                                 <FormField
-                                   control={form.control}
-                                   name="email"
-                                   render={({ field }) => (
-                                     <FormItem>
-                                       <FormLabel>Email</FormLabel>
-                                       <FormControl>
-                                         <Input placeholder="m@example.com" {...field} />
-                                       </FormControl>
-                                       <FormMessage />
-                                     </FormItem>
-                                   )}
-                                 />
-                                </div>
-              <div className="mb-5">
+
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className={labelClass}>Email</FormLabel>
+                    <FormControl>
+                      <Input placeholder="name@example.com" {...field} className={inputClass} />
+                    </FormControl>
+                    <FormMessage className="text-[11px]" />
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={form.control}
                 name="password"
                 render={({ field }) => (
-                  <FormItem className="relative">
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input type={isTypePassword? 'password' : 'text' } placeholder="********" {...field} />
-                     
-                    </FormControl>
-                     <button  className="absolute top-1/2 right-2 cursor-pointer" 
-                     onClick={() => setisTypepassword(!isTypePassword)} type="button" >
-                        {isTypePassword ? <Eye  size={18} /> : <EyeOff size={18} />}
+                  <FormItem>
+                    <FormLabel className={labelClass}>Password</FormLabel>
+                    <div className="relative">
+                      <FormControl>
+                        <Input
+                          type={isTypePassword ? "password" : "text"}
+                          placeholder="••••••••"
+                          {...field}
+                          className={`${inputClass} pr-10`}
+                        />
+                      </FormControl>
+                      <button
+                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-500 hover:text-[#ff6b00] transition-colors"
+                        onClick={() => setisTypepassword(!isTypePassword)}
+                        type="button"
+                      >
+                        {isTypePassword ? <Eye size={18} /> : <EyeOff size={18} />}
                       </button>
-                    
-                    <FormMessage />
+                    </div>
+                    <FormMessage className="text-[11px]" />
                   </FormItem>
                 )}
               />
-             
-              
-                </div>
 
-             <div className="mb-5">
               <FormField
                 control={form.control}
                 name="confirmPassword"
                 render={({ field }) => (
-                  <FormItem className="relative">
-                    <FormLabel>Confirm Password</FormLabel>
-                    <FormControl>
-                      <Input type={isTypeconfirmPassword? 'password' : 'text' } placeholder="********" {...field} />
-                     
-                    </FormControl>
-                    
-                    
-                     <button  className="absolute top-1/2 right-2 cursor-pointer" 
-                     onClick={() => setisTypeconfirmPassword(!isTypeconfirmPassword)} type="button" >
-                        {isTypeconfirmPassword ? <Eye  size={18} /> : <EyeOff size={18} />}
+                  <FormItem>
+                    <FormLabel className={labelClass}>Confirm Password</FormLabel>
+                    <div className="relative">
+                      <FormControl>
+                        <Input
+                          type={isTypeconfirmPassword ? "password" : "text"}
+                          placeholder="••••••••"
+                          {...field}
+                          className={`${inputClass} pr-10`}
+                        />
+                      </FormControl>
+                      <button
+                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-500 hover:text-[#ff6b00] transition-colors"
+                        onClick={() => setisTypeconfirmPassword(!isTypeconfirmPassword)}
+                        type="button"
+                      >
+                        {isTypeconfirmPassword ? <Eye size={18} /> : <EyeOff size={18} />}
                       </button>
-                    <FormMessage />
+                    </div>
+                    <FormMessage className="text-[11px]" />
                   </FormItem>
                 )}
               />
-             
-              
+
+              <ButtonLoading
+                type="submit"
+                className="w-full h-11 text-sm font-bold uppercase tracking-wide bg-[#ff6b00] hover:bg-[#ff7e29] text-white transition-all"
+                loading={loading}
+                text="Create Account"
+              />
+
+              <div className="text-center">
+                <div className="flex gap-1 justify-center text-sm text-zinc-400">
+                  <p>Already have an account?</p>
+                  <Link href={WEBSITE_LOGIN} className="font-semibold text-[#ff6b00] hover:underline">
+                    Sign in
+                  </Link>
                 </div>
-              
-                
-              
-              <ButtonLoading type="submit"
-                className="w-full"
-                 loading={loading}
-             text=  "Create Account"  />
-
-             <div className="text-center">
-                <div className="flex gap-1 justify-center">
-
-                    <p>Already Have account?</p>
-                       <Link href={WEBSITE_LOGIN} className="text-primary underline">login</Link>
-                </div>
-                
-
-
-
-             </div>
+              </div>
             </form>
           </Form>
-          </div>
         </CardContent>
       </Card>
-    </div>
-  )
+    </motion.div>
+  );
 }

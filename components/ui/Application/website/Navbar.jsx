@@ -78,9 +78,14 @@ const Navbar = () => {
   const [openMenu, setOpenMenu] = useState(false);
 
   const auth = useSelector((store) => store.authStore.auth);
+  const cartCount = useSelector((store) => store.cartStore?.count) || 0;
 
   const router = useRouter();
   const dispatch = useDispatch();
+
+  // Straight to checkout if there's already something in the cart —
+  // otherwise browse the menu like any other product listing.
+  const orderNowHref = cartCount > 0 ? "/checkout" : WEBSITE_SHOP;
 
   const handleLogout = async () => {
     try {
@@ -161,7 +166,7 @@ const Navbar = () => {
             )}
 
             {/* Order Now Button */}
-            <Link href={WEBSITE_SHOP}>
+            <Link href={orderNowHref}>
               <motion.span
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.96 }}
