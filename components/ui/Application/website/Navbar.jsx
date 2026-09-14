@@ -8,7 +8,6 @@ import {
   X,
   User,
   LogOutIcon,
-  Package,
   ShoppingBag,
 } from "lucide-react";
 
@@ -26,6 +25,7 @@ import {
   WEBSITE_HOME,
   WEBSITE_LOGIN,
   WEBSITE_REGISTER,
+  WEBSITE_SHOP,
 } from "@/Route/Websiteroute";
 
 import Cart from "./cart";
@@ -161,15 +161,17 @@ const Navbar = () => {
             )}
 
             {/* Order Now Button */}
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.96 }}
-              className="flex h-9 sm:h-11 items-center justify-center gap-1.5 rounded-md bg-[#ff6b00] px-3 sm:px-5 lg:px-6 text-[11px] sm:text-xs lg:text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-orange-500/20 transition-colors duration-300 hover:bg-[#ff7e29]"
-            >
-              <span className="hidden sm:inline">ORDER NOW</span>
-              <span className="sm:hidden">ORDER</span>
-              <ShoppingBag size={15} className="sm:w-[17px] sm:h-[17px]" />
-            </motion.button>
+            <Link href={WEBSITE_SHOP}>
+              <motion.span
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.96 }}
+                className="flex h-9 sm:h-11 items-center justify-center gap-1.5 rounded-md bg-[#ff6b00] px-3 sm:px-5 lg:px-6 text-[11px] sm:text-xs lg:text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-orange-500/20 transition-colors duration-300 hover:bg-[#ff7e29]"
+              >
+                <span className="hidden sm:inline">ORDER NOW</span>
+                <span className="sm:hidden">ORDER</span>
+                <ShoppingBag size={15} className="sm:w-[17px] sm:h-[17px]" />
+              </motion.span>
+            </Link>
           </div>
         </div>
       </div>
@@ -284,16 +286,6 @@ const Navbar = () => {
                   </>
                 )}
 
-                <motion.div variants={MOBILE_LINK_ITEM}>
-                  <Link
-                    href="/track-order"
-                    onClick={() => setOpenMenu(false)}
-                    className="flex items-center gap-3 transition-colors duration-200 hover:text-[#ff6b00]"
-                  >
-                    <Package size={18} />
-                    Track Order
-                  </Link>
-                </motion.div>
               </motion.div>
             </motion.div>
           </div>
