@@ -1,10 +1,19 @@
 import { connectDB } from "@/lib/databaseconnection";
 import { catchError, response } from "@/lib/helperfunction";
+import { isAuthenticated } from "@/lib/auth.server";
 import UserModel from "@/models/User.model";
 import { z } from "zod";
 
 export async function PUT(request) {
   try {
+    // This route can set `role`, including "admin" — without this
+    // check anyone (even logged out) could grant themselves admin on
+    // any account by POSTing their own user id with role: "admin".
+    const auth = await isAuthenticated("admin");
+    if (!auth?.isAuth) {
+      return response(false, 403, "Unauthorized.");
+    }
+
     await connectDB();
 
     const payload = await request.json();

@@ -195,10 +195,15 @@ export default function PremiumMealBuilder() {
     selectedExtras.length + selectedDrinks.length + cartProducts.length;
   const hasSelection = totalItems > 0 || !!base;
 
+  // Extras and drinks are optional add-ons (capped at one each by
+  // selectExtra/selectDrink replacing the selection) — the only real
+  // requirements are a category and an actual item picked from it.
+  // Previously this also required exactly one extra AND exactly one
+  // drink, so choosing a base + a burger alone left "Add to Cart"
+  // silently disabled.
   const missingSteps = [];
   if (!base) missingSteps.push("a category");
-  if (selectedExtras.length !== 1) missingSteps.push("exactly one extra");
-  if (selectedDrinks.length !== 1) missingSteps.push("exactly one drink");
+  if (cartProducts.length === 0) missingSteps.push("an item from your chosen category");
   const canCheckout = missingSteps.length === 0;
 
   const handleBaseClick = (baseId) => {

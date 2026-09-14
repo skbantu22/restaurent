@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { addIntoCart, removeFromCart } from "@/store/reducer/cartReducer";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import { cloudinaryResize } from "@/lib/cloudinaryUrl";
 
 // 🟢 Helper to ensure valid Image URL
 const getValidImageUrl = (mediaArray) => {
@@ -140,7 +141,10 @@ export default function CategoryGrid() {
         /* Dynamic Menu Grid */
         <div className="max-w-7xl mx-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
           {categories.map((item) => {
-            const catImage = getValidImageUrl(item.media || item.image);
+            const catImage = cloudinaryResize(getValidImageUrl(item.media || item.image), {
+              width: 700,
+              height: 600,
+            });
             const cleanDescription = stripHtml(item.description);
 
             return (
@@ -210,7 +214,10 @@ export default function CategoryGrid() {
               <div className="relative w-full h-40 md:h-48 rounded-2xl overflow-hidden bg-zinc-900 mb-4 border border-zinc-800/50">
                 <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 via-transparent to-transparent z-10"></div>
                 <Image
-                  src={getValidImageUrl(selectedCategory.media)}
+                  src={cloudinaryResize(getValidImageUrl(selectedCategory.media), {
+                    width: 900,
+                    height: 500,
+                  })}
                   alt={selectedCategory.name}
                   fill
                   unoptimized
@@ -240,7 +247,10 @@ export default function CategoryGrid() {
               ) : categoryProducts && categoryProducts.length > 0 ? (
                 categoryProducts.map((prod) => {
                   const added = isProductInCart(prod);
-                  const prodImg = getValidImageUrl(prod.media);
+                  const prodImg = cloudinaryResize(getValidImageUrl(prod.media), {
+                    width: 200,
+                    height: 200,
+                  });
                   const calories = prod.calories || prod.kCal || 450;
 
                   return (
