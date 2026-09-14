@@ -407,7 +407,7 @@ export default function PremiumMealBuilder() {
                 2
               </div>
               <h2 className="text-white uppercase tracking-widest font-extrabold text-lg">
-                Choose Extras
+                Choose Sides
               </h2>
             </div>
 
