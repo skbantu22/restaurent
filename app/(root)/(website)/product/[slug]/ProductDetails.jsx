@@ -541,7 +541,7 @@ ${window.location.href}
                     <Link href={WEBSITE_CART} className="w-full">
                       <button className="w-full flex items-center justify-center gap-2 bg-[#0d0d0d] text-white border-2 border-[#ff6b00] rounded-md font-bold uppercase text-[13px] tracking-widest py-3 hover:bg-[#ff6b00] transition-all duration-300">
                         <ShoppingCart size={18} strokeWidth={2.5} />
-                        View In Bag
+                        View Your Order
                       </button>
                     </Link>
                   )}

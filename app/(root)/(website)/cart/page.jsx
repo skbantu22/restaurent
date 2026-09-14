@@ -93,7 +93,7 @@ export default function Page() {
       <div className="storefront-theme bg-background text-foreground w-full min-h-[60vh] flex flex-col justify-center items-center px-4">
         <ShoppingBag size={48} className="text-[#ff6b00] opacity-40 mb-4" />
         <h4 className="text-2xl font-black uppercase tracking-wide mb-6">
-          Your Bag is Empty
+          Your Order is Empty
         </h4>
         <Link
           href={WEBSITE_SHOP}
@@ -112,7 +112,7 @@ export default function Page() {
           <ShoppingBag size={28} className="text-[#ff6b00]" />
           <div>
             <h1 className="text-3xl font-black uppercase tracking-tight text-white">
-              Shopping Bag
+              Your Order
             </h1>
             <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-500 mt-2">
               {products.length} {products.length > 1 ? "Items" : "Item"} Selected

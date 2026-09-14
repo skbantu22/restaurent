@@ -221,7 +221,7 @@ const Cart = ({ active }) => {
         <SheetHeader className="px-6 py-4 border-b border-[#222222] flex flex-row items-center justify-between">
           <SheetTitle className="text-lg font-bold text-white flex items-center gap-2">
             <ShoppingBag size={20} className="text-[#ff6b00]" />
-            Your Shopping Cart
+            Your Order
             <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#ff6b00]/10 text-[#ff6b00] border border-[#ff6b00]/20">
               {count} items
             </span>
@@ -234,13 +234,13 @@ const Cart = ({ active }) => {
             <div className="h-full min-h-[280px] flex flex-col items-center justify-center text-gray-500 gap-3">
               <ShoppingBag size={56} className="opacity-20 text-[#ff6b00]" />
               <p className="text-sm font-medium">
-                Your cart feels a bit light!
+                Your order feels a bit light!
               </p>
               <button
                 onClick={() => setIsOpen(false)}
                 className="mt-2 text-xs text-[#ff6b00] uppercase font-bold hover:underline"
               >
-                Start Shopping
+                Browse the Menu
               </button>
             </div>
           ) : (
