@@ -77,38 +77,38 @@ export default function WhySmashed() {
 
             {/* RIGHT HALAL BADGE */}
             {/* RIGHT HALAL BADGE */}
-            <div className="w-full lg:w-[360px] flex items-center justify-center p-8 lg:p-10">
-              <div className="relative w-[240px] h-[240px] lg:w-[280px] lg:h-[280px] rounded-full border-[6px] border-[#6d9f2f] flex items-center justify-center shadow-[0_0_25px_rgba(109,159,47,0.2)]">
+            <div className="w-full lg:w-[360px] flex items-center justify-center p-5 sm:p-8 lg:p-10">
+              <div className="relative w-[140px] h-[140px] sm:w-[200px] sm:h-[200px] lg:w-[280px] lg:h-[280px] rounded-full border-[3px] sm:border-[5px] lg:border-[6px] border-[#6d9f2f] flex items-center justify-center shadow-[0_0_25px_rgba(109,159,47,0.2)]">
                 {/* OUTER TEXT GLOW RING */}
                 <div className="absolute inset-2 rounded-full border border-[#6d9f2f]/40" />
 
                 {/* INNER CIRCLE (Containing all elements) */}
-                <div className="w-[200px] h-[200px] lg:w-[220px] lg:h-[220px] rounded-full border-[4px] border-[#6d9f2f] flex flex-col items-center justify-center text-center p-2 relative bg-zinc-950/40">
+                <div className="w-[116px] h-[116px] sm:w-[168px] sm:h-[168px] lg:w-[220px] lg:h-[220px] rounded-full border-[2px] sm:border-[3px] lg:border-[4px] border-[#6d9f2f] flex flex-col items-center justify-center text-center p-1.5 sm:p-2 relative bg-zinc-950/40">
                   {/* TOP TEXT */}
-                  <span className="text-[#85c441] text-[11px] lg:text-xs font-black uppercase tracking-[0.15em] mb-0.5">
+                  <span className="text-[#85c441] text-[7px] sm:text-[9px] lg:text-xs font-black uppercase tracking-[0.15em] mb-0.5">
                     100% Halal
                   </span>
 
                   {/* ARABIC */}
                   <span
                     lang="ar"
-                    className="text-[#85c441] text-4xl lg:text-5xl font-black leading-none my-1"
+                    className="text-[#85c441] text-xl sm:text-3xl lg:text-5xl font-black leading-none my-1"
                   >
                     حلال
                   </span>
 
                   {/* MAIN TEXT */}
-                  <span className="text-[#85c441] text-sm lg:text-base font-black uppercase tracking-wide leading-none mb-1">
+                  <span className="text-[#85c441] text-[10px] sm:text-xs lg:text-base font-black uppercase tracking-wide leading-none mb-1">
                     Halal
                   </span>
 
                   {/* BOTTOM TEXT */}
-                  <span className="text-[#85c441] text-[10px] lg:text-[11px] font-black uppercase tracking-[0.18em]">
+                  <span className="text-[#85c441] text-[6px] sm:text-[9px] lg:text-[11px] font-black uppercase tracking-[0.18em]">
                     Certified
                   </span>
 
                   {/* STARS (Positioned symmetrically inside the inner ring) */}
-                  <div className="absolute w-full px-4 flex justify-between items-center pointer-events-none text-[#85c441] text-sm lg:text-base">
+                  <div className="absolute w-full px-2 sm:px-4 flex justify-between items-center pointer-events-none text-[#85c441] text-[10px] sm:text-sm lg:text-base">
                     <span>★</span>
                     <span>★</span>
                   </div>

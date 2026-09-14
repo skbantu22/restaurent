@@ -8,7 +8,6 @@ import {
   X,
   User,
   LogOutIcon,
-  ShoppingBag,
 } from "lucide-react";
 
 import { useDispatch, useSelector } from "react-redux";
@@ -17,7 +16,7 @@ import Image from "next/image";
 import axios from "axios";
 import { AnimatePresence, motion } from "framer-motion";
 
-import logo from "@/public/assets/logo.png";
+import logo from "@/public/assets/logo-transparent.png";
 import userIcon from "@/public/assets/user.png";
 
 import {
@@ -25,7 +24,6 @@ import {
   WEBSITE_HOME,
   WEBSITE_LOGIN,
   WEBSITE_REGISTER,
-  WEBSITE_SHOP,
 } from "@/Route/Websiteroute";
 
 import Cart from "./cart";
@@ -78,14 +76,9 @@ const Navbar = () => {
   const [openMenu, setOpenMenu] = useState(false);
 
   const auth = useSelector((store) => store.authStore.auth);
-  const cartCount = useSelector((store) => store.cartStore?.count) || 0;
 
   const router = useRouter();
   const dispatch = useDispatch();
-
-  // Straight to checkout if there's already something in the cart —
-  // otherwise browse the menu like any other product listing.
-  const orderNowHref = cartCount > 0 ? "/checkout" : WEBSITE_SHOP;
 
   const handleLogout = async () => {
     try {
@@ -107,7 +100,7 @@ const Navbar = () => {
     <header className="sticky top-0 z-50 w-full border-b border-[#1a1a1a] bg-[#0a0a0a]">
       <div className="mx-auto max-w-[1400px] px-4 lg:px-8">
         {/* MAIN NAVBAR */}
-        <div className="flex h-[80px] sm:h-[85px] items-center justify-between gap-2 sm:gap-4">
+        <div className="flex h-[80px] sm:h-[85px] lg:h-[64px] items-center justify-between gap-2 sm:gap-4">
           {/* LEFT: Mobile Menu Button & Logo */}
           <div className="flex items-center gap-3 sm:gap-4">
             <button
@@ -164,19 +157,6 @@ const Navbar = () => {
                 </Avatar>
               </Link>
             )}
-
-            {/* Order Now Button */}
-            <Link href={orderNowHref}>
-              <motion.span
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.96 }}
-                className="flex h-9 sm:h-11 items-center justify-center gap-1.5 rounded-md bg-[#ff6b00] px-3 sm:px-5 lg:px-6 text-[11px] sm:text-xs lg:text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-orange-500/20 transition-colors duration-300 hover:bg-[#ff7e29]"
-              >
-                <span className="hidden sm:inline">ORDER NOW</span>
-                <span className="sm:hidden">ORDER</span>
-                <ShoppingBag size={15} className="sm:w-[17px] sm:h-[17px]" />
-              </motion.span>
-            </Link>
           </div>
         </div>
       </div>

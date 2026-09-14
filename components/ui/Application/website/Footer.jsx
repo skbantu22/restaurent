@@ -7,7 +7,7 @@ import Image from "next/image";
 import { Phone, Mail, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
 
-import logo from "@/public/assets/logo.png";
+import logo from "@/public/assets/logo-transparent.png";
 
 const FOOTER_GRID_VARIANTS = {
   hidden: { opacity: 0, y: 16 },
