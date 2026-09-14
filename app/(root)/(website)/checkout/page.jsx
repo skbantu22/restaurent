@@ -309,6 +309,11 @@ export default function CheckoutPage() {
             item.media?.[0]?.secure_url ||
             "",
           notes: item.notes || "",
+          // Custom Meal bundle's nested burger/extra/drink selections —
+          // the server re-prices each of these itself (see
+          // /api/checkout's cleanSingleItem), never trusting this
+          // client-sent breakdown as-is.
+          ...(Array.isArray(item.items) ? { items: item.items } : {}),
         })),
         coupon: appliedCoupon
           ? {

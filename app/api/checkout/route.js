@@ -86,8 +86,15 @@ export async function POST(req) {
     // FETCH REAL PRODUCTS ONLY
     // ==============================
 
+    // A Custom Meal bundle's burger selection is a real product id
+    // nested in item.items, not on the top-level item itself — has to
+    // be included here too, or the lookup below never finds it and the
+    // bundle's actual burger silently gets dropped from the order.
     const productIds = items
-      .map((item) => item.productId)
+      .flatMap((item) => [
+        item.productId,
+        ...(Array.isArray(item.items) ? item.items.map((child) => child.productId) : []),
+      ])
       .filter(
         (id) =>
           id &&
@@ -111,87 +118,110 @@ export async function POST(req) {
     // ==============================
     // CLEAN & VALIDATE ITEMS
     // ==============================
+    // Shared by top-level cart items and a bundle's nested selections —
+    // a Custom Meal's burger/extras/drinks get exactly the same
+    // server-side re-pricing a top-level item would, so nesting them
+    // inside a bundle is never a way to smuggle a tampered price past
+    // the server.
+    function cleanSingleItem(it) {
+      const id = String(it.productId || "");
+
+      // ==============================
+      // CUSTOM EXTRA / DRINK / CATEGORY
+      // ==============================
+      if (
+        id.startsWith("extra-") ||
+        id.startsWith("drink-") ||
+        id.startsWith("category-")
+      ) {
+        const itemType = id.startsWith("extra-")
+          ? "extra"
+          : id.startsWith("drink-")
+            ? "drink"
+            : "category";
+
+        // Frontend থেকে name না এলে productId থেকে name তৈরি করবে
+        const fallbackName = id
+          .replace(/^extra-/, "")
+          .replace(/^drink-/, "")
+          .replace(/^category-/, "")
+          .replace(/-/g, " ")
+          .replace(/\b\w/g, (char) => char.toUpperCase());
+
+        const itemName = it.name || it.title || it.label || fallbackName;
+
+        // Category is informational only (the chosen base protein) —
+        // never trust a client-sent price for it, it must be £0.
+        const itemPrice =
+          itemType === "category"
+            ? 0
+            : Number(it.sellingPrice ?? it.price ?? it.amount ?? 0);
+
+        return {
+          itemType,
+          customId: id,
+          name: itemName,
+          image: getAbsoluteImageUrl(it.image, origin),
+          price: itemPrice,
+          quantity: Math.max(1, Number(it.quantity || 1)),
+          notes: it.notes || "",
+        };
+      }
+
+      // ==============================
+      // NORMAL PRODUCT
+      // ==============================
+      const product = productMap.get(id);
+
+      if (!product) return null;
+
+      const unitPrice = Number(product.sellingPrice || product.price || 0);
+
+      return {
+        itemType: "product",
+        productId: product._id,
+        name: product.name,
+        image: product.media?.[0]?.secure_url || "",
+        price: unitPrice,
+        quantity: Math.max(1, Number(it.quantity || 1)),
+        notes: it.notes || "",
+      };
+    }
+
     const clean = items
       .map((it) => {
         const id = String(it.productId || "");
 
         // ==============================
-        // CUSTOM EXTRA / DRINK / CATEGORY
+        // CUSTOM MEAL BUNDLE — one order line, re-price every nested
+        // selection server-side (never trust the client's bundle total)
         // ==============================
-        if (
-          id.startsWith("extra-") ||
-          id.startsWith("drink-") ||
-          id.startsWith("category-")
-        ) {
-          const itemType = id.startsWith("extra-")
-            ? "extra"
-            : id.startsWith("drink-")
-              ? "drink"
-              : "category";
+        if (id.startsWith("bundle-")) {
+          const nestedRaw = Array.isArray(it.items) ? it.items : [];
+          const nestedClean = nestedRaw.map(cleanSingleItem).filter(Boolean);
 
-          // Frontend থেকে name না এলে productId থেকে name তৈরি করবে
-          const fallbackName = id
-            .replace(/^extra-/, "")
-            .replace(/^drink-/, "")
-            .replace(/^category-/, "")
-            .replace(/-/g, " ")
-            .replace(/\b\w/g, (char) => char.toUpperCase());
+          if (nestedClean.length === 0) return null;
 
-          const itemName = it.name || it.title || it.label || fallbackName;
-
-          // Category is informational only (the chosen base protein) —
-          // never trust a client-sent price for it, it must be £0.
-          const itemPrice =
-            itemType === "category"
-              ? 0
-              : Number(it.sellingPrice ?? it.price ?? it.amount ?? 0);
+          const bundleTotal = nestedClean.reduce(
+            (sum, child) => sum + child.price * child.quantity,
+            0,
+          );
 
           return {
-            itemType,
+            itemType: "bundle",
             customId: id,
-            name: itemName,
+            name: it.name || it.title || "Custom Meal",
             image: getAbsoluteImageUrl(it.image, origin),
-            price: itemPrice,
+            price: bundleTotal,
             quantity: Math.max(1, Number(it.quantity || 1)),
             notes: it.notes || "",
+            items: nestedClean,
           };
         }
 
-        // ==============================
-        // NORMAL PRODUCT
-        // ==============================
-        const product = productMap.get(id);
-
-        if (!product) return null;
-
-        const unitPrice = Number(product.sellingPrice || product.price || 0);
-
-        return {
-          itemType: "product",
-          productId: product._id,
-          name: product.name,
-          image: product.media?.[0]?.secure_url || "",
-          price: unitPrice,
-          quantity: Math.max(1, Number(it.quantity || 1)),
-          notes: it.notes || "",
-        };
+        return cleanSingleItem(it);
       })
       .filter(Boolean);
-    console.log("========== CHECKOUT DEBUG ==========");
-    console.log("ORIGIN:", origin);
-    console.log("RAW ITEMS:", JSON.stringify(items, null, 2));
-    console.log("CLEAN ITEMS:", JSON.stringify(clean, null, 2));
-
-    clean.forEach((item, index) => {
-      console.log(`ITEM ${index}:`, {
-        name: item.name,
-        itemType: item.itemType,
-        customId: item.customId,
-        image: item.image,
-        price: item.price,
-        quantity: item.quantity,
-      });
-    });
 
     if (clean.length === 0) {
       return NextResponse.json(

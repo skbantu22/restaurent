@@ -253,75 +253,80 @@ export default function PremiumMealBuilder() {
       return;
     }
 
-    // Shared across every item from this click so the cart drawer can
-    // display them together as one "Custom Meal" package instead of
-    // scattered separate rows — see components/.../cart.jsx grouping.
-    // Doesn't change productId or item shape, so checkout parsing and
-    // the cart reducer's existing merge-by-productId behavior are
-    // both untouched.
+    // A Custom Meal is ONE cart line (quantity 1), not N separate
+    // top-level entries sharing a bundleId — the burger/extra/drink
+    // selections live in this one entry's nested `items` array instead.
+    // See store/reducer/cartReducer.js (a plain productId-keyed entry —
+    // no reducer changes needed) and app/api/checkout/route.js (which
+    // re-prices every nested item server-side, same as it always has
+    // for top-level items — a bundle is never trusted as one flat price).
     const bundleId = `bundle-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const bundleLabel = `Custom Meal: ${selectedBase?.label || ""}`.trim();
 
+    const nestedItems = [];
+
     if (selectedBase) {
-      dispatch(
-        addIntoCart({
-          productId: `category-${selectedBase.id}`,
-          name: `Category: ${selectedBase.label}`,
-          sellingPrice: 0,
-          price: 0,
-          quantity: 1,
-          bundleId,
-          bundleLabel,
-        }),
-      );
+      nestedItems.push({
+        productId: `category-${selectedBase.id}`,
+        itemType: "category",
+        name: `Category: ${selectedBase.label}`,
+        price: 0,
+        quantity: 1,
+      });
     }
 
+    cartProducts.forEach((prod) => {
+      nestedItems.push({
+        productId: prod.productId || prod._id,
+        itemType: "product",
+        name: prod.name,
+        price: Number(prod.price ?? prod.sellingPrice ?? 0),
+        quantity: prod.quantity || 1,
+        image: prod.media?.[0]?.secure_url || prod.media?.[0]?.url || "",
+      });
+    });
+
     selectedExtras.forEach((extra) => {
-      dispatch(
-        addIntoCart({
-          productId: `extra-${extra.id}`,
-          name: extra.label,
-          sellingPrice: extra.price,
-          price: extra.price,
-          quantity: 1,
-          image: extra.img,
-          bundleId,
-          bundleLabel,
-        }),
-      );
+      nestedItems.push({
+        productId: `extra-${extra.id}`,
+        itemType: "extra",
+        name: extra.label,
+        price: extra.price,
+        quantity: 1,
+        image: extra.img,
+      });
     });
 
     selectedDrinks.forEach((drink) => {
-      dispatch(
-        addIntoCart({
-          productId: `drink-${drink.id}`,
-          name: drink.label,
-          sellingPrice: drink.price,
-          price: drink.price,
-          quantity: 1,
-          image: drink.img,
-          bundleId,
-          bundleLabel,
-        }),
-      );
+      nestedItems.push({
+        productId: `drink-${drink.id}`,
+        itemType: "drink",
+        name: drink.label,
+        price: drink.price,
+        quantity: 1,
+        image: drink.img,
+      });
     });
 
-    cartProducts.forEach((prod) => {
-      dispatch(
-        addIntoCart({
-          productId: prod.productId || prod._id,
-          name: prod.name,
-          sellingPrice: prod.sellingPrice || prod.price,
-          price: prod.price || prod.sellingPrice,
-          quantity: prod.quantity || 1,
-          media: prod.media,
-          bundleId,
-          bundleLabel,
-        }),
-      );
-    });
+    const bundleTotal = nestedItems.reduce(
+      (sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 1),
+      0,
+    );
 
-    showToast("success", "Items added to cart successfully!");
+    dispatch(
+      addIntoCart({
+        productId: bundleId,
+        itemType: "bundle",
+        name: bundleLabel,
+        sellingPrice: bundleTotal,
+        price: bundleTotal,
+        quantity: 1,
+        image: cartProducts[0]?.media?.[0]?.secure_url || "",
+        items: nestedItems,
+      }),
+    );
+
+    showToast("success", "Custom meal added to cart!");
   };
 
   const clearSelection = () => {

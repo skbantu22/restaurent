@@ -14,7 +14,6 @@ import { useDispatch, useSelector } from "react-redux";
 import Image from "next/image";
 import {
   removeFromCart,
-  removeBundle,
   increaseQuantity,
   decreaseQuantity,
 } from "@/store/reducer/cartReducer";
@@ -97,9 +96,14 @@ function CartItemRow({ item, dispatch, nested = false }) {
           )}
         </div>
 
-        {/* Quantity Control */}
+        {/* Quantity Control — nested rows (a bundle's selections) are
+            always qty 1 and not individually adjustable; only the
+            bundle itself (rendered separately, see the bundle card
+            below) has a quantity stepper. */}
         {isCategoryItem ? (
           <p className="mt-2 text-xs text-gray-500 italic">Base selection — included</p>
+        ) : nested ? (
+          <p className="mt-1 text-[11px] text-gray-500">Qty: {item.quantity}</p>
         ) : (
           <div className="flex items-center justify-between mt-2">
             <div className="flex items-center bg-[#242424] rounded-lg border border-[#333]">
@@ -118,15 +122,9 @@ function CartItemRow({ item, dispatch, nested = false }) {
               </button>
             </div>
 
-            {/* Nested rows (inside a bundle package) skip their own
-                "Total" — the bundle header already shows one combined
-                total for the whole package, so repeating a per-item
-                total underneath just doubled up confusingly. */}
-            {!nested && (
-              <span className="text-xs text-gray-400 font-medium">
-                Total: £{(itemPrice * item.quantity).toLocaleString()}
-              </span>
-            )}
+            <span className="text-xs text-gray-400 font-medium">
+              Total: £{(itemPrice * item.quantity).toLocaleString()}
+            </span>
           </div>
         )}
       </div>
@@ -139,18 +137,11 @@ const Cart = ({ active }) => {
   const { products, count } = useSelector((store) => store.cartStore);
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
-  useEffect(() => {
-    console.log("Cart Products:", products);
-  }, [products]);
 
   // Route change হলে Cart Auto Close হবে
   useEffect(() => {
     setIsOpen(false);
   }, [pathname]);
-
-  useEffect(() => {
-    console.log(JSON.stringify(products, null, 2));
-  }, [products]);
 
   const subtotal = useMemo(() => {
     return products.reduce(
@@ -159,31 +150,17 @@ const Cart = ({ active }) => {
     );
   }, [products]);
 
-  // Items added together from the custom-meal builder share a
-  // bundleId (see customorders.jsx) — group them into one "package"
-  // card instead of scattered separate rows. Regular products (no
-  // bundleId) render individually as before.
-  const { bundles, singles } = useMemo(() => {
-    const bundleMap = new Map();
-    const singleItems = [];
-
-    products.forEach((item) => {
-      if (item.bundleId) {
-        if (!bundleMap.has(item.bundleId)) {
-          bundleMap.set(item.bundleId, {
-            bundleId: item.bundleId,
-            label: item.bundleLabel || "Custom Meal",
-            items: [],
-          });
-        }
-        bundleMap.get(item.bundleId).items.push(item);
-      } else {
-        singleItems.push(item);
-      }
-    });
-
-    return { bundles: Array.from(bundleMap.values()), singles: singleItems };
-  }, [products]);
+  // A Custom Meal is one cart entry with itemType "bundle" and its
+  // selections nested in `items` (see customorders.jsx / cartReducer) —
+  // no more client-side grouping of scattered same-bundleId rows.
+  const bundleItems = useMemo(
+    () => products.filter((item) => item.itemType === "bundle"),
+    [products],
+  );
+  const singleItems = useMemo(
+    () => products.filter((item) => item.itemType !== "bundle"),
+    [products],
+  );
 
   const handleCheckoutClick = () => {
     if (products.length > 0) {
@@ -245,51 +222,71 @@ const Cart = ({ active }) => {
             </div>
           ) : (
             <>
-              {bundles.map((bundle) => {
-                const bundleTotal = bundle.items.reduce(
-                  (sum, item) => sum + getPrice(item.price) * Number(item.quantity || 0),
-                  0,
+              {bundleItems.map((bundle) => {
+                const bundleUnitPrice = getPrice(bundle.price);
+                const bundleQty = Number(bundle.quantity || 1);
+                const nestedVisible = (bundle.items || []).filter(
+                  (item) => item.itemType !== "category",
                 );
 
                 return (
                   <div
-                    key={bundle.bundleId}
+                    key={bundle.productId}
                     className="rounded-xl border border-[#ff6b00]/30 bg-[#1a1a1a] overflow-hidden"
                   >
                     <div className="flex items-center justify-between px-3 py-2 bg-[#ff6b00]/10 border-b border-[#ff6b00]/20">
                       <span className="text-xs font-bold uppercase tracking-wide text-[#ff6b00]">
-                        {bundle.label}
+                        {bundle.name}
                       </span>
-                      <div className="flex items-center gap-3">
-                        <span className="text-xs font-semibold text-gray-300">
-                          £{bundleTotal.toLocaleString()}
-                        </span>
-                        <button
-                          onClick={() => dispatch(removeBundle({ bundleId: bundle.bundleId }))}
-                          className="text-gray-400 hover:text-red-500 transition-colors p-1"
-                          title="Remove this meal"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => dispatch(removeFromCart({ productId: bundle.productId }))}
+                        className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                        title="Remove this meal"
+                      >
+                        <Trash2 size={14} />
+                      </button>
                     </div>
+
                     <div className="px-3 py-1">
-                      {bundle.items
-                        .filter((item) => !String(item.productId || "").startsWith("category-"))
-                        .map((item) => (
+                      {nestedVisible.map((item, i) => (
                         <CartItemRow
-                          key={item.productId}
+                          key={`${bundle.productId}-${item.productId || i}`}
                           item={item}
                           dispatch={dispatch}
                           nested
                         />
                       ))}
                     </div>
+
+                    {/* Bundle-level quantity — increases/decreases the
+                        WHOLE Custom Meal, not any individual selection
+                        inside it. */}
+                    <div className="flex items-center justify-between px-3 py-2.5 border-t border-[#262626]">
+                      <div className="flex items-center bg-[#242424] rounded-lg border border-[#333]">
+                        <button
+                          className="p-1.5 text-gray-300 hover:text-[#ff6b00] transition-colors"
+                          onClick={() => dispatch(decreaseQuantity({ productId: bundle.productId }))}
+                        >
+                          <Minus size={13} />
+                        </button>
+                        <span className="px-3 text-xs font-semibold text-white">{bundleQty}</span>
+                        <button
+                          className="p-1.5 text-gray-300 hover:text-[#ff6b00] transition-colors"
+                          onClick={() => dispatch(increaseQuantity({ productId: bundle.productId }))}
+                        >
+                          <Plus size={13} />
+                        </button>
+                      </div>
+
+                      <span className="text-xs text-gray-300 font-semibold">
+                        Total: £{(bundleUnitPrice * bundleQty).toLocaleString()}
+                      </span>
+                    </div>
                   </div>
                 );
               })}
 
-              {singles.map((item) => (
+              {singleItems.map((item) => (
                 <CartItemRow key={item.productId} item={item} dispatch={dispatch} />
               ))}
             </>

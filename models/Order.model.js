@@ -12,6 +12,33 @@ const ORDER_STATUSES = [
 
 const PAYMENT_STATUSES = ["pending", "paid", "failed", "cancelled", "refunded"];
 
+// A Custom Meal's burger/extra/drink selections, nested one level deep
+// inside an OrderItemSchema entry with itemType "bundle" — see
+// OrderItemSchema.items below. Deliberately a plain flat shape (not a
+// recursive OrderItemSchema) since bundle children are never
+// themselves bundles.
+const BundleChildItemSchema = new mongoose.Schema(
+  {
+    productId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
+      default: null,
+    },
+    itemType: {
+      type: String,
+      enum: ["product", "extra", "drink", "category"],
+      default: "product",
+      required: true,
+    },
+    customId: { type: String, default: "", trim: true },
+    name: { type: String, required: true, trim: true },
+    image: { type: String, default: "" },
+    price: { type: Number, required: true, min: 0 },
+    quantity: { type: Number, required: true, min: 1, default: 1 },
+  },
+  { _id: false },
+);
+
 const OrderItemSchema = new mongoose.Schema(
   {
     // Real MongoDB product
@@ -23,15 +50,18 @@ const OrderItemSchema = new mongoose.Schema(
 
     // Item type. "category" was added for the custom-meal builder's
     // informational £0 base-protein line (e.g. "Category: Beef") —
-    // see /api/checkout's category- handling.
+    // see /api/checkout's category- handling. "bundle" is the custom
+    // meal builder's whole package as ONE order line (see `items`
+    // below for its burger/extra/drink breakdown) rather than each
+    // selection being its own separate top-level order item.
     itemType: {
       type: String,
-      enum: ["product", "extra", "drink", "category"],
+      enum: ["product", "extra", "drink", "category", "bundle"],
       default: "product",
       required: true,
     },
 
-    // Used for extra/drink items
+    // Used for extra/drink/bundle items
     customId: {
       type: String,
       default: "",
@@ -66,6 +96,14 @@ const OrderItemSchema = new mongoose.Schema(
       type: String,
       default: "",
       trim: true,
+    },
+
+    // Only present when itemType === "bundle" — the burger/extra/drink
+    // selections that make up this Custom Meal, so the kitchen still
+    // sees exactly what to prepare even though it's one order line.
+    items: {
+      type: [BundleChildItemSchema],
+      default: undefined,
     },
   },
   {

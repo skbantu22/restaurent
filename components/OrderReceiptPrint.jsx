@@ -80,6 +80,21 @@ export default function OrderReceiptPrint({ order, mode = "receipt" }) {
             {!isKitchen && <span className="text-right">{currency}{(item.price * item.quantity).toFixed(2)}</span>}
           </div>
           {item.notes && <p className="pl-3 text-[11px] italic">Note: {item.notes}</p>}
+
+          {/* A Custom Meal is one order line — kitchen still needs to
+              see exactly what's in it. */}
+          {item.itemType === "bundle" && item.items?.length > 0 && (
+            <div className="pl-3 mt-0.5">
+              {item.items
+                .filter((child) => child.itemType !== "category" || isKitchen)
+                .map((child, ci) => (
+                  <p key={ci} className="text-[11px]">
+                    → {child.quantity > 1 ? `${child.quantity}x ` : ""}
+                    {child.name}
+                  </p>
+                ))}
+            </div>
+          )}
         </div>
       ))}
 
