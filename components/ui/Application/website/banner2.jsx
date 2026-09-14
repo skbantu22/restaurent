@@ -37,7 +37,7 @@ const features = [
 
 export default function WhySmashed() {
   return (
-    <section className="bg-[#050505]  px-4">
+    <section id="our-story" className="bg-[#050505]  px-4 scroll-mt-24">
       <div className="max-w-8xl  mx-auto">
         <div className="relative overflow-hidden  border border-[#1c2b12] bg-[#071207]">
           {/* GREEN GLOW */}

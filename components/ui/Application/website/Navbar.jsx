@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Menu,
-  Heart,
   X,
   User,
   LogOutIcon,
@@ -36,8 +35,8 @@ import { logout } from "@/store/reducer/authReducer";
 
 const NAV_LINKS = [
   { label: "HOME", href: WEBSITE_HOME },
-  { label: "MENU", href: "/#Order-now" },
-  { label: "OUR STORY", href: "#" },
+  { label: "MENU", href: "/#our-menu" },
+  { label: "OUR STORY", href: "/#our-story" },
   { label: "CONTACT", href: "/#contact" },
 ];
 
@@ -284,17 +283,6 @@ const Navbar = () => {
                     </motion.button>
                   </>
                 )}
-
-                <motion.div variants={MOBILE_LINK_ITEM}>
-                  <Link
-                    href="/wishlist"
-                    onClick={() => setOpenMenu(false)}
-                    className="flex items-center gap-3 transition-colors duration-200 hover:text-[#ff6b00]"
-                  >
-                    <Heart size={18} />
-                    Wishlist
-                  </Link>
-                </motion.div>
 
                 <motion.div variants={MOBILE_LINK_ITEM}>
                   <Link
