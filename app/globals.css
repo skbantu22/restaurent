@@ -193,6 +193,16 @@
   --ring: #ff6b00;
 }
 
+/* Bottom padding that clears iPhone's Home Indicator safe area (falls
+   back to a plain 1rem on devices/browsers without it — env() resolves
+   to nothing there, so the max() just picks the fallback). Used by
+   scrollable modal content that can otherwise end up partly behind the
+   Home Indicator or a fixed bottom nav — see components/ui/Application/
+   website/customorders.jsx's "Select Items" modal. */
+.pb-safe-bottom {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
 .admin-theme.dark,
 .dark .admin-theme {
   --background: #18181b;

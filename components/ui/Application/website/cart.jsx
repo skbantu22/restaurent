@@ -118,9 +118,15 @@ function CartItemRow({ item, dispatch, nested = false }) {
               </button>
             </div>
 
-            <span className="text-xs text-gray-400 font-medium">
-              Total: £{(itemPrice * item.quantity).toLocaleString()}
-            </span>
+            {/* Nested rows (inside a bundle package) skip their own
+                "Total" — the bundle header already shows one combined
+                total for the whole package, so repeating a per-item
+                total underneath just doubled up confusingly. */}
+            {!nested && (
+              <span className="text-xs text-gray-400 font-medium">
+                Total: £{(itemPrice * item.quantity).toLocaleString()}
+              </span>
+            )}
           </div>
         )}
       </div>

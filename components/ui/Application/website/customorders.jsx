@@ -127,6 +127,20 @@ export default function PremiumMealBuilder() {
   });
   const [loadingProducts, setLoadingProducts] = useState(false);
 
+  // Prevent the page behind the "Select Items" modal from scrolling
+  // while it's open (iOS Safari in particular will happily scroll the
+  // body underneath a `position: fixed` overlay otherwise).
+  useEffect(() => {
+    if (!activeModalBase) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [activeModalBase]);
+
   useEffect(() => {
     async function fetchFilteredProducts() {
       try {
@@ -636,14 +650,22 @@ export default function PremiumMealBuilder() {
           </div>
         </div>
 
-        {/* CATEGORY PRODUCTS POPUP MODAL */}
+        {/* CATEGORY PRODUCTS POPUP MODAL
+            z-[60] (above MobileBottomNav's z-50, both `fixed`) — at
+            equal z-index the bottom nav, being later in the DOM
+            (rendered in the website layout after page content), was
+            painting on top of this modal and covering its bottom
+            portion regardless of scroll position. That, plus 85vh
+            (unreliable on Safari's dynamic toolbar — use 85dvh) and no
+            safe-area padding, is why the last item could end up
+            hidden/unreachable on iPhone. */}
         {activeModalBase && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
+            className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
             onClick={() => setActiveModalBase(null)}
           >
             <div
-              className="bg-zinc-950 outline outline-1 outline-zinc-800 w-full max-w-lg rounded-none p-6 relative shadow-2xl overflow-hidden max-h-[85vh] flex flex-col"
+              className="bg-zinc-950 outline outline-1 outline-zinc-800 w-full max-w-lg rounded-none p-6 relative shadow-2xl overflow-hidden max-h-[85dvh] flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
               <button
@@ -662,7 +684,11 @@ export default function PremiumMealBuilder() {
                 </p>
               </div>
 
-              <div className="space-y-3 overflow-y-auto pr-1 flex-1">
+              {/* pb-safe-bottom (globals.css): clears the Home
+                  Indicator safe area so the last card is fully
+                  scrollable into view, not just up to the modal's own
+                  edge. */}
+              <div className="space-y-3 overflow-y-auto pr-1 flex-1 pb-safe-bottom">
                 {loadingProducts ? (
                   <div className="flex justify-center items-center py-12">
                     <Loader2
