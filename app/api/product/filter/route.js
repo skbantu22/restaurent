@@ -9,6 +9,19 @@ const CATEGORY_MAP = {
   plant: ["plant-based"],
 };
 
+// Fallback keyword match: a product whose name/description mentions
+// "beef"/"chicken"/"plant" is included even if it isn't assigned to
+// one of the hardcoded category slugs above. This is what actually
+// decides membership for most products, since category slugs are
+// easy to get out of sync with the real menu — matching on the word
+// itself is more forgiving and matches how staff naturally describe
+// items ("Beef Mushroom Burger", "...chicken breast...", etc).
+const KEYWORD_MAP = {
+  beef: /beef/i,
+  chicken: /chicken/i,
+  plant: /plant/i,
+};
+
 export async function GET(req) {
   try {
     await connectDB();
@@ -30,11 +43,17 @@ export async function GET(req) {
     }).select("_id");
 
     const categoryIds = categories.map((c) => c._id);
+    const keyword = KEYWORD_MAP[type];
 
-    // Find products by category ids
+    // A product qualifies if it's assigned to one of the mapped
+    // categories OR its name/description mentions the keyword.
     const products = await ProductModel.find({
-      category: { $in: categoryIds },
       deletedAt: null,
+      $or: [
+        { category: { $in: categoryIds } },
+        { name: { $regex: keyword } },
+        { description: { $regex: keyword } },
+      ],
     })
       .populate("media")
       .populate("category", "name slug");

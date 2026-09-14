@@ -2,6 +2,8 @@
 
 import React from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
 import { LuChevronRight } from "react-icons/lu";
 import { IoMdClose } from "react-icons/io";
 
@@ -31,6 +33,7 @@ import { Button } from "../../button";
 
 export default function Appsidebar() {
   const { toggleSidebar, isMobile } = useSidebar();
+  const pathname = usePathname();
 
   // ✅ Close only on mobile after navigation
   const handleNav = () => {
@@ -69,17 +72,31 @@ export default function Appsidebar() {
                 menu.url.length > 1;
 
               const href = isValidHref ? menu.url : "/admin";
+              const isActive = pathname === href;
+              const hasActiveChild =
+                hasSubmenu &&
+                menu.submenu.some((sub) => sub?.url && pathname === sub.url);
 
               return (
-                <Collapsible key={index} className="group/collapsible">
+                <Collapsible
+                  key={index}
+                  className="group/collapsible"
+                  defaultOpen={hasActiveChild}
+                >
                   <SidebarMenuItem>
                     {hasSubmenu ? (
                       <CollapsibleTrigger asChild>
                         <SidebarMenuButton
                           type="button"
+                          isActive={hasActiveChild}
                           className="flex items-center gap-2"
                         >
-                          <menu.icon />
+                          <motion.span
+                            whileHover={{ scale: 1.15 }}
+                            className="flex items-center"
+                          >
+                            <menu.icon />
+                          </motion.span>
                           <span>{menu.title}</span>
                           <LuChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                         </SidebarMenuButton>
@@ -87,10 +104,16 @@ export default function Appsidebar() {
                     ) : (
                       <SidebarMenuButton
                         asChild
+                        isActive={isActive}
                         className="flex items-center gap-2"
                       >
                         <Link href={href} onClick={handleNav}>
-                          <menu.icon />
+                          <motion.span
+                            whileHover={{ scale: 1.15 }}
+                            className="flex items-center"
+                          >
+                            <menu.icon />
+                          </motion.span>
                           <span>{menu.title}</span>
                         </Link>
                       </SidebarMenuButton>
@@ -109,7 +132,10 @@ export default function Appsidebar() {
 
                             return (
                               <SidebarMenuSubItem key={subIndex}>
-                                <SidebarMenuSubButton asChild>
+                                <SidebarMenuSubButton
+                                  asChild
+                                  isActive={pathname === subHref}
+                                >
                                   <Link href={subHref} onClick={handleNav}>
                                     {sub.title}
                                   </Link>

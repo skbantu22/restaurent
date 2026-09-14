@@ -159,16 +159,12 @@ export default function PremiumMealBuilder() {
     fetchFilteredProducts();
   }, []);
 
-  const toggleExtra = (id) => {
-    setExtras((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
+  const selectExtra = (id) => {
+    setExtras([id]);
   };
 
-  const toggleDrink = (id) => {
-    setDrinks((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
+  const selectDrink = (id) => {
+    setDrinks([id]);
   };
 
   const selectedDrinks = useMemo(
@@ -179,6 +175,11 @@ export default function PremiumMealBuilder() {
   const selectedExtras = useMemo(
     () => EXTRA_OPTIONS.filter((x) => extras.includes(x.id)),
     [extras],
+  );
+
+  const selectedBase = useMemo(
+    () => BASE_OPTIONS.find((x) => x.id === base) || null,
+    [base],
   );
 
   const drinksPrice = selectedDrinks.reduce((sum, item) => sum + item.price, 0);
@@ -192,7 +193,13 @@ export default function PremiumMealBuilder() {
   const total = drinksPrice + extrasPrice + productsPrice;
   const totalItems =
     selectedExtras.length + selectedDrinks.length + cartProducts.length;
-  const hasSelection = totalItems > 0;
+  const hasSelection = totalItems > 0 || !!base;
+
+  const missingSteps = [];
+  if (!base) missingSteps.push("a category");
+  if (selectedExtras.length !== 1) missingSteps.push("exactly one extra");
+  if (selectedDrinks.length !== 1) missingSteps.push("exactly one drink");
+  const canCheckout = missingSteps.length === 0;
 
   const handleBaseClick = (baseId) => {
     setActiveModalBase(baseId);
@@ -204,26 +211,51 @@ export default function PremiumMealBuilder() {
     );
   };
 
+  // Single-select: this builder is for one custom meal at a time, so
+  // picking a product (even from a different category's modal)
+  // replaces whatever was previously chosen rather than adding to a list.
   const handleToggleProductCart = (prod) => {
     const prodId = prod._id || prod.productId || "";
     if (isProductInCart(prodId)) {
-      setCartProducts((prev) =>
-        prev.filter(
-          (item) => String(item.productId || item._id) !== String(prodId),
-        ),
-      );
+      setCartProducts([]);
       showToast("info", `Removed ${prod.name} from selection`);
     } else {
-      setCartProducts((prev) => [
-        ...prev,
-        { ...prod, productId: prodId, quantity: 1 },
-      ]);
+      setCartProducts([{ ...prod, productId: prodId, quantity: 1 }]);
       showToast("success", `Added ${prod.name} to selection`);
     }
   };
 
   const handleAddToCart = () => {
-    if (!hasSelection) return;
+    if (!canCheckout) {
+      showToast(
+        "error",
+        `Please select ${missingSteps.join(", ")} before adding to cart.`,
+      );
+      return;
+    }
+
+    // Shared across every item from this click so the cart drawer can
+    // display them together as one "Custom Meal" package instead of
+    // scattered separate rows — see components/.../cart.jsx grouping.
+    // Doesn't change productId or item shape, so checkout parsing and
+    // the cart reducer's existing merge-by-productId behavior are
+    // both untouched.
+    const bundleId = `bundle-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const bundleLabel = `Custom Meal: ${selectedBase?.label || ""}`.trim();
+
+    if (selectedBase) {
+      dispatch(
+        addIntoCart({
+          productId: `category-${selectedBase.id}`,
+          name: `Category: ${selectedBase.label}`,
+          sellingPrice: 0,
+          price: 0,
+          quantity: 1,
+          bundleId,
+          bundleLabel,
+        }),
+      );
+    }
 
     selectedExtras.forEach((extra) => {
       dispatch(
@@ -234,6 +266,8 @@ export default function PremiumMealBuilder() {
           price: extra.price,
           quantity: 1,
           image: extra.img,
+          bundleId,
+          bundleLabel,
         }),
       );
     });
@@ -247,6 +281,8 @@ export default function PremiumMealBuilder() {
           price: drink.price,
           quantity: 1,
           image: drink.img,
+          bundleId,
+          bundleLabel,
         }),
       );
     });
@@ -260,6 +296,8 @@ export default function PremiumMealBuilder() {
           price: prod.price || prod.sellingPrice,
           quantity: prod.quantity || 1,
           media: prod.media,
+          bundleId,
+          bundleLabel,
         }),
       );
     });
@@ -277,7 +315,7 @@ export default function PremiumMealBuilder() {
     setExtras([]);
     setDrinks([]);
     setCartProducts([]);
-    toast.success("Cleared all selections");
+    showToast("success", "Cleared all selections");
   };
 
   return (
@@ -355,7 +393,7 @@ export default function PremiumMealBuilder() {
                 return (
                   <button
                     key={item.id}
-                    onClick={() => toggleExtra(item.id)}
+                    onClick={() => selectExtra(item.id)}
                     className={`group flex flex-col items-center gap-2 transition-all duration-300 hover:scale-105 ${
                       isSelected ? "scale-105" : ""
                     }`}
@@ -409,7 +447,7 @@ export default function PremiumMealBuilder() {
                 return (
                   <button
                     key={item.id}
-                    onClick={() => toggleDrink(item.id)}
+                    onClick={() => selectDrink(item.id)}
                     className={`group relative flex flex-col items-center justify-between h-[130px] p-3 rounded-none outline outline-1 transition-all duration-300 hover:scale-105 ${
                       active
                         ? "outline-[#7ac943] bg-[#0d0d0d] shadow-[0_0_25px_rgba(122,201,67,0.18)] scale-105"
@@ -500,52 +538,66 @@ export default function PremiumMealBuilder() {
                 </div>
               ))}
 
-              {selectedExtras.map((extra) => (
-                <div
-                  key={extra.id}
-                  className="flex justify-between items-center text-sm px-4 py-3 bg-neutral-900/20 rounded-none outline outline-1 outline-neutral-800"
-                >
-                  <span className="text-neutral-400">
-                    + <span className="text-white">{extra.label}</span>
-                  </span>
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono text-neutral-300">
-                      £{extra.price.toFixed(2)}
+              {(selectedExtras.length > 0 || selectedDrinks.length > 0) && (
+                <div className="rounded-none outline outline-1 outline-[#7ac943]/40 overflow-hidden">
+                  <div className="px-4 py-2 bg-[#7ac943]/10 border-b border-[#7ac943]/20">
+                    <span className="text-[10px] uppercase tracking-widest font-black text-[#7ac943]">
+                      Custom Meal{selectedBase ? `: ${selectedBase.label}` : ""}
                     </span>
-                    <button
-                      onClick={() =>
-                        setExtras((prev) => prev.filter((x) => x !== extra.id))
-                      }
-                      className="text-red-400 hover:text-red-300 text-xs font-black"
-                    >
-                      ✕
-                    </button>
                   </div>
-                </div>
-              ))}
 
-              {selectedDrinks.map((drink) => (
-                <div
-                  key={drink.id}
-                  className="flex justify-between items-center text-sm bg-neutral-900/40 px-4 py-3 rounded-none outline outline-1 outline-neutral-800"
-                >
-                  <span className="text-neutral-300">
-                    Drink →{" "}
-                    <strong className="text-[#7ac943]">{drink.label}</strong>
-                  </span>
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono text-white">
-                      £{drink.price.toFixed(2)}
-                    </span>
-                    <button
-                      onClick={() => toggleDrink(drink.id)}
-                      className="text-red-400 hover:text-red-300 text-xs font-black"
-                    >
-                      ✕
-                    </button>
+                  <div className="divide-y divide-neutral-800">
+                    {selectedExtras.map((extra) => (
+                      <div
+                        key={extra.id}
+                        className="flex justify-between items-center text-sm px-4 py-3 bg-neutral-900/20"
+                      >
+                        <span className="text-neutral-400">
+                          + <span className="text-white">{extra.label}</span>
+                        </span>
+                        <div className="flex items-center gap-3">
+                          <span className="font-mono text-neutral-300">
+                            £{extra.price.toFixed(2)}
+                          </span>
+                          <button
+                            onClick={() =>
+                              setExtras((prev) => prev.filter((x) => x !== extra.id))
+                            }
+                            className="text-red-400 hover:text-red-300 text-xs font-black"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+
+                    {selectedDrinks.map((drink) => (
+                      <div
+                        key={drink.id}
+                        className="flex justify-between items-center text-sm px-4 py-3 bg-neutral-900/40"
+                      >
+                        <span className="text-neutral-300">
+                          Drink →{" "}
+                          <strong className="text-[#7ac943]">{drink.label}</strong>
+                        </span>
+                        <div className="flex items-center gap-3">
+                          <span className="font-mono text-white">
+                            £{drink.price.toFixed(2)}
+                          </span>
+                          <button
+                            onClick={() =>
+                              setDrinks((prev) => prev.filter((x) => x !== drink.id))
+                            }
+                            className="text-red-400 hover:text-red-300 text-xs font-black"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              ))}
+              )}
             </div>
 
             <div className="border-t border-[#7ac943]/20 bg-black/60 px-6 py-5 flex flex-col md:flex-row gap-5 items-center justify-between">
@@ -557,17 +609,24 @@ export default function PremiumMealBuilder() {
                   £{total.toFixed(2)}
                 </h2>
               </div>
-              <button
-                onClick={handleAddToCart}
-                disabled={!hasSelection}
-                className={`w-full md:w-auto font-black px-10 py-4 rounded-none transition-all duration-300 ${
-                  hasSelection
-                    ? "bg-[#7ac943] text-black hover:bg-[#68b038]"
-                    : "bg-neutral-800 text-neutral-500 cursor-not-allowed"
-                }`}
-              >
-                ADD TO CART
-              </button>
+              <div className="flex flex-col items-center md:items-end gap-2 w-full md:w-auto">
+                <button
+                  onClick={handleAddToCart}
+                  disabled={!canCheckout}
+                  className={`w-full md:w-auto font-black px-10 py-4 rounded-none transition-all duration-300 ${
+                    canCheckout
+                      ? "bg-[#7ac943] text-black hover:bg-[#68b038]"
+                      : "bg-neutral-800 text-neutral-500 cursor-not-allowed"
+                  }`}
+                >
+                  ADD TO CART
+                </button>
+                {!canCheckout && (
+                  <p className="text-red-400 text-[11px] uppercase tracking-wide text-center md:text-right">
+                    Please select {missingSteps.join(", ")} to continue.
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -594,7 +653,7 @@ export default function PremiumMealBuilder() {
                   Select {activeModalBase} Items
                 </h2>
                 <p className="text-zinc-400 text-xs mt-1">
-                  Choose multiple items for your meal configuration.
+                  Choose one item for your meal — selecting a new item replaces your current choice.
                 </p>
               </div>
 

@@ -9,12 +9,10 @@ import EditAction from "@/components/ui/Application/Admin/EditAction";
 import DeleteAction from "@/components/ui/Application/Admin/DeleteAction";
 
 import {
-  ADMIN_CATEGORY_ADD,
-  ADMIN_CATEGORY_EDIT,
-  ADMIN_CATEGORY_SHOW,
   ADMIN_DASHBOARD,
   ADMIN_PRODUCT_ADD,
   ADMIN_PRODUCT_EDIT,
+  ADMIN_PRODUCT_SHOW,
   ADMIN_TRASH,
 } from "@/Route/Adminpannelroute";
 
@@ -28,7 +26,7 @@ import { FiPlus } from "react-icons/fi";
 
 const breadcrumbData = [
   { href: ADMIN_DASHBOARD, label: "Home" },
-  { href: ADMIN_CATEGORY_SHOW, label: "Category" },
+  { href: ADMIN_PRODUCT_SHOW, label: "Products" },
 ];
 
 const ShowProduct = () => {
@@ -68,7 +66,7 @@ const ShowProduct = () => {
           <Button asChild>
             <Link href={ADMIN_PRODUCT_ADD}>
               <FiPlus className="mr-2" />
-              New Category
+              New Product
             </Link>
           </Button>
         </CardHeader>

@@ -18,7 +18,7 @@ const Topbar = () => {
   return (
   
 
-  <div className="fixed border h-14 w-full top-0 left-0 z-30 md:ps-72 md:pe-8 px-5 flex justify-between items-center bg-white dark:bg-card">
+  <div className="fixed border-b h-14 w-full top-0 left-0 z-30 md:ps-72 md:pe-8 px-5 flex justify-between items-center bg-background">
 
  <div className="flex items-center md:hidden">
   <h1 className="text-lg font-semibold">

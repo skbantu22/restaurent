@@ -42,18 +42,21 @@ export async function GET(request) {
     const finalSort =
       Object.keys(sortQuery).length > 0 ? sortQuery : { createdAt: -1 };
 
-    // Global Filter
+    // Global Filter — field names match the real Order schema
+    // (models/Order.model.js): flat order_id/payment_id/name/phone/
+    // address/city/status never existed on this model, so searching by
+    // them silently matched nothing.
     const searchMatch = globalFilter
       ? {
           $match: {
             $or: [
-              { order_id: { $regex: globalFilter, $options: "i" } },
-              { payment_id: { $regex: globalFilter, $options: "i" } },
-              { name: { $regex: globalFilter, $options: "i" } },
-              { phone: { $regex: globalFilter, $options: "i" } },
-              { address: { $regex: globalFilter, $options: "i" } },
-              { city: { $regex: globalFilter, $options: "i" } },
-              { status: { $regex: globalFilter, $options: "i" } },
+              { orderNumber: { $regex: globalFilter, $options: "i" } },
+              { "payment.transactionId": { $regex: globalFilter, $options: "i" } },
+              { "customer.name": { $regex: globalFilter, $options: "i" } },
+              { "customer.phone": { $regex: globalFilter, $options: "i" } },
+              { "deliveryAddress.address": { $regex: globalFilter, $options: "i" } },
+              { "deliveryAddress.city": { $regex: globalFilter, $options: "i" } },
+              { orderStatus: { $regex: globalFilter, $options: "i" } },
             ],
           },
         }

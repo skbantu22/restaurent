@@ -21,10 +21,12 @@ const OrderItemSchema = new mongoose.Schema(
       default: null,
     },
 
-    // Item type
+    // Item type. "category" was added for the custom-meal builder's
+    // informational £0 base-protein line (e.g. "Category: Beef") —
+    // see /api/checkout's category- handling.
     itemType: {
       type: String,
-      enum: ["product", "extra", "drink"],
+      enum: ["product", "extra", "drink", "category"],
       default: "product",
       required: true,
     },
@@ -74,8 +76,10 @@ const OrderItemSchema = new mongoose.Schema(
 const PaymentSchema = new mongoose.Schema(
   {
     method: {
+      // "cash"/"card"/"split" added for POS (Phase 5) alongside the
+      // existing website methods — "cod" and "stripe" are unchanged.
       type: String,
-      enum: ["cod", "stripe"],
+      enum: ["cod", "stripe", "cash", "card", "split"],
       default: "stripe",
     },
 
@@ -104,6 +108,25 @@ const PaymentSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+
+    // ---- POS cash handling ----
+    cashReceived: { type: Number, default: null },
+    changeDue: { type: Number, default: null },
+
+    // ---- Split payment architecture ----
+    // Not exposed in a full UI yet, but the shape exists so a POS
+    // order can already record "£10 cash + £5 card" without a later
+    // schema change: method="split" with this breakdown.
+    splitPayments: {
+      type: [
+        {
+          method: { type: String, enum: ["cash", "card", "stripe", "cod"] },
+          amount: { type: Number, min: 0 },
+        },
+      ],
+      default: [],
+      _id: false,
+    },
   },
   {
     _id: false,
@@ -125,11 +148,47 @@ const OrderSchema = new mongoose.Schema(
       index: true,
     },
 
-    orderType: {
+    // Client-generated key (POS only, for now) used to guard against
+    // duplicate order creation from a double-submit/network retry. A
+    // sparse unique index means website orders (which never set this)
+    // are completely unaffected.
+    idempotencyKey: {
       type: String,
-      enum: ["delivery", "pickup"],
+      default: null,
+    },
+
+    orderType: {
+      // "dine_in"/"takeaway" added for the in-store POS (Phase 5).
+      // "pickup" continues to mean customer collection (website and
+      // POS both use it — no separate "collection" value needed).
+      type: String,
+      enum: ["delivery", "pickup", "dine_in", "takeaway"],
       default: "delivery",
       index: true,
+    },
+
+    // Where the order was created. Existing website orders are
+    // unaffected — this defaults to "website" so nothing already in
+    // the database needs a migration.
+    source: {
+      type: String,
+      enum: ["website", "pos"],
+      default: "website",
+      index: true,
+    },
+
+    // Dine-in table identifier (POS only).
+    table: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    // Staff member who rang up a POS sale.
+    cashierId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
     },
 
     customer: {
@@ -300,6 +359,11 @@ OrderSchema.index({
   orderStatus: 1,
   createdAt: -1,
 });
+
+OrderSchema.index(
+  { idempotencyKey: 1 },
+  { unique: true, partialFilterExpression: { idempotencyKey: { $type: "string" } } },
+);
 
 // Generate Order Number
 OrderSchema.pre("validate", function () {

@@ -192,20 +192,22 @@ const handleExport = async (selectedRows) => {
       { columnFilters, globalFilter, pagination, sorting, deleteType },
     ],
     queryFn: async () => {
-      // ✅ FIXED: fetchUrl is the api endpoint
-      const url = new URL(fetchUrl, process.env.NEXT_PUBLIC_BASE_URL);
+      // Relative URL — resolved by the browser against whatever origin
+      // actually served the page. An absolute URL built from
+      // NEXT_PUBLIC_BASE_URL broke as soon as the app ran on a
+      // different host/port than that env var (e.g. a different dev
+      // port), since it turns a same-origin fetch into a cross-origin
+      // one that gets blocked or hits the wrong server.
+      const params = new URLSearchParams();
 
-      url.searchParams.set(
-        "start",
-        `${pagination.pageIndex * pagination.pageSize}`
-      );
-      url.searchParams.set("size", `${pagination.pageSize}`);
-      url.searchParams.set("filters", JSON.stringify(columnFilters ?? []));
-      url.searchParams.set("globalFilter", globalFilter ?? "");
-      url.searchParams.set("sorting", JSON.stringify(sorting ?? []));
-      url.searchParams.set("deleteType", deleteType);
+      params.set("start", `${pagination.pageIndex * pagination.pageSize}`);
+      params.set("size", `${pagination.pageSize}`);
+      params.set("filters", JSON.stringify(columnFilters ?? []));
+      params.set("globalFilter", globalFilter ?? "");
+      params.set("sorting", JSON.stringify(sorting ?? []));
+      params.set("deleteType", deleteType);
 
-      const { data: response } = await axios.get(url.href);
+      const { data: response } = await axios.get(`${fetchUrl}?${params.toString()}`);
 
       return response;
     },

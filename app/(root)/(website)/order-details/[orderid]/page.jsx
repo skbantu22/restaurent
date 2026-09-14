@@ -77,7 +77,7 @@ const OrderDetails = async ({ params }) => {
               <td className="text-center p-3">
                 {item.sellingPrice.toLocaleString("en-BD", {
                   style: "currency",
-                  currency: "BDT",
+                  currency: "GBP",
                   minimumFractionDigits: 0,
                 })}
               </td>
@@ -85,7 +85,7 @@ const OrderDetails = async ({ params }) => {
               <td className="text-center p-3">
                 {(item.quantity * item.sellingPrice).toLocaleString("en-BD", {
                   style: "currency",
-                  currency: "BDT",
+                  currency: "GBP",
                 })}
               </td>
             </tr>
@@ -99,7 +99,7 @@ const OrderDetails = async ({ params }) => {
             <td className="text-center p-3">
               {order.subtotal.toLocaleString("en-BD", {
                 style: "currency",
-                currency: "BDT",
+                currency: "GBP",
               })}
             </td>
           </tr>
@@ -110,7 +110,7 @@ const OrderDetails = async ({ params }) => {
             <td className="text-center p-3">
               {order.shippingFee.toLocaleString("en-BD", {
                 style: "currency",
-                currency: "BDT",
+                currency: "GBP",
               })}
             </td>
           </tr>
@@ -122,7 +122,7 @@ const OrderDetails = async ({ params }) => {
               <td className="text-center p-3">
                 {order.discount.toLocaleString("en-BD", {
                   style: "currency",
-                  currency: "BDT",
+                  currency: "GBP",
                 })}
               </td>
             </tr>
@@ -134,7 +134,7 @@ const OrderDetails = async ({ params }) => {
             <td className="text-center p-3">
               {order.total.toLocaleString("en-BD", {
                 style: "currency",
-                currency: "BDT",
+                currency: "GBP",
               })}
             </td>
           </tr>

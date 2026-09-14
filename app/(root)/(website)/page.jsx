@@ -36,7 +36,7 @@ const Home = () => {
       {/* ✅ LCP element should load first */}
 
       <BurgerHero />
-      <section id="Order-now">
+      <section id="Order-now" className="scroll-mt-24">
         <MostLovedMenu />
       </section>
 

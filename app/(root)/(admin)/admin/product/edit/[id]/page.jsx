@@ -37,6 +37,75 @@ const breadcrumbData = [
   { href: "#", label: "Edit Product" },
 ];
 
+// Read-only summary of the product's active Recipe/BOM cost, if any.
+// Purely additive — renders nothing that affects the product form
+// above, and quietly shows nothing if the product has no recipe yet
+// (recipes are managed under Inventory > Recipes).
+function RecipeCostCard({ productId }) {
+  const [costing, setCosting] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!productId) return;
+
+    let cancelled = false;
+
+    axios
+      .get(`/api/admin/inventory/costing/${productId}`)
+      .then(({ data }) => {
+        if (!cancelled && data.success) setCosting(data.data);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [productId]);
+
+  if (loading || !costing) return null;
+
+  return (
+    <Card className="border-2 border-black rounded-none shadow-none bg-white">
+      <CardHeader className="bg-black py-3 rounded-none">
+        <CardTitle className="text-xs font-bold text-white uppercase tracking-[0.2em]">
+          Recipe Cost (v{costing.recipeVersion})
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-6 grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+        <div>
+          <p className="text-[10px] uppercase text-zinc-500 font-bold">Ingredient Cost</p>
+          <p className="font-bold">£{costing.ingredientCost.toFixed(2)}</p>
+        </div>
+        <div>
+          <p className="text-[10px] uppercase text-zinc-500 font-bold">Packaging Cost</p>
+          <p className="font-bold">£{costing.packagingCost.toFixed(2)}</p>
+        </div>
+        <div>
+          <p className="text-[10px] uppercase text-zinc-500 font-bold">Total Cost</p>
+          <p className="font-bold">£{costing.totalCost.toFixed(2)}</p>
+        </div>
+        <div>
+          <p className="text-[10px] uppercase text-zinc-500 font-bold">Selling Price</p>
+          <p className="font-bold">£{costing.sellingPrice.toFixed(2)}</p>
+        </div>
+        <div>
+          <p className="text-[10px] uppercase text-zinc-500 font-bold">Gross Profit</p>
+          <p className={`font-bold ${costing.grossProfit < 0 ? "text-red-600" : "text-green-600"}`}>
+            £{costing.grossProfit.toFixed(2)}
+          </p>
+        </div>
+        <div>
+          <p className="text-[10px] uppercase text-zinc-500 font-bold">Food Cost %</p>
+          <p className="font-bold">{costing.foodCostPercent === null ? "-" : `${costing.foodCostPercent}%`}</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 const EditProduct = ({ params }) => {
   const { id } = use(params);
 
@@ -422,6 +491,10 @@ const EditProduct = ({ params }) => {
             </div>
           </form>
         </Form>
+
+        <div className="mt-6">
+          <RecipeCostCard productId={id} />
+        </div>
       </div>
 
       <MediaModal

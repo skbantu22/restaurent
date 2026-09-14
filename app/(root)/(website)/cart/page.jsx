@@ -17,7 +17,7 @@ import {
 } from "@/store/reducer/cartReducer";
 
 const formatCurrency = (amount) =>
-  `৳${Number(amount || 0).toLocaleString("en-BD")}`;
+  `£${Number(amount || 0).toLocaleString("en-GB")}`;
 
 export default function Page() {
   const cart = useSelector((store) => store.cartStore);
@@ -53,7 +53,7 @@ export default function Page() {
         content_ids: products.map((p) => String(p.productId)),
         content_type: "product",
         value: Number(subtotal),
-        currency: "BDT",
+        currency: "GBP",
         num_items: products.length,
       });
       hasTrackedView.current = true;
@@ -83,7 +83,7 @@ export default function Page() {
       content_ids: products.map((p) => String(p.productId)),
       content_type: "product",
       value: Number(total),
-      currency: "BDT",
+      currency: "GBP",
       num_items: products.length,
     });
   };

@@ -102,7 +102,7 @@ export default function CategoryGrid() {
   };
 
   return (
-    <section className="bg-black px-4 md:px-8 py-12">
+    <section id="our-menu" className="bg-black px-4 md:px-8 py-12 scroll-mt-24">
       {/* Header */}
       <div className="max-w-7xl mx-auto flex justify-between items-center mb-8">
         <div className="flex items-center gap-3">
@@ -274,7 +274,7 @@ export default function CategoryGrid() {
 
                           <div className="flex items-center gap-3 flex-wrap">
                             <p className="text-orange-500 font-black text-sm sm:text-base">
-                              ৳{prod.sellingPrice || prod.mrp}
+                              £{prod.sellingPrice || prod.mrp}
                             </p>
 
                             <div className="flex items-center gap-1 bg-zinc-950/80 border border-zinc-800/60 px-2.5 py-1 rounded-full text-[11px] text-amber-400 font-medium">

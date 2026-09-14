@@ -8,12 +8,12 @@ import CouponModel from "@/models/Coupon.model";
 // Explicit import to register the Media schema in Mongoose runtime
 import MediaModel from "@/models/Media.model";
 import sendTelegramOrder from "@/lib/sendTelegramOrder";
+import { consumeOrderStock } from "@/lib/inventory/inventory.service";
+import { getRestaurantSettings } from "@/lib/settings.server";
+import { fireServerPurchaseConversion } from "@/lib/meta/firePurchaseConversion";
 
 // Initialize Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
-// Fixed Shipping rate in GBP (£) for all orders
-const FIXED_SHIPPING_FEE = 3.99;
 const getAbsoluteImageUrl = (image, origin) => {
   if (!image || typeof image !== "string") return "";
 
@@ -40,6 +40,9 @@ export async function POST(req) {
     if (!mongoose.models.Media) {
       mongoose.model("Media", MediaModel.schema);
     }
+
+    const settings = await getRestaurantSettings();
+    const currency = (settings.business.currencyCode || "GBP").toLowerCase();
 
     const body = await req.json().catch(() => ({}));
     const {
@@ -90,6 +93,7 @@ export async function POST(req) {
           id &&
           !String(id).startsWith("extra-") &&
           !String(id).startsWith("drink-") &&
+          !String(id).startsWith("category-") &&
           mongoose.Types.ObjectId.isValid(id),
       );
 
@@ -112,26 +116,35 @@ export async function POST(req) {
         const id = String(it.productId || "");
 
         // ==============================
-        // CUSTOM EXTRA / DRINK
+        // CUSTOM EXTRA / DRINK / CATEGORY
         // ==============================
-        // ==============================
-        // CUSTOM EXTRA / DRINK
-        // ==============================
-        if (id.startsWith("extra-") || id.startsWith("drink-")) {
-          const itemType = id.startsWith("extra-") ? "extra" : "drink";
+        if (
+          id.startsWith("extra-") ||
+          id.startsWith("drink-") ||
+          id.startsWith("category-")
+        ) {
+          const itemType = id.startsWith("extra-")
+            ? "extra"
+            : id.startsWith("drink-")
+              ? "drink"
+              : "category";
 
           // Frontend থেকে name না এলে productId থেকে name তৈরি করবে
           const fallbackName = id
             .replace(/^extra-/, "")
             .replace(/^drink-/, "")
+            .replace(/^category-/, "")
             .replace(/-/g, " ")
             .replace(/\b\w/g, (char) => char.toUpperCase());
 
           const itemName = it.name || it.title || it.label || fallbackName;
 
-          const itemPrice = Number(
-            it.sellingPrice ?? it.price ?? it.amount ?? 0,
-          );
+          // Category is informational only (the chosen base protein) —
+          // never trust a client-sent price for it, it must be £0.
+          const itemPrice =
+            itemType === "category"
+              ? 0
+              : Number(it.sellingPrice ?? it.price ?? it.amount ?? 0);
 
           return {
             itemType,
@@ -196,7 +209,7 @@ export async function POST(req) {
     );
 
     // Pickup হলে ডেলিভারি ফি ০ হবে
-    const deliveryFee = orderType === "pickup" ? 0 : FIXED_SHIPPING_FEE;
+    const deliveryFee = orderType === "pickup" ? 0 : settings.business.deliveryFee;
 
     let discount = 0;
     let couponData = {
@@ -286,6 +299,16 @@ export async function POST(req) {
 
     // যদি পেমেন্ট মেথড ক্যাশ (COD/Pickup Cash) হয়, তবে সরাসরি সাকসেস পেজে রিডাইরেক্ট করার রেসপন্স পাঠাবে
     if (!isStripe) {
+      // Cash/pickup orders have no later payment-confirmation step, so
+      // "placed" here is the order-confirmed moment — consume ingredient
+      // stock now. Idempotent and never throws; a stock hiccup must
+      // never stop the order from being accepted.
+      await consumeOrderStock(order);
+
+      // Server-side conversion — reliable even if the customer's
+      // browser never loads /order/success.
+      await fireServerPurchaseConversion(order, origin);
+
       return NextResponse.json({
         success: true,
         orderId: order._id.toString(),
@@ -318,7 +341,7 @@ export async function POST(req) {
 
       return {
         price_data: {
-          currency: "gbp",
+          currency,
           product_data: productData,
           unit_amount: Math.round(item.price * 100),
         },
@@ -329,7 +352,7 @@ export async function POST(req) {
     if (deliveryFee > 0) {
       lineItems.push({
         price_data: {
-          currency: "gbp",
+          currency,
           product_data: {
             name: "Delivery Fee",
           },
@@ -344,7 +367,7 @@ export async function POST(req) {
     if (discount > 0) {
       const stripeCoupon = await stripe.coupons.create({
         amount_off: Math.round(discount * 100), // pence
-        currency: "gbp",
+        currency,
         duration: "once",
         name: `Discount (${couponData.code})`,
       });

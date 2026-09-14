@@ -44,6 +44,67 @@ const productSchema = new mongoose.Schema(
 
     freeDelivery: { type: Boolean, default: false },
 
+    // ---- Restaurant/POS foundation fields (additive, all optional) ----
+    // None of these are required so every existing product document
+    // remains valid without a migration.
+    sku: {
+      type: String,
+      trim: true,
+      uppercase: true,
+      default: "",
+    },
+
+    costPrice: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
+
+    taxRate: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
+
+    taxCode: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    active: {
+      type: Boolean,
+      default: true,
+    },
+
+    available: {
+      type: Boolean,
+      default: true,
+    },
+
+    posVisible: {
+      type: Boolean,
+      default: true,
+    },
+
+    onlineVisible: {
+      type: Boolean,
+      default: true,
+    },
+
+    sortOrder: {
+      type: Number,
+      default: 0,
+    },
+
+    // Whether this product's stock is derived from a Recipe/BOM via the
+    // inventory service. Defaults to false so nothing changes behaviour
+    // until a recipe is actually attached and this is turned on.
+    inventoryTracked: {
+      type: Boolean,
+      default: false,
+    },
+
     media: [
       { type: mongoose.Schema.Types.ObjectId, ref: "Media", required: true },
     ],
@@ -58,7 +119,6 @@ const productSchema = new mongoose.Schema(
 // Indexes
 productSchema.index({ category: 1, subcategory: 1 });
 productSchema.index({ offers: 1 });
-productSchema.index({ isMostLoved: 1 }); // Fast query execution for homepage/menu
 
 const ProductModel =
   mongoose.models.Product ||

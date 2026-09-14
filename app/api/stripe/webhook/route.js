@@ -4,7 +4,8 @@ import { stripe } from "@/lib/stripe";
 import { connectDB } from "@/lib/databaseconnection";
 
 import OrderModel from "@/models/Order.model";
-import ProductModel from "@/models/Product.model";
+import { consumeOrderStock } from "@/lib/inventory/inventory.service";
+import { fireServerPurchaseConversion } from "@/lib/meta/firePurchaseConversion";
 
 export const runtime = "nodejs";
 
@@ -116,38 +117,19 @@ export async function POST(req) {
       console.log("✅ Payment completed - Order Placed");
 
       // ============================
-      // REDUCE STOCK
+      // CONSUME INGREDIENT STOCK
       // ============================
+      // Explodes each order item through its active Recipe/BOM and
+      // records SALE stock movements via the inventory service.
+      // Idempotent (safe on Stripe webhook retries) and never throws —
+      // a payment that has already succeeded must never be blocked or
+      // reported as failed because of inventory bookkeeping.
 
-      await Promise.all(
-        order.items.map(async (item) => {
-          try {
-            const result = await ProductModel.updateOne(
-              {
-                _id: item.productId,
+      await consumeOrderStock(order);
 
-                stock: {
-                  $gte: item.quantity,
-                },
-              },
-
-              {
-                $inc: {
-                  stock: -item.quantity,
-                },
-              },
-            );
-
-            if (result.modifiedCount) {
-              console.log(`Stock reduced: ${item.name}`);
-            } else {
-              console.log(`Stock not available: ${item.name}`);
-            }
-          } catch (error) {
-            console.error("Stock error:", error.message);
-          }
-        }),
-      );
+      // Server-side conversion — reliable even if the customer's
+      // browser never loads /order/success (closed tab, ad blocker).
+      await fireServerPurchaseConversion(order, process.env.NEXT_PUBLIC_APP_URL);
     }
 
     return NextResponse.json({

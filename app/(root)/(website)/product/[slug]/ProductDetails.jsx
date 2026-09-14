@@ -63,7 +63,7 @@ Color: ${selectedColor || "N/A"}
 Size: ${selectedSize || "N/A"}
 Quantity: ${quantity}
 
-Price: ৳£{displaySellingPrice}
+Price: £${displaySellingPrice}
 
 Product Link:
 ${window.location.href}
@@ -251,7 +251,7 @@ ${window.location.href}
       content_ids: [product._id],
       content_type: "product",
       value: displaySellingPrice * (quantity ?? 1),
-      currency: "BDT",
+      currency: "GBP",
     });
 
     dispatch(addIntoCart(cartProduct));
@@ -331,11 +331,11 @@ ${window.location.href}
 
             <div className="flex items-center gap-4 mb-4 md:mb-8 mt-2">
               <span className="text-2xl font-light text-gray-900">
-                ৳{Number(displaySellingPrice).toLocaleString("en-BD")}
+                £{Number(displaySellingPrice).toLocaleString("en-GB")}
               </span>
               {Number(displayMrp) > Number(displaySellingPrice) && (
                 <span className="text-base text-gray-400 line-through font-light">
-                  ৳{Number(displayMrp).toLocaleString("en-BD")}
+                  £{Number(displayMrp).toLocaleString("en-GB")}
                 </span>
               )}
             </div>

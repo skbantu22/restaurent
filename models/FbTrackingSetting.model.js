@@ -9,6 +9,11 @@ const TrackingSettingsSchema = new mongoose.Schema(
       testEventCode: { type: String, default: "", trim: true },
       enabled: { type: Boolean, default: false },
     },
+    googleAds: {
+      conversionId: { type: String, default: "", trim: true }, // "AW-XXXXXXXXX"
+      conversionLabel: { type: String, default: "", trim: true },
+      enabled: { type: Boolean, default: false },
+    },
   },
   { timestamps: true },
 );

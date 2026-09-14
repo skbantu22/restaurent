@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   Menu,
   Heart,
@@ -16,6 +17,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import axios from "axios";
+import { AnimatePresence, motion } from "framer-motion";
 
 import logo from "@/public/assets/logo.png";
 import userIcon from "@/public/assets/user.png";
@@ -31,6 +33,47 @@ import Cart from "./cart";
 import { Avatar, AvatarImage } from "../../avatar";
 import { showToast } from "@/lib/showToast";
 import { logout } from "@/store/reducer/authReducer";
+
+const NAV_LINKS = [
+  { label: "HOME", href: WEBSITE_HOME },
+  { label: "MENU", href: "/#Order-now" },
+  { label: "OUR STORY", href: "#" },
+  { label: "CONTACT", href: "/#contact" },
+];
+
+const MOBILE_LINK_VARIANTS = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.05, delayChildren: 0.1 } },
+};
+
+const MOBILE_LINK_ITEM = {
+  hidden: { opacity: 0, x: -16 },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.25 } },
+};
+
+function NavItem({ href, label }) {
+  const pathname = usePathname();
+  const isActive = href !== "#" && pathname === href;
+
+  return (
+    <Link
+      href={href}
+      className={`relative py-1 text-sm font-bold uppercase tracking-wide transition-colors duration-200 ${
+        isActive ? "text-[#ff6b00]" : "text-white hover:text-[#ff6b00]"
+      }`}
+    >
+      {label}
+      {isActive && (
+        <motion.span
+          layoutId="nav-underline"
+          className="absolute left-0 -bottom-2 h-[2px] w-full bg-[#ff6b00]"
+          transition={{ type: "spring", stiffness: 380, damping: 30 }}
+        />
+      )}
+      <span className="absolute left-0 -bottom-2 h-[2px] w-full origin-center scale-x-0 bg-[#ff6b00]/60 transition-transform duration-300 group-hover:scale-x-100" />
+    </Link>
+  );
+}
 
 const Navbar = () => {
   const [openMenu, setOpenMenu] = useState(false);
@@ -56,11 +99,8 @@ const Navbar = () => {
     }
   };
 
-  const navItem =
-    "relative text-sm font-bold uppercase tracking-wide hover:text-[#ff6b00] transition duration-300";
-
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-[#1a1a1a] bg-black">
+    <header className="sticky top-0 z-50 w-full border-b border-[#1a1a1a] bg-black/90 backdrop-blur-md">
       <div className="mx-auto max-w-[1400px] px-4 lg:px-8">
         {/* MAIN NAVBAR */}
         <div className="flex h-[80px] sm:h-[85px] items-center justify-between gap-2 sm:gap-4">
@@ -87,27 +127,12 @@ const Navbar = () => {
           </div>
 
           {/* CENTER MENU (Desktop) */}
-          <nav className="hidden lg:flex items-center gap-8 xl:gap-12 text-white">
-            <Link href={WEBSITE_HOME} className={`${navItem} text-[#ff6b00]`}>
-              HOME
-              <span className="absolute left-0 -bottom-2 h-[2px] w-full bg-[#ff6b00]" />
-            </Link>
-
-            <Link href="#" className={navItem}>
-              MENU
-            </Link>
-
-            <Link href="#" className={navItem}>
-              BUILD YOUR OWN
-            </Link>
-
-            <Link href="#" className={navItem}>
-              OUR STORY
-            </Link>
-
-            <Link href="#" className={navItem}>
-              CONTACT
-            </Link>
+          <nav className="hidden lg:flex items-center gap-8 xl:gap-12">
+            {NAV_LINKS.map((item) => (
+              <div key={item.label} className="group">
+                <NavItem href={item.href} label={item.label} />
+              </div>
+            ))}
           </nav>
 
           {/* RIGHT SIDE: Cart, User & Order Action */}
@@ -121,13 +146,13 @@ const Navbar = () => {
             {!auth ? (
               <Link
                 href={WEBSITE_LOGIN}
-                className="hidden lg:flex h-10 w-10 items-center justify-center rounded-full border border-[#2a2a2a] text-white transition hover:border-[#ff6b00] hover:text-[#ff6b00]"
+                className="hidden lg:flex h-10 w-10 items-center justify-center rounded-full border border-[#2a2a2a] text-white transition-colors duration-200 hover:border-[#ff6b00] hover:text-[#ff6b00]"
               >
                 <User size={18} />
               </Link>
             ) : (
               <Link href={USER_DASHBOARD} className="hidden lg:flex">
-                <Avatar className="h-10 w-10 border border-[#2a2a2a]">
+                <Avatar className="h-10 w-10 border border-[#2a2a2a] transition-colors duration-200 hover:border-[#ff6b00]">
                   <AvatarImage
                     src={auth?.avatar?.url || userIcon.src}
                     alt={auth?.name || "User Avatar"}
@@ -137,129 +162,155 @@ const Navbar = () => {
             )}
 
             {/* Order Now Button */}
-            <button
-              className="
-                flex h-9 sm:h-11 items-center justify-center gap-1.5 rounded-md bg-[#ff6b00] 
-                px-3 sm:px-5 lg:px-6 text-[11px] sm:text-xs lg:text-sm font-bold uppercase 
-                tracking-wider text-white shadow-lg shadow-orange-500/20 
-                transition-all duration-300 hover:bg-[#ff7e29] active:scale-95
-              "
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.96 }}
+              className="flex h-9 sm:h-11 items-center justify-center gap-1.5 rounded-md bg-[#ff6b00] px-3 sm:px-5 lg:px-6 text-[11px] sm:text-xs lg:text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-orange-500/20 transition-colors duration-300 hover:bg-[#ff7e29]"
             >
               <span className="hidden sm:inline">ORDER NOW</span>
               <span className="sm:hidden">ORDER</span>
               <ShoppingBag size={15} className="sm:w-[17px] sm:h-[17px]" />
-            </button>
+            </motion.button>
           </div>
         </div>
       </div>
 
       {/* MOBILE SIDEBAR MENU */}
-      {openMenu && (
-        <div className="fixed inset-0 z-[100] lg:hidden">
-          {/* Backdrop Overlay */}
-          <div
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity"
-            onClick={() => setOpenMenu(false)}
-          />
+      <AnimatePresence>
+        {openMenu && (
+          <div className="fixed inset-0 z-[100] lg:hidden">
+            {/* Backdrop Overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+              onClick={() => setOpenMenu(false)}
+            />
 
-          {/* Drawer Sidebar */}
-          <div className="absolute left-0 top-0 flex h-full w-[280px] sm:w-[320px] flex-col border-r border-[#1f1f1f] bg-black p-5 text-white shadow-2xl transition-transform">
-            {/* Drawer Header */}
-            <div className="flex items-center justify-between border-b border-[#1f1f1f] pb-4">
-              <span className="text-base font-bold uppercase tracking-wider text-[#ff6b00]">
-                Navigation
-              </span>
-              <button
-                onClick={() => setOpenMenu(false)}
-                className="rounded-full p-1 hover:bg-[#1f1f1f]"
+            {/* Drawer Sidebar */}
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", stiffness: 320, damping: 34 }}
+              className="absolute left-0 top-0 flex h-full w-[280px] sm:w-[320px] flex-col border-r border-[#1f1f1f] bg-black p-5 text-white shadow-2xl"
+            >
+              {/* Drawer Header */}
+              <div className="flex items-center justify-between border-b border-[#1f1f1f] pb-4">
+                <span className="text-base font-bold uppercase tracking-wider text-[#ff6b00]">
+                  Navigation
+                </span>
+                <button
+                  onClick={() => setOpenMenu(false)}
+                  className="rounded-full p-1 transition-colors duration-200 hover:bg-[#1f1f1f]"
+                >
+                  <X size={22} />
+                </button>
+              </div>
+
+              {/* Mobile Nav Links */}
+              <motion.nav
+                variants={MOBILE_LINK_VARIANTS}
+                initial="hidden"
+                animate="visible"
+                className="flex flex-col gap-4 border-b border-[#1f1f1f] py-6 text-sm font-semibold uppercase tracking-wide"
               >
-                <X size={22} />
-              </button>
-            </div>
+                {NAV_LINKS.map((item) => (
+                  <motion.div key={item.label} variants={MOBILE_LINK_ITEM}>
+                    <Link
+                      href={item.href}
+                      onClick={() => setOpenMenu(false)}
+                      className="transition-colors duration-200 hover:text-[#ff6b00]"
+                    >
+                      {item.label}
+                    </Link>
+                  </motion.div>
+                ))}
+              </motion.nav>
 
-            {/* Mobile Nav Links */}
-            <nav className="flex flex-col gap-4 border-b border-[#1f1f1f] py-6 text-sm font-semibold uppercase tracking-wide">
-              <Link href={WEBSITE_HOME} onClick={() => setOpenMenu(false)}>
-                Home
-              </Link>
-              <Link href="#" onClick={() => setOpenMenu(false)}>
-                Menu
-              </Link>
-              <Link href="#" onClick={() => setOpenMenu(false)}>
-                Build Your Own
-              </Link>
-              <Link href="#" onClick={() => setOpenMenu(false)}>
-                Our Story
-              </Link>
-              <Link href="#" onClick={() => setOpenMenu(false)}>
-                Contact
-              </Link>
-            </nav>
-
-            {/* Mobile User & Utility Section */}
-            <div className="flex flex-col gap-4.5 py-6 text-sm">
-              {!auth ? (
-                <>
-                  <Link
-                    href={WEBSITE_LOGIN}
-                    onClick={() => setOpenMenu(false)}
-                    className="flex items-center gap-3 hover:text-[#ff6b00]"
-                  >
-                    <User size={18} />
-                    Sign In
-                  </Link>
-
-                  <Link
-                    href={WEBSITE_REGISTER}
-                    onClick={() => setOpenMenu(false)}
-                    className="flex items-center gap-3 hover:text-[#ff6b00]"
-                  >
-                    <User size={18} />
-                    Create Account
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <Link
-                    href={USER_DASHBOARD}
-                    onClick={() => setOpenMenu(false)}
-                    className="flex items-center gap-3 hover:text-[#ff6b00]"
-                  >
-                    <User size={18} />
-                    My Account
-                  </Link>
-
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-3 text-left text-red-500 hover:text-red-400"
-                  >
-                    <LogOutIcon size={18} />
-                    Logout
-                  </button>
-                </>
-              )}
-
-              <Link
-                href="/wishlist"
-                onClick={() => setOpenMenu(false)}
-                className="flex items-center gap-3 hover:text-[#ff6b00]"
+              {/* Mobile User & Utility Section */}
+              <motion.div
+                variants={MOBILE_LINK_VARIANTS}
+                initial="hidden"
+                animate="visible"
+                className="flex flex-col gap-4.5 py-6 text-sm"
               >
-                <Heart size={18} />
-                Wishlist
-              </Link>
+                {!auth ? (
+                  <>
+                    <motion.div variants={MOBILE_LINK_ITEM}>
+                      <Link
+                        href={WEBSITE_LOGIN}
+                        onClick={() => setOpenMenu(false)}
+                        className="flex items-center gap-3 transition-colors duration-200 hover:text-[#ff6b00]"
+                      >
+                        <User size={18} />
+                        Sign In
+                      </Link>
+                    </motion.div>
 
-              <Link
-                href="/track-order"
-                onClick={() => setOpenMenu(false)}
-                className="flex items-center gap-3 hover:text-[#ff6b00]"
-              >
-                <Package size={18} />
-                Track Order
-              </Link>
-            </div>
+                    <motion.div variants={MOBILE_LINK_ITEM}>
+                      <Link
+                        href={WEBSITE_REGISTER}
+                        onClick={() => setOpenMenu(false)}
+                        className="flex items-center gap-3 transition-colors duration-200 hover:text-[#ff6b00]"
+                      >
+                        <User size={18} />
+                        Create Account
+                      </Link>
+                    </motion.div>
+                  </>
+                ) : (
+                  <>
+                    <motion.div variants={MOBILE_LINK_ITEM}>
+                      <Link
+                        href={USER_DASHBOARD}
+                        onClick={() => setOpenMenu(false)}
+                        className="flex items-center gap-3 transition-colors duration-200 hover:text-[#ff6b00]"
+                      >
+                        <User size={18} />
+                        My Account
+                      </Link>
+                    </motion.div>
+
+                    <motion.button
+                      variants={MOBILE_LINK_ITEM}
+                      onClick={handleLogout}
+                      className="flex items-center gap-3 text-left text-red-500 transition-colors duration-200 hover:text-red-400"
+                    >
+                      <LogOutIcon size={18} />
+                      Logout
+                    </motion.button>
+                  </>
+                )}
+
+                <motion.div variants={MOBILE_LINK_ITEM}>
+                  <Link
+                    href="/wishlist"
+                    onClick={() => setOpenMenu(false)}
+                    className="flex items-center gap-3 transition-colors duration-200 hover:text-[#ff6b00]"
+                  >
+                    <Heart size={18} />
+                    Wishlist
+                  </Link>
+                </motion.div>
+
+                <motion.div variants={MOBILE_LINK_ITEM}>
+                  <Link
+                    href="/track-order"
+                    onClick={() => setOpenMenu(false)}
+                    className="flex items-center gap-3 transition-colors duration-200 hover:text-[#ff6b00]"
+                  >
+                    <Package size={18} />
+                    Track Order
+                  </Link>
+                </motion.div>
+              </motion.div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </header>
   );
 };

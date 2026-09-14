@@ -1,4 +1,16 @@
 "use client";
+
+import dynamic from "next/dynamic";
+
+// Client-only: touches window/document and WebGL, must never run
+// during SSR. loading:() => null keeps the hero's initial paint
+// unblocked — the 3D layer fades in once it's ready, everything else
+// about the hero renders immediately as before.
+const Restaurant3DBackground = dynamic(
+  () => import("./Restaurant3DBackground"),
+  { ssr: false, loading: () => null },
+);
+
 const scrollToSection = (id) => {
   const element = document.getElementById(id);
 
@@ -15,6 +27,12 @@ export default function BurgerHero() {
       {/* Premium Ambient Light Glows */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 lg:left-[35%] lg:top-1/2 lg:-translate-y-1/2 w-[300px] sm:w-[450px] lg:w-[500px] h-[300px] sm:h-[450px] bg-orange-600/15 blur-[80px] sm:blur-[120px] rounded-full pointer-events-none z-0" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(255,90,0,0.1),transparent_60%)] lg:bg-[radial-gradient(circle_at_75%_50%,rgba(255,90,0,0.12),transparent_40%)] pointer-events-none z-0" />
+
+      {/* Cinematic 3D food atmosphere — sits behind all existing content */}
+      <Restaurant3DBackground className="z-[1]" />
+
+      {/* Text-legibility guard: dark on the left where copy sits, fading out toward the 3D scene on the right */}
+      <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent lg:from-black lg:via-black/50 lg:to-transparent pointer-events-none z-[2]" />
 
       {/* Main Container */}
       <div className="max-w-7xl mx-auto w-full relative z-10 flex flex-col lg:flex-row items-center justify-between gap-10 lg:gap-0">

@@ -38,6 +38,17 @@ const categorySchema = new mongoose.Schema(
       default: null,
       index: true,
     },
+
+    // ---- Restaurant/admin foundation fields (additive, optional) ----
+    active: {
+      type: Boolean,
+      default: true,
+    },
+
+    sortOrder: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true },
 );

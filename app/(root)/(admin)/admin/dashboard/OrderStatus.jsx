@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useMemo } from "react";
+import { motion } from "framer-motion";
 import { Label, Pie, PieChart } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -13,13 +14,9 @@ import useFetch from "@/hooks/useFetch";
 export const description = "Order Status Chart";
 
 const chartConfig = {
-  pending: {
-    label: "Pending",
+  placed: {
+    label: "Placed",
     color: "#3b82f6",
-  },
-  confirmed: {
-    label: "Confirmed",
-    color: "#8b5cf6",
   },
   preparing: {
     label: "Preparing",
@@ -44,22 +41,18 @@ const chartConfig = {
 };
 
 export function OrderStatus() {
-  const [chartData, setChartData] = useState([]);
-
-  const { data: orderStatus, loading } = useFetch(
+  const { data: orderStatus, error } = useFetch(
     "/api/dashboard/admin/order-status",
   );
 
-  useEffect(() => {
-    if (orderStatus?.success) {
-      const newData = orderStatus.data.map((item) => ({
-        status: item._id || "pending",
-        count: item.count || 0,
-        fill: chartConfig[item._id]?.color || "#9ca3af",
-      }));
+  const chartData = useMemo(() => {
+    if (!orderStatus?.success) return [];
 
-      setChartData(newData);
-    }
+    return orderStatus.data.map((item) => ({
+      status: item._id || "placed",
+      count: item.count || 0,
+      fill: chartConfig[item._id]?.color || "#9ca3af",
+    }));
   }, [orderStatus]);
 
   const totalOrders = chartData.reduce(
@@ -67,13 +60,12 @@ export function OrderStatus() {
     0,
   );
 
-  if (loading) {
+  if (!orderStatus && !error) {
     return <div className="p-4 text-center">Loading...</div>;
   }
 
   const colors = {
-    pending: "bg-blue-500",
-    confirmed: "bg-purple-500",
+    placed: "bg-blue-500",
     preparing: "bg-yellow-500",
     ready: "bg-cyan-500",
     out_for_delivery: "bg-sky-500",
@@ -82,7 +74,11 @@ export function OrderStatus() {
   };
 
   return (
-    <div>
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.4 }}
+    >
       <Card className="flex flex-col border-0 shadow-none">
         <CardHeader className="items-center pb-0">
           <CardTitle>Orders Status</CardTitle>
@@ -145,7 +141,7 @@ export function OrderStatus() {
       <div className="mt-4">
         <ul className="space-y-3 text-sm">
           {chartData.map((item) => {
-            const status = item.status || "pending";
+            const status = item.status || "placed";
 
             return (
               <li key={status} className="flex justify-between items-center">
@@ -167,6 +163,6 @@ export function OrderStatus() {
           })}
         </ul>
       </div>
-    </div>
+    </motion.div>
   );
 }

@@ -146,7 +146,7 @@ export default function ShowroomTestPage() {
             {variants.map((v) => (
               <div key={v._id} className="text-sm border p-2 mb-2">
                 <div>
-                  {v.color} - {v.size} - ৳{v.price}
+                  {v.color} - {v.size} - £{v.price}
                 </div>
 
                 <div className="flex gap-2 items-center mt-1">
@@ -180,7 +180,7 @@ export default function ShowroomTestPage() {
 
         <hr className="my-3" />
 
-        <div className="font-bold text-lg">Total: ৳{total}</div>
+        <div className="font-bold text-lg">Total: £{total}</div>
 
         <button
           onClick={checkout}
@@ -209,7 +209,7 @@ export default function ShowroomTestPage() {
                     isSelected ? "bg-green-200" : ""
                   }`}
                 >
-                  {v.color} - {v.size} - ৳{v.price}
+                  {v.color} - {v.size} - £{v.price}
                 </div>
               );
             })}

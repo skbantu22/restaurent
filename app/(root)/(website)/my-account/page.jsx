@@ -13,7 +13,7 @@ import { WEBSITE_ORDER_DETAILS } from "@/Route/Websiteroute";
 const money = (amount) =>
   Number(amount || 0).toLocaleString("en-BD", {
     style: "currency",
-    currency: "BDT",
+    currency: "GBP",
     maximumFractionDigits: 0,
   });
 

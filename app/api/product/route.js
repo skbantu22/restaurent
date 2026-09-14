@@ -123,6 +123,9 @@ export async function GET(request) {
       description: item.description || "",
       badge: item.badge || "",
       isMostLoved: Boolean(item.isMostLoved),
+      active: item.active !== false,
+      available: item.available !== false,
+      posVisible: item.posVisible !== false,
       media:
         item.media?.map((img) => ({
           _id: img._id,
@@ -130,6 +133,7 @@ export async function GET(request) {
           thumbnail: img.thumbnail_url || img.secure_url || img.url || "",
         })) || [],
       category: item.category?.name || item.category || "",
+      categoryId: item.category?._id ? String(item.category._id) : (item.category ? String(item.category) : ""),
       createdAt: item.createdAt,
       updatedAt: item.updatedAt,
       deletedAt: item.deletedAt,

@@ -10,24 +10,37 @@ import {
 } from "@/components/ui/table";
 
 import useFetch from "@/hooks/useFetch";
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import Image from "next/image";
 import notFound from "@/public/assets/not-found.png";
-import { statusBadge } from "@/lib/helperfunction";
+
+// Mirrors the badge coloring used on the orders board/table
+// (components/ui/Application/Admin/OrderBoard.jsx) — kept here as plain
+// Tailwind classes since this file isn't wrapped in MUI's ThemeProvider.
+const STATUS_BADGE_CLASS = {
+  placed: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300",
+  preparing: "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300",
+  ready: "bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300",
+  out_for_delivery: "bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300",
+  delivered: "bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-300",
+  cancelled: "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300",
+};
+
+const OrderStatusBadge = ({ status }) => (
+  <span
+    className={`text-xs font-medium px-2 py-1 rounded-full capitalize ${
+      STATUS_BADGE_CLASS[status] || STATUS_BADGE_CLASS.placed
+    }`}
+  >
+    {(status || "placed").replace("_", " ")}
+  </span>
+);
 
 const LatestOrder = () => {
-  const [latestOrder, setLatestOrder] = useState([]);
-  const { data, loading } = useFetch("/api/dashboard/admin/latest-order");
+  const { data, error } = useFetch("/api/dashboard/admin/latest-order");
+  const latestOrder = useMemo(() => (data?.success ? data.data : []), [data]);
 
-  console.log(data);
-
-  useEffect(() => {
-    if (data?.success) {
-      setLatestOrder(data.data);
-    }
-  }, [data]);
-
-  if (loading)
+  if (!data && !error)
     return (
       <div className="h-full w-full flex justify-center items-center">
         Loading...
@@ -60,14 +73,16 @@ const LatestOrder = () => {
             <TableCell>{order.orderNumber}</TableCell>
 
             <TableCell>
-              {order.paymentMethodSelected?.toUpperCase() || "N/A"}
+              {order.payment?.method?.toUpperCase() || "N/A"}
             </TableCell>
 
             <TableCell>{order.items?.length || 0}</TableCell>
 
-            <TableCell>{statusBadge(order.status)}</TableCell>
+            <TableCell>
+              <OrderStatusBadge status={order.orderStatus} />
+            </TableCell>
 
-            <TableCell>£{order.total}</TableCell>
+            <TableCell>£{Number(order.total || 0).toFixed(2)}</TableCell>
           </TableRow>
         ))}
       </TableBody>

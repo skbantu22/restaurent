@@ -84,6 +84,21 @@ const cartSlice = createSlice({
       }
     },
 
+    // ---------------- REMOVE WHOLE BUNDLE (Custom Meal package) ----------------
+
+    removeBundle: (state, action) => {
+      const { bundleId } = action.payload;
+
+      const removedQty = state.products
+        .filter((product) => product.bundleId === bundleId)
+        .reduce((sum, product) => sum + Number(product.quantity || 0), 0);
+
+      state.products = state.products.filter(
+        (product) => product.bundleId !== bundleId,
+      );
+      state.count -= removedQty;
+    },
+
     // ---------------- CLEAR CART ----------------
 
     clearCart: (state) => {
@@ -111,6 +126,7 @@ export const {
   increaseQuantity,
   decreaseQuantity,
   removeFromCart,
+  removeBundle,
   clearCart,
   setCart,
 } = cartSlice.actions;

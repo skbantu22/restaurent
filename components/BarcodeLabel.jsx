@@ -9,6 +9,7 @@ const BarcodePrintPage = () => {
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [printQty, setPrintQty] = useState(1);
   const [labels, setLabels] = useState([]);
+  const [currencySymbol, setCurrencySymbol] = useState("£");
 
   // Fetch Variants
   useEffect(() => {
@@ -25,6 +26,18 @@ const BarcodePrintPage = () => {
     };
 
     fetchVariants();
+  }, []);
+
+  // Fetch restaurant currency symbol for the printed price
+  useEffect(() => {
+    axios
+      .get("/api/settings/public")
+      .then(({ data }) => {
+        if (data?.success && data.data?.currencySymbol) {
+          setCurrencySymbol(data.data.currencySymbol);
+        }
+      })
+      .catch(() => {}); // fall back to £ silently
   }, []);
 
   // Generate Labels
@@ -136,7 +149,7 @@ const BarcodePrintPage = () => {
             </div>
 
             {/* Price */}
-            <p className="font-bold text-sm mt-2">৳ {item?.sellingPrice}</p>
+            <p className="font-bold text-sm mt-2">{currencySymbol}{item?.sellingPrice}</p>
           </div>
         ))}
       </div>

@@ -23,7 +23,7 @@ import Image from "next/image";
 import SearchBox from "@/components/ui/Application/Admin/SearchBox";
 import ProductBox from "@/components/ui/Application/website/ProductBox";
 
-const money = (n) => `৳ ${Number(n || 0).toLocaleString("en-BD")}`;
+const money = (n) => `£${Number(n || 0).toLocaleString("en-GB")}`;
 
 // -----------------------------------------------------
 // Fetchers

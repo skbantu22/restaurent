@@ -227,7 +227,7 @@ const BarcodePrintPage = () => {
 
               {/* PRICE */}
               <div className="barcode-price text-center">
-                ৳ {item.sellingPrice}
+                £{item.sellingPrice}
               </div>
             </div>
           </div>

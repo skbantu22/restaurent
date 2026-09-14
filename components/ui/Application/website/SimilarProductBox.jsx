@@ -68,7 +68,7 @@ const SimilarProductBox = ({
       content_ids: [String(product._id)], // ইউনিক আইডি বুস্ট করার জন্য জরুরি
       content_type: "product",
       value: Number(cartProduct.sellingPrice),
-      currency: "BDT",
+      currency: "GBP",
       content_name: product.name,
       contents: [
         {

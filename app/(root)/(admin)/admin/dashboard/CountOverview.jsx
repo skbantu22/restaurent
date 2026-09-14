@@ -1,83 +1,112 @@
 "use client";
-import useFetch from '@/hooks/useFetch'
-import { ADMIN_CATEGORY_SHOW, ADMIN_PRODUCT_SHOW } from '@/Route/Adminpannelroute';
-import Link from 'next/link'
-import React from 'react'
-import { BiCategory } from 'react-icons/bi'
 
-const countOverview = () => {
-    const { data: countData } = useFetch('/api/dashboard/admin/count')
-console.log(countData)
-  return (
-  <div className='grid lg:grid-cols-4 sm:grid-cols-2 sm:gap-10 gap-5'>
-  <Link href={ADMIN_CATEGORY_SHOW}>
-    <div className='flex items-center justify-between p-3 rounded-lg border shadow border-l-4 border-l-green-400 bg-white dark:bg-card dark:border-gray-800 dark:border-l-green-400'>
-      
-      <div>
-        <h4 className='font-medium text-gray-500'>Total Categories</h4>
-        <span className='text-xl font-bold'>{countData?.data?.category ?? 0}</span>
-      </div>
+import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
+import { motion } from "framer-motion";
+import { UtensilsCrossed, Wallet, ShoppingBag, ClipboardList } from "lucide-react";
+import { ADMIN_PRODUCT_SHOW, ADMIN_ORDER_SHOW } from "@/Route/Adminpannelroute";
+import Link from "next/link";
 
-      <div>
-        <span className='w-12 h-12 border flex justify-center items-center rounded-full bg-green-500 text-white'>
-          <BiCategory />
-        </span>
-      </div>
-
-    </div>
-  </Link>
-   <Link href={ADMIN_PRODUCT_SHOW}>
-    <div className='flex items-center justify-between p-3 rounded-lg border shadow border-l-4 border-l-green-400 bg-white dark:bg-card dark:border-gray-800 dark:border-l-green-400'>
-      
-      <div>
-        <h4 className='font-medium text-gray-500'>Total Products</h4>
-        <span className='text-xl font-bold'>{countData?.data?.product ?? 0}</span>
-      </div>
-
-      <div>
-        <span className='w-12 h-12 border flex justify-center items-center rounded-full bg-green-500 text-white'>
-          <BiCategory />
-        </span>
-      </div>
-
-    </div>
-  </Link>
-   <Link href="">
-    <div className='flex items-center justify-between p-3 rounded-lg border shadow border-l-4 border-l-green-400 bg-white dark:bg-card dark:border-gray-800 dark:border-l-green-400'>
-      
-      <div>
-        <h4 className='font-medium text-gray-500'>Total Orders</h4>
-        <span className='text-xl font-bold'>{countData?.data?.order ?? 0}</span>
-      </div>
-
-      <div>
-        <span className='w-12 h-12 border flex justify-center items-center rounded-full bg-green-500 text-white'>
-          <BiCategory />
-        </span>
-      </div>
-
-    </div>
-  </Link>
-   <Link href="">
-    <div className='flex items-center justify-between p-3 rounded-lg border shadow border-l-4 border-l-green-400 bg-white dark:bg-card dark:border-gray-800 dark:border-l-green-400'>
-      
-      <div>
-        <h4 className='font-medium text-gray-500'>Total Customer</h4>
-        <span className='text-xl font-bold'>{countData?.data?.customer ?? 0}</span>
-      </div>
-
-      <div>
-        <span className='w-12 h-12 border flex justify-center items-center rounded-full bg-green-500 text-white'>
-          <BiCategory />
-        </span>
-      </div>
-
-    </div>
-  </Link>
-</div>
-
-
-  )
+async function fetchCount() {
+  const { data } = await axios.get("/api/dashboard/admin/count");
+  if (!data?.success) throw new Error(data?.message || "Failed to load counts");
+  return data.data;
 }
 
-export default countOverview
+async function fetchInsights() {
+  const { data } = await axios.get("/api/dashboard/admin/insights");
+  if (!data?.success) throw new Error(data?.message || "Failed to load insights");
+  return data.data;
+}
+
+async function fetchCurrencySymbol() {
+  const { data } = await axios.get("/api/settings/public");
+  return data?.data?.currencySymbol || "£";
+}
+
+const container = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.08 } },
+};
+
+const item = {
+  hidden: { opacity: 0, y: 12 },
+  show: { opacity: 1, y: 0 },
+};
+
+function StatCard({ href, label, value, icon, gradient }) {
+  const content = (
+    <motion.div
+      variants={item}
+      className="flex items-center justify-between p-4 rounded-xl border shadow-sm bg-white dark:bg-card hover:shadow-md transition-shadow"
+    >
+      <div>
+        <div className="text-2xl font-bold">{value}</div>
+        <div className="text-sm text-muted-foreground">{label}</div>
+      </div>
+
+      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white shrink-0 bg-gradient-to-br ${gradient}`}>
+        {icon}
+      </div>
+    </motion.div>
+  );
+
+  return href ? <Link href={href}>{content}</Link> : content;
+}
+
+export default function CountOverview() {
+  const { data: countData } = useQuery({
+    queryKey: ["dashboard-count"],
+    queryFn: fetchCount,
+  });
+
+  const { data: insights } = useQuery({
+    queryKey: ["dashboard-insights"],
+    queryFn: fetchInsights,
+  });
+
+  const { data: currency = "£" } = useQuery({
+    queryKey: ["settings-currency"],
+    queryFn: fetchCurrencySymbol,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  return (
+    <motion.div
+      variants={container}
+      initial="hidden"
+      animate="show"
+      className="grid lg:grid-cols-4 sm:grid-cols-2 gap-4"
+    >
+      <StatCard
+        href={ADMIN_PRODUCT_SHOW}
+        label="Total Menus"
+        value={countData?.product ?? 0}
+        icon={<UtensilsCrossed size={20} />}
+        gradient="from-orange-400 to-orange-600"
+      />
+
+      <StatCard
+        label="Revenue"
+        value={`${currency}${Number(insights?.revenue || 0).toLocaleString("en-GB", { maximumFractionDigits: 2 })}`}
+        icon={<Wallet size={20} />}
+        gradient="from-emerald-400 to-emerald-600"
+      />
+
+      <StatCard
+        label="Items Sold"
+        value={insights?.itemsSold ?? 0}
+        icon={<ShoppingBag size={20} />}
+        gradient="from-sky-400 to-sky-600"
+      />
+
+      <StatCard
+        href={ADMIN_ORDER_SHOW}
+        label="Total Orders"
+        value={countData?.order ?? 0}
+        icon={<ClipboardList size={20} />}
+        gradient="from-violet-400 to-violet-600"
+      />
+    </motion.div>
+  );
+}

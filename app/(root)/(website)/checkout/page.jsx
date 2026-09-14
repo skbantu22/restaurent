@@ -104,6 +104,16 @@ export default function CheckoutPage() {
     [products],
   );
 
+  // The custom-meal builder's base-protein line (e.g. "Category:
+  // Beef") is £0 and informational only — it's still sent to the
+  // server as part of the order (so the kitchen sees the chosen
+  // base), but it's not a purchasable line item, so it's hidden from
+  // this customer-facing review list.
+  const displayProducts = useMemo(
+    () => products.filter((item) => !String(item?.productId || "").startsWith("category-")),
+    [products],
+  );
+
   const discountAmount = useMemo(() => {
     if (!appliedCoupon) return 0;
     return (subtotal * Number(appliedCoupon.discountPercentage)) / 100;
@@ -607,7 +617,7 @@ export default function CheckoutPage() {
 
             {/* Products List */}
             <div className="max-h-56 overflow-y-auto space-y-3 mb-6 pr-2">
-              {products.map((item, index) => (
+              {displayProducts.map((item, index) => (
                 <div
                   key={index}
                   className="flex justify-between items-center text-sm outline-b outline-zinc-900 pb-3 border-b"
@@ -630,7 +640,7 @@ export default function CheckoutPage() {
                     />
                     <div>
                       <p className="font-bold text-xs text-zinc-900 line-clamp-1 uppercase tracking-wider">
-                        {item.title}
+                        {item.name || item.title}
                       </p>
                       <p className="text-[11px] text-zinc-600 font-semibold mt-0.5">
                         QTY: {item.quantity}

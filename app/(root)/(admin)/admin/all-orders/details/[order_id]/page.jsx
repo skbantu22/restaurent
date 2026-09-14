@@ -100,7 +100,7 @@ const OrderDetails = ({ params }) => {
           <div className="text-center">
             <h4 className="text-red-500 text-2xl font-bold">Order Not Found</h4>
             <p className="text-gray-500 mt-2">
-              We couldn't find the order with ID: {order_id}
+              We couldn&apos;t find the order with ID: {order_id}
             </p>
             <Link
               href={ADMIN_ORDER_SHOW}
@@ -120,8 +120,26 @@ const OrderDetails = ({ params }) => {
             <p>
               <b>Order Id:</b> {orderData.orderNumber}
             </p>
+            <p className="capitalize">
+              <b>Source:</b> {orderData.source === "pos" ? "POS" : "Website"}
+            </p>
+            <p className="capitalize">
+              <b>Order Type:</b> {(orderData.orderType || "").replace("_", " ")}
+              {orderData.orderType === "dine_in" && orderData.table
+                ? ` (Table ${orderData.table})`
+                : ""}
+            </p>
+            <p className="uppercase">
+              <b className="normal-case">Payment Method:</b> {orderData.payment?.method || "N/A"}
+            </p>
+            <p className="capitalize">
+              <b>Payment Status:</b> {orderData.payment?.status || "N/A"}
+            </p>
             <p>
-              <b>Transaction Id:</b> {orderData.payment_id || "N/A"}
+              <b>Transaction Id:</b>{" "}
+              {orderData.payment?.transactionId ||
+                orderData.payment?.paymentIntentId ||
+                "N/A"}
             </p>
             <p className="capitalize">
               <b>Status:</b> {orderData.orderStatus}
@@ -208,10 +226,10 @@ const OrderDetails = ({ params }) => {
                 </tr>
                 <tr className="font-semibold">
                   <td colSpan={3} className="text-right p-3">
-                    Shipping Fee:
+                    Delivery Fee:
                   </td>
                   <td className="text-center p-3">
-                    {orderData.shippingFee?.toLocaleString("en-BD", {
+                    {(orderData.deliveryFee || 0).toLocaleString("en-GB", {
                       style: "currency",
                       currency: "GBP",
                     })}
@@ -256,10 +274,17 @@ const OrderDetails = ({ params }) => {
               <p>
                 <b>Phone:</b> {orderData.customer?.phone}
               </p>
-              <p>
-                <b>Address:</b> {orderData.customer?.address},{" "}
-                {orderData.customer?.cityId}
-              </p>
+              {orderData.orderType === "delivery" && (
+                <p>
+                  <b>Address:</b> {orderData.deliveryAddress?.address}
+                  {orderData.deliveryAddress?.city
+                    ? `, ${orderData.deliveryAddress.city}`
+                    : ""}
+                  {orderData.deliveryAddress?.postcode
+                    ? `, ${orderData.deliveryAddress.postcode}`
+                    : ""}
+                </p>
+              )}
             </div>
 
             <div>

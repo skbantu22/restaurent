@@ -1,17 +1,86 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import axios from "axios";
 import Link from "next/link";
 import Image from "next/image";
 import { Phone, Mail, MapPin } from "lucide-react";
+import { motion } from "framer-motion";
 
 import logo from "@/public/assets/logo.png";
 
+const FOOTER_GRID_VARIANTS = {
+  hidden: { opacity: 0, y: 16 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+};
+
+const DAY_LABELS = { mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri", sat: "Sat", sun: "Sun" };
+const DAY_ORDER = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+
+function formatTime12h(hhmm) {
+  if (!hhmm) return "";
+  const [h, m] = hhmm.split(":").map(Number);
+  const period = h >= 12 ? "PM" : "AM";
+  const hour12 = h % 12 === 0 ? 12 : h % 12;
+  return `${hour12}:${String(m).padStart(2, "0")} ${period}`;
+}
+
+// Collapses the 7 per-day entries into contiguous ranges that share the
+// same hours (e.g. "Mon – Fri: 12:00 PM – 11:00 PM", "Sat – Sun: ...")
+// instead of always assuming every day is identical.
+function groupOpeningHours(openingHours) {
+  if (!Array.isArray(openingHours) || openingHours.length === 0) return [];
+
+  const byDay = Object.fromEntries(openingHours.map((h) => [h.day, h]));
+  const ordered = DAY_ORDER.map((d) => byDay[d]).filter(Boolean);
+  if (ordered.length === 0) return [];
+
+  const groups = [];
+  for (const day of ordered) {
+    const key = day.closed ? "closed" : `${day.open}-${day.close}`;
+    const last = groups[groups.length - 1];
+    if (last && last.key === key) {
+      last.days.push(day.day);
+    } else {
+      groups.push({ key, days: [day.day], closed: day.closed, open: day.open, close: day.close });
+    }
+  }
+
+  return groups.map((g) => ({
+    label:
+      g.days.length > 1
+        ? `${DAY_LABELS[g.days[0]]} – ${DAY_LABELS[g.days[g.days.length - 1]]}`
+        : DAY_LABELS[g.days[0]],
+    hours: g.closed ? "Closed" : `${formatTime12h(g.open)} – ${formatTime12h(g.close)}`,
+  }));
+}
+
 export default function Footer() {
+  const [settings, setSettings] = useState(null);
+
+  useEffect(() => {
+    axios
+      .get("/api/settings/public")
+      .then(({ data }) => data?.success && setSettings(data.data))
+      .catch(() => {}); // falls back to the defaults below
+  }, []);
+
+  const phone = settings?.phone || "020 7123 4567";
+  const email = settings?.email || "hello@smashedldn.uk";
+  const address = settings?.address || "Hackney, East London";
+  const hourGroups = groupOpeningHours(settings?.openingHours);
+
   return (
     <footer className="w-full bg-[#030303] border-t border-[#111] text-white overflow-hidden">
       <div className="max-w-[1450px] mx-auto">
         {/* MAIN FOOTER */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5">
+        <motion.div
+          variants={FOOTER_GRID_VARIANTS}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4"
+        >
           {/* LOGO BLOCK */}
           <div className="px-6 lg:px-8 py-8 border-b lg:border-b-0 lg:border-r border-[#111]">
             <Image
@@ -34,29 +103,11 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* QUICK LINKS */}
-          <div className="px-6 lg:px-8 py-8 border-b lg:border-b-0 lg:border-r border-[#111]">
-            <h3 className="text-white text-[18px] font-black uppercase mb-6 tracking-wide">
-              Quick Links
-            </h3>
-
-            <div className="flex flex-col gap-3">
-              {["Home", "Menu", "Build Your Own", "Our Story", "Contact"].map(
-                (item) => (
-                  <Link
-                    key={item}
-                    href="#"
-                    className="text-gray-300 hover:text-[#ff6b00] transition text-[15px] font-semibold"
-                  >
-                    {item}
-                  </Link>
-                ),
-              )}
-            </div>
-          </div>
-
           {/* CONTACT */}
-          <div className="px-6 lg:px-8 py-8 border-b lg:border-b-0 lg:border-r border-[#111]">
+          <div
+            id="contact"
+            className="px-6 lg:px-8 py-8 border-b lg:border-b-0 lg:border-r border-[#111] scroll-mt-24"
+          >
             <h3 className="text-white text-[18px] font-black uppercase mb-6 tracking-wide">
               Contact
             </h3>
@@ -148,13 +199,13 @@ export default function Footer() {
               12:00 PM – 11:30 PM
             </p>
           </div>
-        </div>
+        </motion.div>
 
         {/* BOTTOM BAR */}
         <div className="border-t border-[#111] px-6 lg:px-8 py-5">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-gray-500 text-[13px] font-medium text-center sm:text-left">
-              © 2024 S'Mashed LDN. All rights reserved.
+              © 2024 S&apos;Mashed LDN. All rights reserved.
             </p>
 
             <div className="flex items-center gap-6">

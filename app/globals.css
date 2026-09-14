@@ -128,6 +128,74 @@
   }
 }
 
+/* Admin panel color theme — scoped to .admin-theme (applied on the
+   admin section's root, app/(root)/(admin)/admin/layout.jsx) so the
+   public website keeps its own neutral palette untouched. Warm
+   orange/teal/amber instead of the site-wide grayscale tokens. */
+.admin-theme {
+  --background: #fffaf5;
+  --foreground: #1c1917;
+  --card: #ffffff;
+  --card-foreground: #1c1917;
+  --popover: #ffffff;
+  --popover-foreground: #1c1917;
+  --primary: #f97316;
+  --primary-foreground: #ffffff;
+  --secondary: #14b8a6;
+  --secondary-foreground: #ffffff;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --accent: #fef3c7;
+  --accent-foreground: #92400e;
+  --destructive: #ef4444;
+  --border: #e7e5e4;
+  --input: #e7e5e4;
+  --ring: #fb923c;
+  --chart-1: #f97316;
+  --chart-2: #14b8a6;
+  --chart-3: #eab308;
+  --chart-4: #8b5cf6;
+  --chart-5: #ec4899;
+  --sidebar: #1c1917;
+  --sidebar-foreground: #fafaf9;
+  --sidebar-primary: #f97316;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #292524;
+  --sidebar-accent-foreground: #fafaf9;
+  --sidebar-border: #292524;
+  --sidebar-ring: #f97316;
+}
+
+.admin-theme.dark,
+.dark .admin-theme {
+  --background: #18181b;
+  --foreground: #fafafa;
+  --card: #27272a;
+  --card-foreground: #fafafa;
+  --popover: #27272a;
+  --popover-foreground: #fafafa;
+  --primary: #fb923c;
+  --primary-foreground: #1c1917;
+  --secondary: #2dd4bf;
+  --secondary-foreground: #042f2e;
+  --muted: #3f3f46;
+  --muted-foreground: #a1a1aa;
+  --accent: #422006;
+  --accent-foreground: #fde68a;
+  --destructive: #f87171;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.15);
+  --ring: #fb923c;
+  --sidebar: #0c0a09;
+  --sidebar-foreground: #fafaf9;
+  --sidebar-primary: #fb923c;
+  --sidebar-primary-foreground: #1c1917;
+  --sidebar-accent: #1c1917;
+  --sidebar-accent-foreground: #fafaf9;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: #fb923c;
+}
+
 .slick-dots {
   bottom: 15px !important;
 }

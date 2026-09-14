@@ -157,7 +157,7 @@ const Wishlist = () => {
                   </td>
 
                   <td className="p-4 font-semibold text-green-600">
-                    ৳{product?.sellingPrice?.toLocaleString("en-BD")}
+                    £{product?.sellingPrice?.toLocaleString("en-GB")}
                   </td>
 
                   <td className="p-4 text-right flex justify-end gap-2">

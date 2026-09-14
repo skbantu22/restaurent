@@ -9,6 +9,7 @@ import { ToastContainer } from "react-toastify";
 
 // Import MetaPixel
 import MetaPixel from "@/lib/MetaPixel";
+import GoogleAdsTag from "@/lib/GoogleAdsTag";
 import { connectDB } from "@/lib/databaseconnection";
 import FBTrackingSetting from "@/models/FbTrackingSetting.model";
 import LiveOrderWidget from "@/components/ui/Application/website/LiveOrderWidget";
@@ -38,12 +39,27 @@ const Layout = async ({ children }) => {
     settings = JSON.parse(JSON.stringify(newSettings));
   }
 
-  const plainSettings = JSON.parse(JSON.stringify(settings));
+  // Only ever pass the safe, non-secret subset to client components —
+  // Server→Client props are serialized into the page payload, so the
+  // full document (which includes the Meta Graph API access token)
+  // must never be passed down as-is.
+  const trackingSettings = {
+    meta: {
+      enabled: settings.meta?.enabled || false,
+      pixelId: settings.meta?.pixelId || "",
+    },
+    googleAds: {
+      enabled: settings.googleAds?.enabled || false,
+      conversionId: settings.googleAds?.conversionId || "",
+      conversionLabel: settings.googleAds?.conversionLabel || "",
+    },
+  };
 
   return (
     <GlobalStoreProvider>
       <div className={jost.className}>
-        <MetaPixel settings={plainSettings} />
+        <MetaPixel settings={trackingSettings} />
+        <GoogleAdsTag settings={trackingSettings} />
 
         <Header />
 
