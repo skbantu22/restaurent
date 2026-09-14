@@ -4,22 +4,9 @@ import ProductModel from "@/models/Product.model";
 import CategoryModel from "@/models/category.model";
 import MediaModel from "@/models/Media.model";
 const CATEGORY_MAP = {
-  beef: ["smash-burgers", "stack-burger"],
+  beef: ["smash-burgers", "steak-burger-premium-burgers"],
   chicken: ["chicken-burgers"],
   plant: ["plant-based"],
-};
-
-// Fallback keyword match: a product whose name/description mentions
-// "beef"/"chicken"/"plant" is included even if it isn't assigned to
-// one of the hardcoded category slugs above. This is what actually
-// decides membership for most products, since category slugs are
-// easy to get out of sync with the real menu — matching on the word
-// itself is more forgiving and matches how staff naturally describe
-// items ("Beef Mushroom Burger", "...chicken breast...", etc).
-const KEYWORD_MAP = {
-  beef: /beef/i,
-  chicken: /chicken/i,
-  plant: /plant/i,
 };
 
 export async function GET(req) {
@@ -43,17 +30,14 @@ export async function GET(req) {
     }).select("_id");
 
     const categoryIds = categories.map((c) => c._id);
-    const keyword = KEYWORD_MAP[type];
 
-    // A product qualifies if it's assigned to one of the mapped
-    // categories OR its name/description mentions the keyword.
+    // Category membership only — a name/description keyword fallback
+    // used to also match here, but that pulled in anything merely
+    // mentioning "beef"/"chicken" (Loaded Fries with beef mince,
+    // Healthier Options chicken wraps/salads), not just burgers.
     const products = await ProductModel.find({
       deletedAt: null,
-      $or: [
-        { category: { $in: categoryIds } },
-        { name: { $regex: keyword } },
-        { description: { $regex: keyword } },
-      ],
+      category: { $in: categoryIds },
     })
       .populate("media")
       .populate("category", "name slug");
