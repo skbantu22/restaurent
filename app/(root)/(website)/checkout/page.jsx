@@ -633,7 +633,7 @@ export default function CheckoutPage() {
                         item.media?.[0]?.thumbnail ||
                         item.media?.secure_url ||
                         item.media?.url ||
-                        imgPlaceholder
+                        "/assets/img-placeholder.webp"
                       }
                       alt={item.title || item.name || "Product Image"}
                       className="w-11 h-11 object-cover outline outline-1 outline-zinc-900 rounded-none"
