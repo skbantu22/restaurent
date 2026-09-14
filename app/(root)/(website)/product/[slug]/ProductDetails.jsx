@@ -42,6 +42,28 @@ const ProductDetails = ({
   const [quantity, setQuantity] = useState(1);
   const [isAddedIntoCart, setIsAddedIntoCart] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  // The restaurant's real phone, from Settings — was a hardcoded
+  // "8801XXXXXXXXX" placeholder that was never actually filled in.
+  const [contactPhone, setContactPhone] = useState("");
+
+  useEffect(() => {
+    fetch("/api/settings/public")
+      .then((res) => res.json())
+      .then((res) => {
+        if (res?.success && res.data?.phone) setContactPhone(res.data.phone);
+      })
+      .catch(() => {});
+  }, []);
+
+  // UK-format → E.164-ish digits (44 + local number, no leading 0),
+  // suitable for both tel: and wa.me links.
+  const intlPhone = useMemo(() => {
+    const digits = contactPhone.replace(/[^0-9]/g, "");
+    if (!digits) return "";
+    if (digits.startsWith("44")) return digits;
+    const local = digits.startsWith("0") ? digits.slice(1) : digits;
+    return `44${local}`;
+  }, [contactPhone]);
 
   const breadcrumbItems = [
     { label: "Home", href: "/" },
@@ -51,16 +73,14 @@ const ProductDetails = ({
     },
     { label: product?.name || "Product" },
   ];
-  const WHATSAPP_NUMBER = "8801XXXXXXXXX";
-  const CALL_NUMBER = "8801XXXXXXXXX";
 
   const handleWhatsAppOrder = () => {
+    if (!intlPhone) return;
+
     const message = `
 🛍️ Order Request
 
 Product: ${product?.name}
-Color: ${selectedColor || "N/A"}
-Size: ${selectedSize || "N/A"}
 Quantity: ${quantity}
 
 Price: £${displaySellingPrice}
@@ -69,13 +89,14 @@ Product Link:
 ${window.location.href}
   `;
 
-    const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+    const whatsappUrl = `https://wa.me/${intlPhone}?text=${encodeURIComponent(message)}`;
 
     window.open(whatsappUrl, "_blank");
   };
 
   const handleCallOrder = () => {
-    window.location.href = `tel:+${CALL_NUMBER}`;
+    if (!intlPhone) return;
+    window.location.href = `tel:+${intlPhone}`;
   };
   // ==========================================
   // STEP 1: Create Flat Gallery List
@@ -286,8 +307,8 @@ ${window.location.href}
   }, [hasColors, flatGallery.length]);
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 antialiased">
-      <div className="max-w-7xl mx-auto px-2 md:px-6 py-2 md:py-6 flex items-center gap-2 text-[9px] uppercase text-gray-400">
+    <div className="storefront-theme bg-background text-foreground min-h-screen antialiased">
+      <div className="max-w-7xl mx-auto px-2 md:px-6 py-2 md:py-6 flex items-center gap-2 text-[9px] uppercase text-zinc-500">
         <Breadcums items={breadcrumbItems} />
       </div>
 
@@ -313,7 +334,7 @@ ${window.location.href}
         <div className="lg:col-span-5 flex flex-col">
           <div className="w-full max-w-md mx-auto lg:mx-0 flex flex-col ">
             <div className="flex items-start justify-between gap-3 ">
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-medium tracking-tight leading-snug text-gray-900 break-words">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-tight leading-snug text-white break-words">
                 {product?.name}
               </h1>
               <div className="shrink-0 ">
@@ -324,170 +345,164 @@ ${window.location.href}
               </div>
             </div>
 
-            <div className="text-[12px] md:text-sm tracking-wide text-gray-400">
-              <span className="uppercase font-medium text-gray-400">SKU: </span>
-              <span className="uppercase font-semibold">{displaySku}</span>
+            <div className="text-[12px] md:text-sm tracking-wide text-zinc-500">
+              <span className="uppercase font-medium text-zinc-500">SKU: </span>
+              <span className="uppercase font-semibold text-zinc-300">{displaySku}</span>
             </div>
 
             <div className="flex items-center gap-4 mb-4 md:mb-8 mt-2">
-              <span className="text-2xl font-light text-gray-900">
+              <span className="text-2xl font-bold text-[#ff6b00]">
                 £{Number(displaySellingPrice).toLocaleString("en-GB")}
               </span>
               {Number(displayMrp) > Number(displaySellingPrice) && (
-                <span className="text-base text-gray-400 line-through font-light">
+                <span className="text-base text-zinc-600 line-through font-light">
                   £{Number(displayMrp).toLocaleString("en-GB")}
                 </span>
               )}
             </div>
 
-            <div className="space-y-4 md:space-y-5 mb-3 md:mb-4 ">
-              {hasColors ? (
-                <div className="select-none">
-                  <h3 className="text-xs md:text-lg font-medium mb-2 text-gray-900">
-                    Color
-                  </h3>
+            {/* Colour/size variants only apply to the legacy retail
+                catalogue (ProductVariantModel) — real menu items have
+                none, so this whole block simply doesn't render for
+                food, instead of showing an empty "Size: Select" with
+                a disabled dash. */}
+            {flatGallery.length > 0 && (
+              <div className="space-y-4 md:space-y-5 mb-3 md:mb-4 ">
+                {hasColors ? (
+                  <div className="select-none">
+                    <h3 className="text-xs md:text-lg font-medium mb-2 text-white">
+                      Color
+                    </h3>
 
-                  <div className="flex flex-wrap gap-2 sm:gap-3">
-                    {colors.map((color) => {
-                      const isSelected = selectedColor === color;
-
-                      return (
-                        <button
-                          key={color}
-                          type="button"
-                          onClick={() => handleVariantSelection(color, null)}
-                          className={`min-w-[30px] h-[25px] md:h-[40px] px-4 rounded-full border transition-all ${
-                            isSelected
-                              ? "border-black bg-white text-black shadow-sm scale-105"
-                              : "border-zinc-200 bg-white text-zinc-500 hover:border-zinc-400"
-                          }`}
-                        >
-                          <span className="text-[9px] md:text-[12px] tracking-wider">
-                            {color}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ) : (
-                // ✅ THIS IS YOUR ELSE PART (NO COLOR CASE)
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium">Colors:</h3>
-
-                  <div className="flex flex-wrap gap-2">
-                    {flatGallery
-                      .filter(
-                        (v, index, self) =>
-                          index === self.findIndex((t) => t.image === v.image),
-                      )
-                      .slice(0, 6)
-                      .map((item) => {
-                        const realIndex = flatGallery.findIndex(
-                          (v) => v.image === item.image,
-                        );
-
-                        const isActive = activeIndex === realIndex;
+                    <div className="flex flex-wrap gap-2 sm:gap-3">
+                      {colors.map((color) => {
+                        const isSelected = selectedColor === color;
 
                         return (
                           <button
-                            key={realIndex}
-                            onClick={() => setActiveIndex(realIndex)}
-                            className={`w-14 h-14 rounded-md overflow-hidden border transition-all ${
-                              isActive
-                                ? "border-black scale-105 shadow-md"
-                                : "border-gray-300"
+                            key={color}
+                            type="button"
+                            onClick={() => handleVariantSelection(color, null)}
+                            className={`min-w-[30px] h-[25px] md:h-[40px] px-4 rounded-full border transition-all ${
+                              isSelected
+                                ? "border-[#ff6b00] bg-[#ff6b00]/10 text-[#ff6b00] shadow-sm scale-105"
+                                : "border-[#262626] bg-[#0d0d0d] text-zinc-400 hover:border-zinc-600"
                             }`}
                           >
-                            <img
-                              src={item.image}
-                              alt="variant"
-                              className="w-full h-full object-cover"
-                            />
+                            <span className="text-[9px] md:text-[12px] tracking-wider">
+                              {color}
+                            </span>
                           </button>
                         );
                       })}
-                  </div>
-                </div>
-              )}
-
-              <div className="mt-4">
-                <h3 className="text-xs md:text-lg font-medium mb-2 text-gray-900 ">
-                  Size:
-                  <span className="font-normal text-gray-600 ml-1">
-                    {selectedSize || "Select"}
-                  </span>
-                </h3>
-                <div className="flex flex-wrap items-center gap-2 md:gap-3 ">
-                  {dynamicSizes.length > 0 ? (
-                    dynamicSizes.map((item) => {
-                      const isSelected = selectedSize === item.size;
-                      return (
-                        <button
-                          key={item.size}
-                          type="button"
-                          disabled={item.stock === 0}
-                          onClick={() =>
-                            handleVariantSelection(null, item.size)
-                          }
-                          className={`
-                            relative flex items-center justify-center 
-                            min-w-[30px] h-[25px] md:h-[40px] px-4
-                            text-sm transition-all duration-200 
-                            ${
-                              isSelected
-                                ? "border border-black rounded-full text-black shadow-[0_4px_12px_rgba(0,0,0,0.1)] scale-105"
-                                : "border border-gray-500 text-gray-500 rounded-full hover:text-black"
-                            }
-                            ${item.stock === 0 ? "cursor-not-allowed opacity-60" : "cursor-pointer"}
-                          `}
-                        >
-                          <span
-                            className={
-                              isSelected ? "font-semibold" : "font-normal"
-                            }
-                          >
-                            {item.size}
-                          </span>
-                          {item.stock === 0 && (
-                            <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                              <span className="w-full h-[1px] bg-gray-400"></span>
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })
-                  ) : (
-                    <div className="flex flex-wrap items-center gap-6">
-                      <button
-                        type="button"
-                        disabled
-                        className="relative flex items-center justify-center min-w-[30px] h-[25px] px-1 text-sm transition-all duration-200 border border-gray-500 text-gray-500 rounded-full opacity-60"
-                      >
-                        <span className="opacity-0">-</span>
-                        <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                          <span className="w-3 h-[1px] bg-gray-400"></span>
-                        </span>
-                      </button>
                     </div>
-                  )}
-                </div>
+                  </div>
+                ) : (
+                  // ✅ THIS IS YOUR ELSE PART (NO COLOR CASE)
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-medium text-white">Colors:</h3>
+
+                    <div className="flex flex-wrap gap-2">
+                      {flatGallery
+                        .filter(
+                          (v, index, self) =>
+                            index === self.findIndex((t) => t.image === v.image),
+                        )
+                        .slice(0, 6)
+                        .map((item) => {
+                          const realIndex = flatGallery.findIndex(
+                            (v) => v.image === item.image,
+                          );
+
+                          const isActive = activeIndex === realIndex;
+
+                          return (
+                            <button
+                              key={realIndex}
+                              onClick={() => setActiveIndex(realIndex)}
+                              className={`w-14 h-14 rounded-md overflow-hidden border transition-all ${
+                                isActive
+                                  ? "border-[#ff6b00] scale-105 shadow-md"
+                                  : "border-[#262626]"
+                              }`}
+                            >
+                              <img
+                                src={item.image}
+                                alt="variant"
+                                className="w-full h-full object-cover"
+                              />
+                            </button>
+                          );
+                        })}
+                    </div>
+                  </div>
+                )}
+
+                {dynamicSizes.length > 0 && (
+                  <div className="mt-4">
+                    <h3 className="text-xs md:text-lg font-medium mb-2 text-white ">
+                      Size:
+                      <span className="font-normal text-zinc-400 ml-1">
+                        {selectedSize || "Select"}
+                      </span>
+                    </h3>
+                    <div className="flex flex-wrap items-center gap-2 md:gap-3 ">
+                      {dynamicSizes.map((item) => {
+                        const isSelected = selectedSize === item.size;
+                        return (
+                          <button
+                            key={item.size}
+                            type="button"
+                            disabled={item.stock === 0}
+                            onClick={() =>
+                              handleVariantSelection(null, item.size)
+                            }
+                            className={`
+                              relative flex items-center justify-center
+                              min-w-[30px] h-[25px] md:h-[40px] px-4
+                              text-sm transition-all duration-200
+                              ${
+                                isSelected
+                                  ? "border border-[#ff6b00] rounded-full text-[#ff6b00] shadow-[0_4px_12px_rgba(255,107,0,0.15)] scale-105"
+                                  : "border border-zinc-600 text-zinc-400 rounded-full hover:text-white"
+                              }
+                              ${item.stock === 0 ? "cursor-not-allowed opacity-60" : "cursor-pointer"}
+                            `}
+                          >
+                            <span
+                              className={
+                                isSelected ? "font-semibold" : "font-normal"
+                              }
+                            >
+                              {item.size}
+                            </span>
+                            {item.stock === 0 && (
+                              <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <span className="w-full h-[1px] bg-zinc-600"></span>
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
+            )}
 
             <div className="flex flex-col gap-3 mb-4 md:mb-12 mt-2">
               <div className="flex flex-col gap-2 items-stretch">
                 <div className="flex gap-1 md:gap-2 items-stretch">
-                  <div className="flex items-center border border-black bg-white w-[110px] md:w-[130px] h-[40px] md:h-[42px] select-none">
+                  <div className="flex items-center border border-[#262626] bg-[#0d0d0d] w-[110px] md:w-[130px] h-[40px] md:h-[42px] select-none rounded-md overflow-hidden">
                     <button
                       type="button"
                       onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                      className="w-10 h-full flex items-center justify-center text-black hover:bg-gray-50 transition-colors"
+                      className="w-10 h-full flex items-center justify-center text-white hover:bg-[#1a1a1a] hover:text-[#ff6b00] transition-colors"
                     >
                       <span className="text-xl font-light leading-none">-</span>
                     </button>
                     <div className="flex-1 h-full flex items-center justify-center">
-                      <span className="text-sm md:text-base font-bold text-gray-900">
+                      <span className="text-sm md:text-base font-bold text-white">
                         {quantity}
                       </span>
                     </div>
@@ -500,7 +515,7 @@ ${window.location.href}
                             : q + 1,
                         )
                       }
-                      className="w-10 h-full flex items-center justify-center text-black hover:bg-gray-50 transition-colors"
+                      className="w-10 h-full flex items-center justify-center text-white hover:bg-[#1a1a1a] hover:text-[#ff6b00] transition-colors"
                     >
                       <span className="text-lg font-light leading-none">+</span>
                     </button>
@@ -511,10 +526,10 @@ ${window.location.href}
                       type="button"
                       disabled={isOutOfStock}
                       onClick={handleAddtoCart}
-                      className={`w-full flex items-center justify-center gap-2 font-bold uppercase text-[13px] tracking-widest py-2.5 transition-all duration-300 border ${
+                      className={`w-full flex items-center justify-center gap-2 font-bold uppercase text-[13px] tracking-widest py-2.5 rounded-md transition-all duration-300 border ${
                         isOutOfStock
-                          ? "bg-gray-100 text-gray-400 border-gray-100 cursor-not-allowed"
-                          : "bg-[#222222] text-white border-[#222222] hover:bg-white hover:text-black"
+                          ? "bg-[#1a1a1a] text-zinc-600 border-[#1a1a1a] cursor-not-allowed"
+                          : "bg-[#ff6b00] text-white border-[#ff6b00] hover:bg-[#ff7e29]"
                       }`}
                     >
                       {!isOutOfStock && (
@@ -524,7 +539,7 @@ ${window.location.href}
                     </button>
                   ) : (
                     <Link href={WEBSITE_CART} className="w-full">
-                      <button className="w-full flex items-center justify-center gap-2 bg-white text-black border-2 border-black font-bold uppercase text-[13px] tracking-widest py-3 hover:bg-black hover:text-white transition-all duration-300">
+                      <button className="w-full flex items-center justify-center gap-2 bg-[#0d0d0d] text-white border-2 border-[#ff6b00] rounded-md font-bold uppercase text-[13px] tracking-widest py-3 hover:bg-[#ff6b00] transition-all duration-300">
                         <ShoppingCart size={18} strokeWidth={2.5} />
                         View In Bag
                       </button>
@@ -539,44 +554,43 @@ ${window.location.href}
                     const added = handleAddtoCart();
                     if (added) window.location.href = WEBSITE_CART;
                   }}
-                  className={`w-full flex items-center justify-center font-bold uppercase text-[13px] tracking-widest py-3 transition-all duration-300 border ${
+                  className={`w-full flex items-center justify-center font-bold uppercase text-[13px] tracking-widest py-3 rounded-md transition-all duration-300 border ${
                     isOutOfStock
-                      ? "bg-gray-100 text-gray-400 border-gray-100 cursor-not-allowed"
-                      : "bg-[#222222] text-white border-[#222222] hover:bg-white hover:text-black shadow-sm"
+                      ? "bg-[#1a1a1a] text-zinc-600 border-[#1a1a1a] cursor-not-allowed"
+                      : "bg-[#1a1a1a] text-white border-[#262626] hover:border-[#ff6b00] hover:text-[#ff6b00] shadow-sm"
                   }`}
                 >
                   {isOutOfStock ? "Out of Stock" : "Buy It Now"}
                 </button>
 
-                <div className="grid grid-cols-2 gap-2">
-                  {/* CALL BUTTON */}
-                  <button
-                    type="button"
-                    onClick={handleCallOrder}
-                    className="w-full flex items-center justify-center gap-2 bg-white text-black border border-black font-bold uppercase text-[12px] tracking-widest py-3 hover:bg-black hover:text-white transition-all duration-300"
-                  >
-                    <Phone size={18} strokeWidth={2.2} />
-                    Call For Order
-                  </button>
+                {intlPhone && (
+                  <div className="grid grid-cols-2 gap-2">
+                    {/* CALL BUTTON */}
+                    <button
+                      type="button"
+                      onClick={handleCallOrder}
+                      className="w-full flex items-center justify-center gap-2 bg-[#0d0d0d] text-white border border-[#262626] rounded-md font-bold uppercase text-[12px] tracking-widest py-3 hover:border-[#ff6b00] hover:text-[#ff6b00] transition-all duration-300"
+                    >
+                      <Phone size={18} strokeWidth={2.2} />
+                      Call For Order
+                    </button>
 
-                  {/* WHATSAPP BUTTON */}
-                  <button
-                    type="button"
-                    onClick={handleWhatsAppOrder}
-                    className="w-full flex items-center justify-center gap-2 bg-green-600 text-white border border-green-600 font-bold uppercase text-[12px] tracking-widest py-3 hover:bg-green-700 transition-all duration-300"
-                  >
-                    <MessageCircle size={18} strokeWidth={2.2} />
-                    Order On WhatsApp
-                  </button>
-                </div>
+                    {/* WHATSAPP BUTTON */}
+                    <button
+                      type="button"
+                      onClick={handleWhatsAppOrder}
+                      className="w-full flex items-center justify-center gap-2 bg-green-600 text-white border border-green-600 rounded-md font-bold uppercase text-[12px] tracking-widest py-3 hover:bg-green-700 transition-all duration-300"
+                    >
+                      <MessageCircle size={18} strokeWidth={2.2} />
+                      Order On WhatsApp
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
             <div className="flex flex-col gap-2">
-              <AccordionBasic
-                product={product}
-                initialVariant={initialVariant}
-              />
+              <AccordionBasic product={product} />
             </div>
           </div>
         </div>
@@ -585,7 +599,7 @@ ${window.location.href}
       {similarProducts && similarProducts.length > 0 && (
         <section className="px-1 md:px-30 lg:px-40 pb-4">
           <div className="flex justify-center items-center px-2 text-center mb-2 lg:mb-4">
-            <h1 className="text-xl md:text-2xl font-semibold">
+            <h1 className="text-xl md:text-2xl font-black uppercase tracking-wide text-white">
               You May Also Like
             </h1>
           </div>

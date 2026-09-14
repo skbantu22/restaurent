@@ -33,13 +33,13 @@ function useIsMobile() {
  * Full size on desktop (sm:min-h-[56px])
  */
 const StyledTrigger = ({ title }) => (
-  <div className="flex w-full items-stretch min-h-[44px] sm:min-h-[56px] bg-[#F7F7F7] mb-1 group">
-    <div className="flex-1 flex items-center px-3 sm:px-5 py-2 sm:py-3 transition-colors group-data-[state=open]:text-red-600 group-aria-expanded:text-red-600">
+  <div className="flex w-full items-stretch min-h-[44px] sm:min-h-[56px] bg-[#0d0d0d] border border-[#262626] mb-1 group">
+    <div className="flex-1 flex items-center px-3 sm:px-5 py-2 sm:py-3 transition-colors text-white group-data-[state=open]:text-[#ff6b00] group-aria-expanded:text-[#ff6b00]">
       <span className="text-[13px] sm:text-[15px] font-medium uppercase tracking-tight text-left">
         {title}
       </span>
     </div>
-    <div className="w-10 sm:w-14 bg-[#222222] flex items-center justify-center text-white shrink-0">
+    <div className="w-10 sm:w-14 bg-[#ff6b00] flex items-center justify-center text-white shrink-0">
       <Plus
         size={16}
         className="sm:size-[20px] group-data-[state=open]:hidden group-aria-expanded:hidden"
@@ -54,7 +54,7 @@ const StyledTrigger = ({ title }) => (
   </div>
 );
 
-export function AccordionBasic({ product, initialVariant }) {
+export function AccordionBasic({ product }) {
   const isMobile = useIsMobile();
 
   return (
@@ -77,13 +77,13 @@ export function AccordionBasic({ product, initialVariant }) {
             </SheetTrigger>
             <SheetContent
               side="right"
-              className="w-[400px] sm:w-[540px] p-0 overflow-y-auto"
+              className="w-[400px] sm:w-[540px] p-0 overflow-y-auto bg-[#0d0d0d] border-l border-[#262626]"
             >
-              <div className="sticky top-0 bg-[#F7F7F7] border-b py-5 px-6 font-bold uppercase tracking-widest text-xs">
+              <div className="sticky top-0 bg-[#0d0d0d] border-b border-[#262626] py-5 px-6 font-bold uppercase tracking-widest text-xs text-white">
                 Product Description
               </div>
               <div
-                className="p-6 text-sm text-gray-600 leading-relaxed"
+                className="p-6 text-sm text-zinc-400 leading-relaxed"
                 dangerouslySetInnerHTML={{
                   __html: decode(product?.description || ""),
                 }}
@@ -95,7 +95,7 @@ export function AccordionBasic({ product, initialVariant }) {
             <AccordionTrigger className="p-0 hover:no-underline group">
               <StyledTrigger title="Product Description" />
             </AccordionTrigger>
-            <AccordionContent className="px-4 py-3 bg-white border-x border-b border-gray-100 text-xs text-gray-600">
+            <AccordionContent className="px-4 py-3 bg-[#0d0d0d] border-x border-b border-[#262626] text-xs text-zinc-400">
               <div
                 dangerouslySetInnerHTML={{
                   __html: decode(product?.description || ""),
@@ -106,70 +106,16 @@ export function AccordionBasic({ product, initialVariant }) {
         )}
       </AccordionItem>
 
-      {/* Product Size Card */}
-      <AccordionItem value="size-card" className="border-none">
-        {!isMobile ? (
-          <Sheet modal={false}>
-            <SheetTitle>
-              <VisuallyHidden>Size Card</VisuallyHidden>
-            </SheetTitle>
-            <SheetTrigger asChild>
-              <button className="w-full focus:outline-none group">
-                <StyledTrigger title="Size Chart and Description" />
-              </button>
-            </SheetTrigger>
-            <SheetContent
-              side="right"
-              className="w-[400px] sm:w-[540px] p-0 overflow-y-auto"
-            >
-              <div className="sticky top-0 bg-[#F7F7F7] border-b py-5 px-6 font-bold uppercase tracking-widest text-xs">
-                Size Guide
-              </div>
-              <div className="p-6 text-sm text-gray-600">
-                Size chart content for PC.
-              </div>
-              <div className="p-6">
-                {product?.sizeChart?.secure_url ? (
-                  <img
-                    src={product.sizeChart.secure_url}
-                    alt="Size Chart"
-                    className="w-full h-auto object-contain"
-                  />
-                ) : (
-                  <p className="text-sm text-gray-500">
-                    No size chart available
-                  </p>
-                )}
-              </div>
-            </SheetContent>
-          </Sheet>
-        ) : (
-          <>
-            <AccordionTrigger className="p-0 hover:no-underline group">
-              <StyledTrigger title="Size Chart and Description" />
-            </AccordionTrigger>
-            <AccordionContent className="px-4 py-3 bg-white border-x border-b border-gray-100">
-              {product?.sizeChart?.secure_url ? (
-                <img
-                  src={product.sizeChart.secure_url}
-                  alt="Size Chart"
-                  className="w-full h-auto object-contain"
-                />
-              ) : (
-                <p className="text-sm text-gray-500">No size chart available</p>
-              )}
-            </AccordionContent>
-          </>
-        )}
-      </AccordionItem>
-
-      {/* Return Policy */}
-      <AccordionItem value="returns" className="border-none">
+      {/* Freshness note — a burger/menu item obviously has no size
+          chart or 7-day return window, unlike the clothing-store
+          template this page started from. */}
+      <AccordionItem value="freshness" className="border-none">
         <AccordionTrigger className="p-0 hover:no-underline group">
-          <StyledTrigger title="Return Policy" />
+          <StyledTrigger title="Freshness & Allergies" />
         </AccordionTrigger>
-        <AccordionContent className="px-4 py-3 bg-white border-x border-b border-gray-100  text-black">
-          Returns are accepted within 7 days.
+        <AccordionContent className="px-4 py-3 bg-[#0d0d0d] border-x border-b border-[#262626] text-xs text-zinc-400">
+          Freshly prepared to order. Please let us know about any allergies
+          or dietary requirements before ordering.
         </AccordionContent>
       </AccordionItem>
     </Accordion>
