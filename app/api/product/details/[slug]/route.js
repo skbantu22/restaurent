@@ -18,12 +18,13 @@ export async function GET(request, { params }) {
     if (!slug) return response(false, 404, "Slug is required");
 
     // 1️⃣ Fetch main product
+    // Note: no "subcategory" or "sizeChart" fields exist on ProductModel
+    // (subcategory only survives as a leftover index; sizeChart never
+    // existed) — populating either throws StrictPopulateError and was
+    // crashing every product details request.
     const getProduct = await ProductModel.findOne({ slug, deletedAt: null })
       .populate("media", "secure_url")
       .populate("category", "name slug")
-      .populate("subcategory", "name slug")
-      .populate("sizeChart", "secure_url")
-
       .lean();
 
     if (!getProduct) return response(false, 404, "Product not found");
@@ -86,7 +87,6 @@ export async function GET(request, { params }) {
       .limit(8) // max 8 similar products
       .sort({ createdAt: -1 })
       .populate("media", "secure_url")
-      .populate("subcategory", "name slug")
       .lean();
 
     // 5️⃣ Fetch variants for similar products
