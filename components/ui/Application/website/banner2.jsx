@@ -56,18 +56,18 @@ export default function WhySmashed() {
                 {features.map((item, index) => (
                   <div
                     key={index}
-                    className="bg-[#0b1809] border border-[#1f2d1a] rounded-xl p-5 min-h-[220px] flex flex-col"
+                    className="bg-[#0b1809] border border-[#1f2d1a] rounded-xl p-4 sm:p-5 min-h-[140px] sm:min-h-[190px] xl:min-h-[220px] flex flex-col"
                   >
                     {/* ICON */}
-                    <div className={`${item.color}`}>{item.icon}</div>
+                    <div className={`${item.color} scale-75 sm:scale-100 origin-left`}>{item.icon}</div>
 
                     {/* TITLE */}
-                    <h3 className="mt-5 text-white text-[20px] leading-tight font-black uppercase whitespace-pre-line">
+                    <h3 className="mt-2 sm:mt-5 text-white text-base sm:text-[20px] leading-tight font-black uppercase whitespace-pre-line">
                       {item.title}
                     </h3>
 
                     {/* DESC */}
-                    <p className="mt-4 text-gray-400 text-[15px] leading-relaxed font-medium">
+                    <p className="mt-1.5 sm:mt-4 text-gray-400 text-[13px] sm:text-[15px] leading-snug sm:leading-relaxed font-medium">
                       {item.description}
                     </p>
                   </div>
