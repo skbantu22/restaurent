@@ -159,31 +159,31 @@ export default function Footer() {
 
             <div className="flex items-center gap-8 flex-wrap">
               {/* UBER */}
-              <div className="leading-none">
-                <p className="text-white text-[22px] font-black">Uber</p>
-
-                <p className="text-[#6fda44] text-[22px] font-black mt-1">
-                  Eats
-                </p>
-              </div>
+              <Image
+                src="/assets/uber-eats.png"
+                alt="Uber Eats"
+                width={56}
+                height={56}
+                className="w-14 h-14 rounded-xl"
+              />
 
               {/* DELIVEROO */}
-              <div className="flex flex-col items-center leading-none">
-                <div className="text-[#00d0c7] text-[34px] font-black">↯</div>
-
-                <p className="text-[#00d0c7] text-[15px] font-black lowercase mt-1">
-                  deliveroo
-                </p>
-              </div>
+              <Image
+                src="/assets/deliveroo.png"
+                alt="Deliveroo"
+                width={56}
+                height={58}
+                className="w-14 h-auto object-contain"
+              />
 
               {/* JUST EAT */}
-              <div className="leading-none">
-                <div className="text-[#ff7a00] text-[28px] font-black">⌂</div>
-
-                <p className="text-[#ff7a00] text-[15px] font-black uppercase mt-1">
-                  Just Eat
-                </p>
-              </div>
+              <Image
+                src="/assets/just-eat.png"
+                alt="Just Eat"
+                width={56}
+                height={56}
+                className="w-14 h-14 rounded-xl object-contain"
+              />
             </div>
           </div>
 

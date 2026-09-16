@@ -139,15 +139,27 @@ export default function BurgerHero() {
           {/* Footer Logistics / Partners */}
           <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-y-2 gap-x-4 mt-8 sm:mt-10 lg:mt-12 text-[11px] sm:text-xs font-bold text-gray-400">
             <div className="flex items-center gap-4">
-              <span className="text-white font-black tracking-wide">
-                Uber Eats
-              </span>
-              <span className="text-[#00cdbc] lowercase font-extrabold">
-                deliveroo
-              </span>
-              <span className="text-[#ff8000] uppercase font-black">
-                Just Eat
-              </span>
+              <img
+                src="/assets/uber-eats.png"
+                alt="Uber Eats"
+                width={28}
+                height={28}
+                className="w-7 h-7 object-contain"
+              />
+              <img
+                src="/assets/deliveroo.png"
+                alt="Deliveroo"
+                width={28}
+                height={29}
+                className="w-7 h-auto object-contain"
+              />
+              <img
+                src="/assets/just-eat.png"
+                alt="Just Eat"
+                width={28}
+                height={28}
+                className="w-7 h-7 object-contain"
+              />
             </div>
             <span className="text-gray-400 sm:text-gray-500 font-medium tracking-wide sm:border-l sm:border-gray-800 sm:pl-4">
               Fast Delivery in East London
