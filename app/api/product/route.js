@@ -117,6 +117,7 @@ export async function GET(request) {
       calories: item.calories, // ✅ ADD THIS
 
       slug: item.slug,
+      sku: item.sku || "",
       mrp: item.mrp,
       sellingPrice: item.sellingPrice,
       discountPercentage: item.discountPercentage,

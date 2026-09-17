@@ -7,6 +7,7 @@ import axios from 'axios'
 import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import {
+  Barcode,
   ChevronRight,
   ClipboardList,
   LayoutDashboard,
@@ -33,6 +34,7 @@ const MENU_ITEMS = [
   { href: ADMIN_DASHBOARD, label: "Dashboard", icon: LayoutDashboard },
   { href: ADMIN_PRODUCT_ADD, label: "Add Product", icon: PackagePlus },
   { href: ADMIN_ORDER_SHOW, label: "Orders", icon: ClipboardList },
+  { href: "/admin/barcode", label: "Print Barcodes", icon: Barcode },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ]
 
