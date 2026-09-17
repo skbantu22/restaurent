@@ -147,13 +147,13 @@ const Navbar = () => {
             {!auth ? (
               <Link
                 href={WEBSITE_LOGIN}
-                className="hidden lg:flex h-9 w-8 items-center justify-center rounded-md text-white transition-colors duration-200 hover:text-[#ff6b00]"
+                className="hidden lg:flex h-11 w-10 items-center justify-center rounded-md text-white transition-colors duration-200 hover:text-[#ff6b00]"
               >
-                <User size={22} strokeWidth={2.5} />
+                <User size={27} strokeWidth={2.4} />
               </Link>
             ) : avatarUrl ? (
-              <Link href={USER_DASHBOARD} className="hidden lg:flex h-9 w-9 items-center justify-center">
-                <Avatar className="h-7 w-7 border border-[#2a2a2a] transition-colors duration-200 hover:border-[#ff6b00]">
+              <Link href={USER_DASHBOARD} className="hidden lg:flex h-11 w-10 items-center justify-center">
+                <Avatar className="h-9 w-9 border border-[#2a2a2a] transition-colors duration-200 hover:border-[#ff6b00]">
                   <AvatarImage
                     src={avatarUrl}
                     alt={auth?.name || "User Avatar"}
@@ -166,9 +166,9 @@ const Navbar = () => {
               <Link
                 href={USER_DASHBOARD}
                 aria-label={auth?.name || "My account"}
-                className="hidden lg:flex h-9 w-8 items-center justify-center rounded-md text-white transition-colors duration-200 hover:text-[#ff6b00]"
+                className="hidden lg:flex h-11 w-10 items-center justify-center rounded-md text-white transition-colors duration-200 hover:text-[#ff6b00]"
               >
-                <User size={22} strokeWidth={2.5} />
+                <User size={27} strokeWidth={2.4} />
               </Link>
             )}
           </div>

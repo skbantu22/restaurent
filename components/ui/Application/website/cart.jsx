@@ -30,6 +30,7 @@ import imgPlaceholder from "@/public/assets/img-placeholder.webp";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { trackMetaEvent } from "@/lib/meta/metaTrack";
+import { CUSTOM_MEAL_DISCOUNT_LABEL } from "@/lib/mealDeal";
 
 const getPrice = (price) => {
   if (!price) return 0;
@@ -190,7 +191,7 @@ const Cart = ({ active }) => {
             active
               ? "relative flex items-center justify-center p-2 text-white hover:text-[#ff6b00] transition-colors focus:outline-none"
               : // navbar: plain bold icon, sits right next to the account icon
-                "relative flex h-11 w-11 lg:h-9 lg:w-8 items-center justify-center rounded-md text-white transition-colors duration-200 hover:text-[#ff6b00] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff6b00]/50"
+                "relative flex h-11 w-11 lg:h-11 lg:w-10 items-center justify-center rounded-md text-white transition-colors duration-200 hover:text-[#ff6b00] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff6b00]/50"
           }
           aria-label="Open Cart Drawer"
         >
@@ -199,7 +200,7 @@ const Cart = ({ active }) => {
           ) : (
             <ShoppingCart
               strokeWidth={2.5}
-              className="h-5 w-5 lg:h-[22px] lg:w-[22px]"
+              className="h-5 w-5 lg:h-[26px] lg:w-[26px]"
             />
           )}
           {count > 0 && (
@@ -261,8 +262,11 @@ const Cart = ({ active }) => {
                     className="rounded-xl border border-[#ff6b00]/30 bg-[#1a1a1a] overflow-hidden"
                   >
                     <div className="flex items-center justify-between px-3 py-2 bg-[#ff6b00]/10 border-b border-[#ff6b00]/20">
-                      <span className="text-xs font-bold uppercase tracking-wide text-[#ff6b00]">
+                      <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-[#ff6b00]">
                         {bundle.name}
+                        <span className="rounded-full bg-[#7ac943] px-1.5 py-px text-[9px] font-black text-black">
+                          {CUSTOM_MEAL_DISCOUNT_LABEL}
+                        </span>
                       </span>
                       <button
                         onClick={() => dispatch(removeFromCart({ productId: bundle.productId }))}

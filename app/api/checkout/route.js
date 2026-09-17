@@ -11,6 +11,7 @@ import sendTelegramOrder from "@/lib/sendTelegramOrder";
 import { consumeOrderStock } from "@/lib/inventory/inventory.service";
 import { getRestaurantSettings } from "@/lib/settings.server";
 import { fireServerPurchaseConversion } from "@/lib/meta/firePurchaseConversion";
+import { customMealPrice } from "@/lib/mealDeal";
 
 // Initialize Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -207,12 +208,16 @@ export async function POST(req) {
             0,
           );
 
+          // Custom Meal deal: 20% off the combined selections, applied
+          // here rather than trusting whatever price the client sent.
+          const bundlePrice = customMealPrice(bundleTotal);
+
           return {
             itemType: "bundle",
             customId: id,
             name: it.name || it.title || "Custom Meal",
             image: getAbsoluteImageUrl(it.image, origin),
-            price: bundleTotal,
+            price: bundlePrice,
             quantity: Math.max(1, Number(it.quantity || 1)),
             notes: it.notes || "",
             items: nestedClean,

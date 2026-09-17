@@ -6,6 +6,11 @@ import { useDispatch } from "react-redux";
 import { addIntoCart } from "@/store/reducer/cartReducer";
 import { X, Plus, Loader2, Flame, Check } from "lucide-react";
 import { showToast } from "@/lib/showToast";
+import {
+  CUSTOM_MEAL_DISCOUNT_LABEL,
+  customMealPrice,
+  customMealSaving,
+} from "@/lib/mealDeal";
 
 // ---------------- ICONS (Enlarged) ----------------
 const ICONS = {
@@ -67,20 +72,31 @@ const BASE_OPTIONS = [
   { id: "plant", label: "Plant Based", icon: ICONS.plant },
 ];
 
-// ---------------- EXTRAS ----------------
+// ---------------- SIDES ----------------
 const EXTRA_OPTIONS = [
-  { id: "bacon", label: "Bacon", price: 1.5, img: "/assets/Custom/bacon.png" },
   {
-    id: "jalapenos",
-    label: "Jalapeños",
-    price: 0.8,
-    img: "/assets/Custom/jalapenos.png",
+    id: "seasoned-fries",
+    label: "Signature Seasoned Fries",
+    price: 3.49,
+    img: "/assets/Custom/Signature%20Seasoned%20Fries.jpg",
   },
   {
-    id: "onions",
-    label: "Fried Onions",
-    price: 0.7,
-    img: "/assets/Custom/onions.png",
+    id: "onion-rings",
+    label: "Crispy Onion Rings",
+    price: 4.49,
+    img: "/assets/Crispy%20Onion%20Rings.jpg",
+  },
+  {
+    id: "chicken-stripes",
+    label: "Crispy Chicken Stripes",
+    price: 6.49,
+    img: "/assets/chicken-wallfies.png",
+  },
+  {
+    id: "potato-wedges",
+    label: "Potato Wedges",
+    price: 4.5,
+    img: "/assets/Custom/Potatoes%20Wedges.jpg",
   },
 ];
 
@@ -114,6 +130,9 @@ export default function PremiumMealBuilder() {
   const [extras, setExtras] = useState([]);
   const [drinks, setDrinks] = useState([]);
   const [activeModalBase, setActiveModalBase] = useState(null);
+  // brief "Added" confirmation on the Add to Cart button, which also
+  // blocks a double tap adding the same meal twice
+  const [justAdded, setJustAdded] = useState(false);
   const [cartProducts, setCartProducts] = useState([]);
   function decodeHtml(html = "") {
     const txt = document.createElement("textarea");
@@ -204,7 +223,10 @@ export default function PremiumMealBuilder() {
     0,
   );
 
-  const total = drinksPrice + extrasPrice + productsPrice;
+  // Custom Meal deal — 20% off the items combined in the builder
+  const subtotal = drinksPrice + extrasPrice + productsPrice;
+  const saving = customMealSaving(subtotal);
+  const total = customMealPrice(subtotal);
   const totalItems =
     selectedExtras.length + selectedDrinks.length + cartProducts.length;
   const hasSelection = totalItems > 0 || !!base;
@@ -313,20 +335,30 @@ export default function PremiumMealBuilder() {
       0,
     );
 
+    // the deal price — the checkout API applies the same 20% again
+    // server-side, so this is never trusted on its own
+    const bundlePrice = customMealPrice(bundleTotal);
+
     dispatch(
       addIntoCart({
         productId: bundleId,
         itemType: "bundle",
         name: bundleLabel,
-        sellingPrice: bundleTotal,
-        price: bundleTotal,
+        sellingPrice: bundlePrice,
+        price: bundlePrice,
         quantity: 1,
         image: cartProducts[0]?.media?.[0]?.secure_url || "",
         items: nestedItems,
       }),
     );
 
-    showToast("success", "Custom meal added to cart!");
+    showToast(
+      "success",
+      `Custom meal added to cart — ${CUSTOM_MEAL_DISCOUNT_LABEL} applied!`,
+    );
+
+    setJustAdded(true);
+    setTimeout(() => setJustAdded(false), 2000);
   };
 
   const clearSelection = () => {
@@ -345,6 +377,16 @@ export default function PremiumMealBuilder() {
   return (
     <div className="bg-[#050505] text-white border border-zinc-800 p-4 md:p-6 rounded-none">
       <div className="max-w-7xl mx-auto">
+        {/* Deal note — every meal built here gets the discount */}
+        <div className="mb-3 flex justify-end">
+          <span className="inline-flex items-center gap-2 border border-[#7ac943]/40 bg-[#7ac943]/10 px-3 py-1.5 text-[11px] font-black uppercase tracking-wider text-[#7ac943]">
+            <span className="bg-[#7ac943] px-1.5 py-px text-black">
+              {CUSTOM_MEAL_DISCOUNT_LABEL}
+            </span>
+            on every custom meal
+          </span>
+        </div>
+
         {/* MAIN GRID */}
         <div className="grid lg:grid-cols-3 border border-[#1f1f1f] rounded-none overflow-hidden">
           {/* BASE CATEGORIES */}
@@ -370,23 +412,21 @@ export default function PremiumMealBuilder() {
                       setBase(item.id);
                       handleBaseClick(item.id);
                     }}
-                    className={`group flex flex-col items-center justify-center gap-3 py-6 px-2 rounded-none outline outline-1 transition-all duration-300 hover:scale-105 ${
-                      active
-                        ? "outline-[#7ac943] bg-[#7ac943]/10 shadow-[0_0_20px_rgba(122,201,67,0.3)] scale-105"
-                        : "outline-white/5 bg-white/[0.02] hover:outline-[#7ac943]/30"
+                    className={`group flex w-full flex-col items-center gap-2 transition-all duration-300 hover:scale-105 ${
+                      active ? "scale-105" : ""
                     }`}
                   >
                     <div
-                      className={`transition-all duration-300 ${
+                      className={`relative w-full h-28 lg:h-32 flex items-center justify-center transition-all duration-300 rounded-none outline outline-1 ${
                         active
-                          ? "text-[#7ac943]"
-                          : "text-white group-hover:text-[#7ac943]"
+                          ? "bg-[#7ac943]/10 outline-[#7ac943] shadow-[0_0_20px_rgba(122,201,67,0.3)] text-[#7ac943]"
+                          : "outline-white/5 text-white group-hover:text-[#7ac943]"
                       }`}
                     >
                       {item.icon}
                     </div>
                     <span
-                      className={`text-xs md:text-sm font-bold tracking-wider uppercase text-center ${
+                      className={`text-[11px] lg:text-base font-black uppercase leading-none tracking-wider text-center ${
                         active ? "text-[#7ac943]" : "text-white"
                       }`}
                     >
@@ -411,19 +451,19 @@ export default function PremiumMealBuilder() {
               </h2>
             </div>
 
-            <div className="flex flex-wrap items-center justify-center gap-4 relative z-10">
+            <div className="grid grid-cols-2 gap-4 relative z-10">
               {EXTRA_OPTIONS.map((item) => {
                 const isSelected = extras.includes(item.id);
                 return (
                   <button
                     key={item.id}
                     onClick={() => selectExtra(item.id)}
-                    className={`group flex flex-col items-center gap-2 transition-all duration-300 hover:scale-105 ${
+                    className={`group flex w-full flex-col items-center gap-2 transition-all duration-300 hover:scale-105 ${
                       isSelected ? "scale-105" : ""
                     }`}
                   >
                     <div
-                      className={`relative w-20 h-32 lg:w-24 lg:h-32 flex items-center justify-center transition-all duration-300 rounded-none outline outline-1 ${
+                      className={`relative w-full h-28 lg:h-32 flex items-center justify-center transition-all duration-300 rounded-none outline outline-1 ${
                         isSelected
                           ? "bg-[#7ac943]/10 outline-[#7ac943] shadow-[0_0_20px_rgba(122,201,67,0.3)]"
                           : "outline-white/5"
@@ -433,6 +473,7 @@ export default function PremiumMealBuilder() {
                         src={item.img}
                         alt={item.label}
                         fill
+                        sizes="(max-width: 1024px) 40vw, 160px"
                         className="object-contain p-2"
                       />
                     </div>
@@ -465,46 +506,42 @@ export default function PremiumMealBuilder() {
               </h2>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 relative z-10">
+            <div className="grid grid-cols-2 gap-4 relative z-10">
               {DRINK_OPTIONS.map((item) => {
                 const active = drinks.includes(item.id);
                 return (
                   <button
                     key={item.id}
                     onClick={() => selectDrink(item.id)}
-                    className={`group relative flex flex-col items-center justify-between h-[130px] p-3 rounded-none outline outline-1 transition-all duration-300 hover:scale-105 ${
-                      active
-                        ? "outline-[#7ac943] bg-[#0d0d0d] shadow-[0_0_25px_rgba(122,201,67,0.18)] scale-105"
-                        : "outline-white/5 bg-white/[0.02] hover:outline-[#7ac943]/30"
+                    className={`group flex w-full flex-col items-center gap-2 transition-all duration-300 hover:scale-105 ${
+                      active ? "scale-105" : ""
                     }`}
                   >
                     <div
-                      className={`relative w-16 h-16 lg:w-18 lg:h-20 flex items-center justify-center transition-all duration-300 ${
+                      className={`relative w-full h-28 lg:h-32 flex items-center justify-center transition-all duration-300 rounded-none outline outline-1 ${
                         active
-                          ? "drop-shadow-[0_0_18px_rgba(122,201,67,0.7)]"
-                          : ""
+                          ? "bg-[#7ac943]/10 outline-[#7ac943] shadow-[0_0_20px_rgba(122,201,67,0.3)]"
+                          : "outline-white/5"
                       }`}
                     >
                       <Image
                         src={item.img}
                         alt={item.label}
                         fill
-                        sizes="80px"
-                        className="object-contain"
+                        sizes="(max-width: 1024px) 40vw, 160px"
+                        className="object-contain p-2"
                       />
                     </div>
-                    <div className="flex flex-col items-center gap-0.5">
-                      <span
-                        className={`text-[10px] lg:text-base font-black uppercase tracking-wider text-center leading-tight ${
-                          active ? "text-[#7ac943]" : "text-white"
-                        }`}
-                      >
-                        {item.label}
-                      </span>
-                      <span className="text-[10px] lg:text-base text-orange-500 font-semibold">
-                        +£{item.price.toFixed(2)}
-                      </span>
-                    </div>
+                    <span
+                      className={`text-[11px] lg:text-base font-black uppercase leading-none tracking-wider text-center ${
+                        active ? "text-[#7ac943]" : "text-white"
+                      }`}
+                    >
+                      {item.label}
+                    </span>
+                    <span className="text-[10px] lg:text-base text-orange-500 font-semibold">
+                      +£{item.price.toFixed(2)}
+                    </span>
                   </button>
                 );
               })}
@@ -629,21 +666,43 @@ export default function PremiumMealBuilder() {
                 <p className="uppercase tracking-[0.25em] text-[10px] text-[#7ac943] font-black">
                   Total Cost
                 </p>
-                <h2 className="text-4xl font-black mt-2 text-white">
-                  £{total.toFixed(2)}
-                </h2>
+                <div className="flex items-end gap-3 mt-2">
+                  <h2 className="text-4xl font-black text-white">
+                    £{total.toFixed(2)}
+                  </h2>
+                  {saving > 0 && (
+                    <span className="mb-1 text-lg font-bold text-neutral-500 line-through">
+                      £{subtotal.toFixed(2)}
+                    </span>
+                  )}
+                </div>
+                {saving > 0 && (
+                  <p className="mt-1 text-xs font-black uppercase tracking-wide text-[#7ac943]">
+                    {CUSTOM_MEAL_DISCOUNT_LABEL} applied — you save £
+                    {saving.toFixed(2)}
+                  </p>
+                )}
               </div>
               <div className="flex flex-col items-center md:items-end gap-2 w-full md:w-auto">
+                {/* Always clickable and always styled the same — picking
+                    something is enforced by handleAddToCart, which shows
+                    what's still missing, instead of a greyed-out button. */}
                 <button
                   onClick={handleAddToCart}
-                  disabled={!canCheckout}
+                  disabled={justAdded}
                   className={`w-full md:w-auto font-black px-10 py-4 rounded-none transition-all duration-300 ${
-                    canCheckout
-                      ? "bg-[#7ac943] text-black hover:bg-[#68b038]"
-                      : "bg-neutral-800 text-neutral-500 cursor-not-allowed"
+                    justAdded
+                      ? "bg-[#7ac943] text-black cursor-default"
+                      : "cursor-pointer bg-[#ff6b00] text-white hover:bg-[#ff7e29] active:scale-[0.98] shadow-lg shadow-orange-500/20"
                   }`}
                 >
-                  ADD TO CART
+                  {justAdded ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <Check size={18} /> ADDED
+                    </span>
+                  ) : (
+                    "ADD TO CART"
+                  )}
                 </button>
                 {!canCheckout && (
                   <p className="text-red-400 text-[11px] uppercase tracking-wide text-center md:text-right">
