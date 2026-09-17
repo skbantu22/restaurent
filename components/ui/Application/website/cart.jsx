@@ -218,7 +218,7 @@ const Cart = ({ active }) => {
 
       <SheetContent
         side="right"
-        className="w-72 !sm:w-60 md:w-[400px] lg:w-[400px] p-0 bg-[#121212] border-l border-[#222222] text-white flex flex-col shadow-2xl z-[150]"
+        className="w-72 !sm:w-60 md:w-[400px] lg:w-[400px] p-0 bg-[#121212] border-l border-[#222222] text-white flex flex-col shadow-2xl z-[150] will-change-transform ease-out data-[state=open]:duration-300 data-[state=closed]:duration-200"
       >
         {/* HEADER */}
         <SheetHeader className="px-6 py-4 border-b border-[#222222] flex flex-row items-center justify-between">

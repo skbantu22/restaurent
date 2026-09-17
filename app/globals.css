@@ -354,3 +354,16 @@
     padding: 8px;
   }
 }
+
+/* Opening a drawer/dialog (cart, menus) locks page scroll, which hides the
+   scrollbar and made the page jump sideways by its width. Always reserve
+   the scrollbar's space so nothing moves when the lock turns on. */
+html {
+  scrollbar-gutter: stable;
+}
+
+
+body[data-scroll-locked] {
+  margin-right: 0 !important;
+  padding-right: 0 !important;
+}
