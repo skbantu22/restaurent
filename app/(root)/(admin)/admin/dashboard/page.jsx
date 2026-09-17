@@ -4,6 +4,7 @@ import React from "react";
 import { motion } from "framer-motion";
 
 import CountOverview from "./CountOverview";
+import SalesOverview from "./SalesOverview";
 import QuickAdd from "./QuickAdd";
 import Earnings from "./Earnings";
 import SalesByCategory from "./SalesByCategory";
@@ -27,6 +28,8 @@ const Page = () => {
       <motion.div initial="hidden" animate="show" variants={fadeUp} transition={{ duration: 0.35 }}>
         <CountOverview />
       </motion.div>
+
+      <SalesOverview />
 
       <QuickAdd />
 

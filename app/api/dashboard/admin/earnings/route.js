@@ -39,6 +39,10 @@ export async function GET(request) {
         day: { $dayOfMonth: "$createdAt" },
       };
     } else {
+      // this calendar year only — otherwise e.g. Sep last year and Sep
+      // this year were summed into the same "Sep" bar
+      const startOfYear = new Date(new Date().getFullYear(), 0, 1);
+      dateMatch = { createdAt: { $gte: startOfYear } };
       groupId = { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } };
     }
 
