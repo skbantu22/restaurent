@@ -1,7 +1,23 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
 import Image from "next/image";
 import BurgerAssembly from "./BurgerAssembly";
+
+// The hero burger is hidden below md (768px); only mount it (and download
+// its layer images) on screens where it is actually shown.
+const MD_QUERY = "(min-width: 768px)";
+const subscribeMd = (cb) => {
+  const mq = window.matchMedia(MD_QUERY);
+  mq.addEventListener("change", cb);
+  return () => mq.removeEventListener("change", cb);
+};
+const useIsMdUp = () =>
+  useSyncExternalStore(
+    subscribeMd,
+    () => window.matchMedia(MD_QUERY).matches,
+    () => false,
+  );
 
 const scrollToSection = (id) => {
   const element = document.getElementById(id);
@@ -14,6 +30,8 @@ const scrollToSection = (id) => {
   }
 };
 export default function BurgerHero() {
+  const isMdUp = useIsMdUp();
+
   return (
     <section className="relative bg-black lg:min-h-[500px] flex items-center px-4 sm:px-8 md:px-12 lg:px-20 overflow-hidden lg:py-10">
       {/* Premium Ambient Light Glows */}
@@ -30,7 +48,7 @@ export default function BurgerHero() {
           {/* Main Burger Image Assembly */}
           <div className="relative w-full flex justify-center items-center">
             {/* Builds itself layer by layer, then floats */}
-            <BurgerAssembly className="w-[85%] sm:w-full max-w-[280px] sm:max-w-[380px] lg:max-w-[480px] xl:max-w-[540px] drop-shadow-[0_20px_40px_rgba(0,0,0,0.9)] lg:drop-shadow-[0_35px_60px_rgba(0,0,0,0.95)] z-10" />
+            {isMdUp && <BurgerAssembly className="w-[85%] sm:w-full max-w-[280px] sm:max-w-[380px] lg:max-w-[480px] xl:max-w-[540px] drop-shadow-[0_20px_40px_rgba(0,0,0,0.9)] lg:drop-shadow-[0_35px_60px_rgba(0,0,0,0.95)] z-10" />}
             {/* Darker Floor Shadow Reflection */}
             <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-[75%] h-4 bg-orange-500/10 blur-xl rounded-full z-0" />
           </div>

@@ -110,7 +110,7 @@ const Navbar = () => {
           {/* LEFT: Mobile Menu Button & Logo */}
           <div className="flex items-center gap-3 sm:gap-4">
             <button
-              className="text-white lg:hidden p-1 focus:outline-none"
+              className="text-white lg:hidden -ml-2 flex h-11 w-11 items-center justify-center rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff6b00]/50"
               onClick={() => setOpenMenu(true)}
               aria-label="Toggle Menu"
             >

@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import Image from "next/image";
 import { Flame, Check, Plus } from "lucide-react";
+import { cloudinaryResize } from "@/lib/cloudinaryUrl";
 
 // 🛠️ Safe Plain Text extraction from HTML & HTML Entities
 const getPlainText = (html) => {
@@ -157,7 +158,7 @@ export default function MostLovedMenu() {
                 <div>
                   <div className="relative mb-4 aspect-square overflow-hidden rounded-lg bg-black">
                     <Image
-                      src={imageUrl}
+                      src={cloudinaryResize(imageUrl, { width: 480, height: 480 })}
                       alt={item.name}
                       fill
                       unoptimized

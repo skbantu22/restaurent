@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { X, ShoppingBag, Plus, Loader2, Flame, Check } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
@@ -91,6 +91,23 @@ export default function CategoryGrid({
 
   const categories = categoriesData || [];
 
+  // While the popup is open: stop the page behind it scrolling (iOS
+  // Safari scrolls the body under a fixed overlay otherwise) and let
+  // Escape close it.
+  useEffect(() => {
+    if (!selectedCategory) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e) => e.key === "Escape" && setSelectedCategory(null);
+    window.addEventListener("keydown", onKey);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [selectedCategory]);
+
   const isProductInCart = (prod) => {
     return cartProducts.some((item) => item.productId === prod._id);
   };
@@ -120,7 +137,15 @@ export default function CategoryGrid({
   }
 
   return (
-    <section id={sectionId} className="bg-black px-4 md:px-8 py-12 scroll-mt-24">
+    // Our Menu and Bangladeshi Special sit back to back, so keep the space
+    // between them tight: small bottom padding on the menu, almost no top
+    // padding on the special section.
+    <section
+      id={sectionId}
+      className={`bg-black px-4 md:px-8 scroll-mt-24 ${
+        listing === "special" ? "pt-2 pb-12" : "pt-12 pb-6"
+      }`}
+    >
       {/* Header */}
       <div className="max-w-7xl mx-auto flex justify-between items-center mb-8">
         <div>
@@ -168,8 +193,8 @@ export default function CategoryGrid({
         <div className="max-w-7xl mx-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
           {categories.map((item) => {
             const catImage = cloudinaryResize(getValidImageUrl(item.media || item.image), {
-              width: 700,
-              height: 600,
+              width: 560,
+              height: 480,
             });
             const cleanDescription = stripHtml(item.description);
 
@@ -226,6 +251,9 @@ export default function CategoryGrid({
           <div
             className="bg-zinc-950 border border-zinc-800/90 w-full max-w-2xl rounded-3xl p-4 sm:p-6 relative shadow-[0_0_50px_rgba(0,0,0,0.9)] overflow-hidden max-h-[88vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-label={selectedCategory.name}
           >
             {/* Header: name + description, no cover photo */}
             <div className="flex items-start justify-between gap-4 border-b border-zinc-900 pb-4 mb-4 shrink-0">
@@ -254,7 +282,7 @@ export default function CategoryGrid({
             </div>
 
             {/* Modal Products List */}
-            <div className="space-y-3 overflow-y-auto pr-1.5 -mr-1.5 flex-1 [scrollbar-width:thin] [scrollbar-color:#3f3f46_transparent]">
+            <div className="space-y-3 overflow-y-auto pr-1.5 -mr-1.5 flex-1 overscroll-contain [scrollbar-width:thin] [scrollbar-color:#3f3f46_transparent]">
               {isProductsLoading ? (
                 <div className="flex flex-col items-center justify-center py-16 gap-3 text-zinc-400">
                   <Loader2 size={32} className="animate-spin text-orange-500" />

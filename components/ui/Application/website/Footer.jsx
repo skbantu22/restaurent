@@ -211,14 +211,14 @@ export default function Footer() {
             <div className="flex items-center gap-6">
               <Link
                 href="#"
-                className="text-gray-500 hover:text-white transition text-[13px] font-semibold"
+                className="inline-block py-2.5 text-gray-500 hover:text-white transition text-[13px] font-semibold"
               >
                 Privacy Policy
               </Link>
 
               <Link
                 href="#"
-                className="text-gray-500 hover:text-white transition text-[13px] font-semibold"
+                className="inline-block py-2.5 text-gray-500 hover:text-white transition text-[13px] font-semibold"
               >
                 Terms & Conditions
               </Link>

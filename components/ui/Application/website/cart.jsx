@@ -190,7 +190,7 @@ const Cart = ({ active }) => {
             active
               ? "relative flex items-center justify-center p-2 text-white hover:text-[#ff6b00] transition-colors focus:outline-none"
               : // navbar: plain bold icon, sits right next to the account icon
-                "relative flex h-9 w-8 items-center justify-center rounded-md text-white transition-colors duration-200 hover:text-[#ff6b00] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff6b00]/50"
+                "relative flex h-11 w-11 lg:h-9 lg:w-8 items-center justify-center rounded-md text-white transition-colors duration-200 hover:text-[#ff6b00] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff6b00]/50"
           }
           aria-label="Open Cart Drawer"
         >
