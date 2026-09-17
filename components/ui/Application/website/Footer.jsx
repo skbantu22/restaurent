@@ -202,7 +202,7 @@ export default function Footer() {
         </motion.div>
 
         {/* BOTTOM BAR */}
-        <div className="border-t border-[#111] px-6 lg:px-8 py-5">
+        <div className="border-t border-[#111] px-6 lg:px-8 pt-5 pb-[calc(1.25rem+4rem+env(safe-area-inset-bottom))] lg:pb-5">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-gray-500 text-[13px] font-medium text-center sm:text-left">
               © 2024 S&apos;Mashed LDN. All rights reserved.

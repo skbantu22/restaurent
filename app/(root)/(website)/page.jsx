@@ -46,8 +46,6 @@ const Home = () => {
         <PremiumMealBuilder />
       </section>
 
-      <WhySmashed />
-
       <ShowCategoryList />
 
       <ShowCategoryList
@@ -59,6 +57,8 @@ const Home = () => {
         showCartButton={false}
         hideWhenEmpty
       />
+
+      <WhySmashed />
 
       <FooterPromo />
     </div>

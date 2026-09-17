@@ -220,51 +220,41 @@ export default function CategoryGrid({
       {/* Selected Category Popup Modal */}
       {selectedCategory && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in"
+          className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md animate-fade-in"
           onClick={() => setSelectedCategory(null)}
         >
           <div
-            className="bg-zinc-950 border border-zinc-800/90 w-full max-w-xl rounded-3xl p-5 sm:p-7 relative shadow-[0_0_50px_rgba(0,0,0,0.9)] overflow-hidden max-h-[88vh] flex flex-col"
+            className="bg-zinc-950 border border-zinc-800/90 w-full max-w-2xl rounded-3xl p-4 sm:p-6 relative shadow-[0_0_50px_rgba(0,0,0,0.9)] overflow-hidden max-h-[88vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Close Button */}
-            <button
-              onClick={() => setSelectedCategory(null)}
-              className="absolute top-4 right-4 bg-zinc-900 border border-zinc-800 p-2.5 rounded-full hover:bg-orange-500 hover:text-black text-white transition-all duration-300 z-50 shadow-lg"
-            >
-              <X size={18} />
-            </button>
-
-            {/* Modal Category Header */}
-            <div className="mb-5 pb-4 border-b border-zinc-900 shrink-0">
-              <div className="relative w-full h-40 md:h-48 rounded-2xl overflow-hidden bg-zinc-900 mb-4 border border-zinc-800/50">
-                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 via-transparent to-transparent z-10"></div>
-                <Image
-                  src={cloudinaryResize(getValidImageUrl(selectedCategory.media), {
-                    width: 900,
-                    height: 500,
-                  })}
-                  alt={selectedCategory.name}
-                  fill
-                  unoptimized
-                  className="object-cover"
-                />
+            {/* Header: name + description, no cover photo */}
+            <div className="flex items-start justify-between gap-4 border-b border-zinc-900 pb-4 mb-4 shrink-0">
+              <div className="min-w-0">
+                <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-wide">
+                  {selectedCategory.name}
+                </h2>
+                {selectedCategory.description && (
+                  <p className="text-zinc-400 text-sm mt-1 leading-relaxed line-clamp-2">
+                    {stripHtml(selectedCategory.description)}
+                  </p>
+                )}
+                {!isProductsLoading && categoryProducts?.length > 0 && (
+                  <p className="mt-2 text-xs font-semibold uppercase tracking-wider text-orange-500">
+                    {categoryProducts.length} item{categoryProducts.length === 1 ? "" : "s"}
+                  </p>
+                )}
               </div>
-              <h2 className="text-2xl font-black text-white uppercase tracking-wide">
-                {selectedCategory.name}
-              </h2>
-              {selectedCategory.description && (
-                <div
-                  className="text-zinc-400 text-xs sm:text-sm mt-1.5 leading-relaxed line-clamp-2"
-                  dangerouslySetInnerHTML={{
-                    __html: selectedCategory.description,
-                  }}
-                />
-              )}
+              <button
+                onClick={() => setSelectedCategory(null)}
+                aria-label="Close"
+                className="shrink-0 bg-zinc-900 border border-zinc-800 p-2.5 rounded-full hover:bg-orange-500 hover:text-black text-white transition-all duration-300 shadow-lg"
+              >
+                <X size={18} />
+              </button>
             </div>
 
             {/* Modal Products List */}
-            <div className="space-y-3.5 overflow-y-auto pr-1 flex-1 custom-scrollbar">
+            <div className="space-y-3 overflow-y-auto pr-1.5 -mr-1.5 flex-1 [scrollbar-width:thin] [scrollbar-color:#3f3f46_transparent]">
               {isProductsLoading ? (
                 <div className="flex flex-col items-center justify-center py-16 gap-3 text-zinc-400">
                   <Loader2 size={32} className="animate-spin text-orange-500" />
@@ -274,77 +264,75 @@ export default function CategoryGrid({
                 categoryProducts.map((prod) => {
                   const added = isProductInCart(prod);
                   const prodImg = cloudinaryResize(getValidImageUrl(prod.media), {
-                    width: 200,
-                    height: 200,
+                    width: 360,
+                    height: 360,
                   });
-                  const calories = prod.calories || prod.kCal || 450;
+                  const calories = prod.calories || prod.kCal;
+                  const description = stripHtml(prod.description);
 
                   return (
                     <div
                       key={prod._id}
-                      className="flex items-center justify-between gap-4 bg-zinc-900/60 hover:bg-zinc-900 p-3.5 rounded-2xl border border-zinc-800/60 hover:border-zinc-700 transition-all duration-300"
+                      className="group flex gap-3.5 sm:gap-4 bg-zinc-900/60 hover:bg-zinc-900 p-3 rounded-2xl border border-zinc-800/60 hover:border-zinc-700 transition-all duration-300"
                     >
-                      <div className="flex items-center gap-3.5 min-w-0">
-                        {/* Product Thumbnail */}
-                        <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-zinc-950 border border-zinc-800">
-                          <Image
-                            src={prodImg}
-                            alt={prod.name}
-                            fill
-                            unoptimized
-                            sizes="64px"
-                            className="object-cover"
-                          />
-                        </div>
-
-                        {/* Product Info */}
-                        <div className="min-w-0">
-                          <h4 className="text-white font-bold text-sm sm:text-base line-clamp-1 mb-1">
-                            {prod.name}
-                          </h4>
-                          {prod.description && (
-                            <p className="text-zinc-400 text-[11px] sm:text-xs leading-relaxed line-clamp-2 mb-2">
-                              {stripHtml(prod.description)}
-                            </p>
-                          )}
-
-                          <div className="flex items-center gap-3 flex-wrap">
-                            <p className="text-orange-500 font-black text-sm sm:text-base">
-                              £{prod.sellingPrice || prod.mrp}
-                            </p>
-
-                            <div className="flex items-center gap-1 bg-zinc-950/80 border border-zinc-800/60 px-2.5 py-1 rounded-full text-[11px] text-amber-400 font-medium">
-                              <Flame
-                                size={13}
-                                className="text-orange-400 shrink-0"
-                              />
-                              <span>{calories} kcal</span>
-                            </div>
-                          </div>
-                        </div>
+                      {/* Product photo */}
+                      <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-xl overflow-hidden shrink-0 bg-zinc-950 border border-zinc-800">
+                        <Image
+                          src={prodImg}
+                          alt={prod.name}
+                          fill
+                          unoptimized
+                          sizes="128px"
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
                       </div>
 
-                      {/* Add Button */}
-                      <button
-                        onClick={() => handleToggleCart(prod)}
-                        className={`px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-all duration-300 shrink-0 ${
-                          added
-                            ? "bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500 hover:text-white"
-                            : "bg-orange-500 hover:bg-orange-400 text-black shadow-lg shadow-orange-500/25 active:scale-95"
-                        }`}
-                      >
-                        {added ? (
-                          <>
-                            <Check size={16} />
-                            <span>Added</span>
-                          </>
-                        ) : (
-                          <>
-                            <Plus size={16} />
-                            <span>Add</span>
-                          </>
+                      {/* Details */}
+                      <div className="flex min-w-0 flex-1 flex-col">
+                        <h4 className="text-white font-bold text-base sm:text-lg leading-snug line-clamp-1">
+                          {prod.name}
+                        </h4>
+                        {description && (
+                          <p className="mt-1 text-zinc-400 text-xs sm:text-sm leading-relaxed line-clamp-2 sm:line-clamp-3">
+                            {description}
+                          </p>
                         )}
-                      </button>
+
+                        <div className="mt-auto pt-2.5 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-orange-500 font-black text-base sm:text-lg leading-none">
+                              £{Number(prod.sellingPrice || prod.mrp || 0).toFixed(2)}
+                            </p>
+                            {calories ? (
+                              <span className="inline-flex items-center gap-1 bg-zinc-950/80 border border-zinc-800/60 px-2 py-0.5 rounded-full text-[11px] text-amber-400 font-medium">
+                                <Flame size={12} className="text-orange-400 shrink-0" />
+                                {calories} kcal
+                              </span>
+                            ) : null}
+                          </div>
+
+                          <button
+                            onClick={() => handleToggleCart(prod)}
+                            className={`px-3.5 py-2 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-all duration-300 shrink-0 ${
+                              added
+                                ? "bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500 hover:text-white"
+                                : "bg-orange-500 hover:bg-orange-400 text-black shadow-lg shadow-orange-500/25 active:scale-95"
+                            }`}
+                          >
+                            {added ? (
+                              <>
+                                <Check size={15} />
+                                <span>Added</span>
+                              </>
+                            ) : (
+                              <>
+                                <Plus size={15} />
+                                <span>Add</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   );
                 })

@@ -62,7 +62,7 @@ export default function MobileBottomNav() {
       )}
 
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50">
-        <div className="relative bg-white border-t shadow-[0_-2px_12px_rgba(0,0,0,0.08)] rounded-t-2xl h-16">
+        <div className="relative bg-white border-t shadow-[0_-2px_12px_rgba(0,0,0,0.08)] rounded-t-2xl h-[calc(4rem+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)]">
           {/* Floating Cart Button */}
           <div className="absolute left-1/2 -translate-x-1/2 -top-6">
             <div className="h-16 w-16 rounded-full bg-white shadow-lg border flex items-center justify-center">
