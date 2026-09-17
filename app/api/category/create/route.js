@@ -21,6 +21,7 @@ export async function POST(request) {
       .extend({
         // Frontend থেকে আসা Media Object ID-র Array (Optional)
         media: z.array(z.string()).optional().default([]),
+        isBangladeshiSpecial: z.boolean().optional().default(false),
       });
 
     const validate = schema.safeParse(payload);
@@ -34,7 +35,8 @@ export async function POST(request) {
       );
     }
 
-    const { name, slug, description, media } = validate.data;
+    const { name, slug, description, media, isBangladeshiSpecial } =
+      validate.data;
 
     // Check Duplicate Slug (Soft Deleted ক্যাটাগরি বাদ দিয়ে)
     const exists = await CategoryModel.findOne({
@@ -52,6 +54,7 @@ export async function POST(request) {
       slug,
       description,
       media, // Array of Media ObjectIDs
+      isBangladeshiSpecial,
     });
 
     return response(true, 201, "Category added successfully.", newCategory);

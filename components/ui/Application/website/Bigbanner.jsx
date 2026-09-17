@@ -1,15 +1,7 @@
 "use client";
 
-import dynamic from "next/dynamic";
-
-// Client-only: touches window/document and WebGL, must never run
-// during SSR. loading:() => null keeps the hero's initial paint
-// unblocked — the 3D layer fades in once it's ready, everything else
-// about the hero renders immediately as before.
-const Restaurant3DBackground = dynamic(
-  () => import("./Restaurant3DBackground"),
-  { ssr: false, loading: () => null },
-);
+import Image from "next/image";
+import BurgerAssembly from "./BurgerAssembly";
 
 const scrollToSection = (id) => {
   const element = document.getElementById(id);
@@ -23,15 +15,12 @@ const scrollToSection = (id) => {
 };
 export default function BurgerHero() {
   return (
-    <section className="relative bg-black lg:min-h-[500px] lg:h-[500px] flex items-center px-4 sm:px-8 md:px-12 lg:px-20 overflow-hidden lg:py-0">
+    <section className="relative bg-black lg:min-h-[500px] flex items-center px-4 sm:px-8 md:px-12 lg:px-20 overflow-hidden lg:py-10">
       {/* Premium Ambient Light Glows */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 lg:left-[35%] lg:top-1/2 lg:-translate-y-1/2 w-[300px] sm:w-[450px] lg:w-[500px] h-[300px] sm:h-[450px] bg-orange-600/15 blur-[80px] sm:blur-[120px] rounded-full pointer-events-none z-0" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(255,90,0,0.1),transparent_60%)] lg:bg-[radial-gradient(circle_at_75%_50%,rgba(255,90,0,0.12),transparent_40%)] pointer-events-none z-0" />
 
-      {/* Cinematic 3D food atmosphere — sits behind all existing content */}
-      <Restaurant3DBackground className="z-[1]" />
-
-      {/* Text-legibility guard: dark on the left where copy sits, fading out toward the 3D scene on the right */}
+      {/* Text-legibility guard: dark on the left where copy sits, fading out toward the right */}
       <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent lg:from-black lg:via-black/50 lg:to-transparent pointer-events-none z-[2]" />
 
       {/* Main Container */}
@@ -40,11 +29,8 @@ export default function BurgerHero() {
         <div className="relative order-1 lg:order-2 w-full max-w-[320px] sm:max-w-[420px] lg:max-w-none lg:w-[48%] lg:absolute lg:right-[-2%] xl:right-[0%] lg:top-1/2 lg:-translate-y-1/2 flex justify-center items-center my-2 lg:my-0 hidden md:block">
           {/* Main Burger Image Assembly */}
           <div className="relative w-full flex justify-center items-center">
-            <img
-              src="/assets/Burgers.png"
-              alt="London's Finest Smash Burger"
-              className="w-[85%] sm:w-full h-auto max-h-[280px] sm:max-h-[380px] lg:max-h-none lg:h-[480px] xl:h-[540px] object-contain drop-shadow-[0_20px_40px_rgba(0,0,0,0.9)] lg:drop-shadow-[0_35px_60px_rgba(0,0,0,0.95)] relative z-10"
-            />
+            {/* Builds itself layer by layer, then floats */}
+            <BurgerAssembly className="w-[85%] sm:w-full max-w-[280px] sm:max-w-[380px] lg:max-w-[480px] xl:max-w-[540px] drop-shadow-[0_20px_40px_rgba(0,0,0,0.9)] lg:drop-shadow-[0_35px_60px_rgba(0,0,0,0.95)] z-10" />
             {/* Darker Floor Shadow Reflection */}
             <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-[75%] h-4 bg-orange-500/10 blur-xl rounded-full z-0" />
           </div>
@@ -137,28 +123,28 @@ export default function BurgerHero() {
           </div>
 
           {/* Footer Logistics / Partners */}
-          <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-y-2 gap-x-4 mt-8 sm:mt-10 lg:mt-12 text-[11px] sm:text-xs font-bold text-gray-400">
-            <div className="flex items-center gap-4">
-              <img
+          <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-y-2 gap-x-4 mt-8 sm:mt-10 lg:mt-8 text-[11px] sm:text-xs font-bold text-gray-400">
+            <div className="flex items-center gap-5">
+              <Image
                 src="/assets/uber-eats.png"
                 alt="Uber Eats"
-                width={28}
-                height={28}
-                className="w-7 h-7 object-contain"
+                width={132}
+                height={132}
+                className="w-10 h-10 sm:w-11 sm:h-11 object-contain"
               />
-              <img
-                src="/assets/deliveroo.png"
+              <Image
+                src="/assets/deliveroo-logo.png"
                 alt="Deliveroo"
-                width={28}
-                height={29}
-                className="w-7 h-auto object-contain"
+                width={132}
+                height={132}
+                className="w-10 h-10 sm:w-11 sm:h-11 object-contain"
               />
-              <img
+              <Image
                 src="/assets/just-eat.png"
                 alt="Just Eat"
-                width={28}
-                height={28}
-                className="w-7 h-7 object-contain"
+                width={132}
+                height={132}
+                className="w-10 h-10 sm:w-11 sm:h-11 object-contain"
               />
             </div>
             <span className="text-gray-400 sm:text-gray-500 font-medium tracking-wide sm:border-l sm:border-gray-800 sm:pl-4">

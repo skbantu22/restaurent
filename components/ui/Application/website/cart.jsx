@@ -9,7 +9,15 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { BsCart2 } from "react-icons/bs";
-import { Minus, Plus, X, ShoppingBag, ArrowRight, Trash2 } from "lucide-react";
+import {
+  Minus,
+  Plus,
+  X,
+  ShoppingBag,
+  ShoppingCart,
+  ArrowRight,
+  Trash2,
+} from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import Image from "next/image";
 import {
@@ -178,12 +186,30 @@ const Cart = ({ active }) => {
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <button
-          className="relative flex items-center justify-center p-2 text-white hover:text-[#ff6b00] transition-colors focus:outline-none"
+          className={
+            active
+              ? "relative flex items-center justify-center p-2 text-white hover:text-[#ff6b00] transition-colors focus:outline-none"
+              : // navbar: plain bold icon, sits right next to the account icon
+                "relative flex h-9 w-8 items-center justify-center rounded-md text-white transition-colors duration-200 hover:text-[#ff6b00] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff6b00]/50"
+          }
           aria-label="Open Cart Drawer"
         >
-          <BsCart2 size={active ? 24 : 22} />
+          {active ? (
+            <BsCart2 size={24} />
+          ) : (
+            <ShoppingCart
+              strokeWidth={2.5}
+              className="h-5 w-5 lg:h-[22px] lg:w-[22px]"
+            />
+          )}
           {count > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#ff6b00] text-[10px] font-bold text-white shadow-lg animate-in zoom-in-50">
+            <span
+              className={`absolute flex items-center justify-center rounded-full bg-[#ff6b00] font-bold text-white shadow-lg animate-in zoom-in-50 ${
+                active
+                  ? "-top-0.5 -right-0.5 h-5 w-5 text-[10px]"
+                  : "top-0 -right-1.5 h-[17px] min-w-[17px] px-1 text-[9px] ring-2 ring-[#0a0a0a]"
+              }`}
+            >
               {count > 99 ? "99+" : count}
             </span>
           )}

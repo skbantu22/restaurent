@@ -24,29 +24,23 @@ export async function PUT(request) {
         media: true,
         offers: true,
         freeDelivery: true,
-        color: true, // ✅ ADDED
-        size: true, // ✅ ADDED
       })
       .extend({
-        sizeChart: z.string().optional().or(z.literal("")).nullable(), // ✅ ADDED
+        mealBuilderType: z
+          .enum(["", "beef", "chicken", "plant"])
+          .optional()
+          .default(""),
       });
 
     const validate = schema.safeParse(payload);
 
-    // ✅ Zod error show
     if (!validate.success) {
-      console.log("ZOD ERROR:", validate.error.format());
-
       return response(false, 400, "Validation Error", validate.error.format());
     }
 
     const validatedData = validate.data;
 
-    console.log("VALIDATED DATA:", validatedData);
-
-    // ✅ Check _id
     if (!validatedData?._id) {
-      console.log("ID MISSING");
       return response(false, 400, "_id missing");
     }
 
@@ -54,8 +48,6 @@ export async function PUT(request) {
       deletedAt: null,
       _id: validatedData._id,
     });
-
-    console.log("FOUND PRODUCT:", getProduct);
 
     if (!getProduct) {
       return response(false, 404, "Product not found");
@@ -70,22 +62,13 @@ export async function PUT(request) {
     getProduct.discountPercentage = validatedData.discountPercentage;
     getProduct.description = encode(validatedData.description);
     getProduct.media = validatedData.media;
-    getProduct.color = validatedData.color; // ✅ ADDED
-    getProduct.size = validatedData.size; // ✅ ADDED
-    getProduct.sizeChart =
-      validatedData.sizeChart && validatedData.sizeChart !== ""
-        ? validatedData.sizeChart
-        : null; // ✅ ADDED
+    getProduct.mealBuilderType = validatedData.mealBuilderType || "";
 
     await getProduct.save();
 
     return response(true, 200, "Product updated successfully.");
   } catch (error) {
-    // ✅ Full error log
-    console.log("SERVER ERROR:");
-    console.log(error);
-
-    // ✅ Axios readable error
-    return response(false, 500, error.message, error);
+    console.error("PRODUCT UPDATE ERROR:", error);
+    return catchError(error);
   }
 }

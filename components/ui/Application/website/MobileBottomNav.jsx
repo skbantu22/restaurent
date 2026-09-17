@@ -137,7 +137,14 @@ export default function MobileBottomNav() {
                 className="flex flex-col items-center justify-center text-xs text-gray-600"
               >
                 <Avatar className="h-6 w-6">
-                  <AvatarImage src={auth?.avatar?.url || userIcon.src} />
+                  <AvatarImage
+                    src={
+                      auth?.avatar?.url ||
+                      auth?.data?.user?.avatar?.url ||
+                      auth?.user?.avatar?.url ||
+                      userIcon.src
+                    }
+                  />
                 </Avatar>
                 <span>Account</span>
               </Link>

@@ -50,6 +50,16 @@ const Home = () => {
 
       <ShowCategoryList />
 
+      <ShowCategoryList
+        listing="special"
+        sectionId="bangladeshi-special"
+        eyebrow="Extra Special on the Menu"
+        title="Bangladeshi"
+        accent="Special"
+        showCartButton={false}
+        hideWhenEmpty
+      />
+
       <FooterPromo />
     </div>
   );

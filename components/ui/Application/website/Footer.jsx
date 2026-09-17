@@ -157,32 +157,32 @@ export default function Footer() {
               Delivery Partners
             </h3>
 
-            <div className="flex items-center gap-8 flex-wrap">
+            <div className="flex items-center gap-5 flex-wrap">
               {/* UBER */}
               <Image
                 src="/assets/uber-eats.png"
                 alt="Uber Eats"
-                width={56}
-                height={56}
-                className="w-14 h-14 rounded-xl"
+                width={192}
+                height={192}
+                className="w-16 h-16 object-contain"
               />
 
               {/* DELIVEROO */}
               <Image
-                src="/assets/deliveroo.png"
+                src="/assets/deliveroo-logo.png"
                 alt="Deliveroo"
-                width={56}
-                height={58}
-                className="w-14 h-auto object-contain"
+                width={192}
+                height={192}
+                className="w-16 h-16 object-contain"
               />
 
               {/* JUST EAT */}
               <Image
                 src="/assets/just-eat.png"
                 alt="Just Eat"
-                width={56}
-                height={56}
-                className="w-14 h-14 rounded-xl object-contain"
+                width={192}
+                height={192}
+                className="w-16 h-16 object-contain"
               />
             </div>
           </div>

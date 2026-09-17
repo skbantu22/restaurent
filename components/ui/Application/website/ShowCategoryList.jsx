@@ -47,7 +47,18 @@ const stripHtml = (htmlString = "") => {
   return textarea.value.replace(/<[^>]*>/g, "").trim();
 };
 
-export default function CategoryGrid() {
+// Used for both "OUR MENU" (default props: categories shown in the menu)
+// and the "Bangladeshi Special" section (listing="special": categories
+// ticked "Bangladeshi Special" in Admin > Category, e.g. Dhaka Flavours).
+export default function CategoryGrid({
+  listing = "menu",
+  sectionId = "our-menu",
+  title = "OUR",
+  accent = "MENU",
+  eyebrow,
+  showCartButton = true,
+  hideWhenEmpty = false,
+}) {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const dispatch = useDispatch();
 
@@ -56,9 +67,11 @@ export default function CategoryGrid() {
 
   // 1. 🟢 DB থেকে ক্যাটাগরি লিস্ট ফেচ করা
   const { data: categoriesData, isLoading: isCategoriesLoading } = useQuery({
-    queryKey: ["categories-list"],
+    queryKey: ["categories-list", listing],
     queryFn: async () => {
-      const res = await axios.get("/api/category");
+      const res = await axios.get(
+        listing === "special" ? "/api/category?special=1" : "/api/category?menu=1",
+      );
       return res.data?.data || [];
     },
   });
@@ -102,18 +115,30 @@ export default function CategoryGrid() {
     }
   };
 
+  if (hideWhenEmpty && !isCategoriesLoading && categories.length === 0) {
+    return null;
+  }
+
   return (
-    <section id="our-menu" className="bg-black px-4 md:px-8 py-12 scroll-mt-24">
+    <section id={sectionId} className="bg-black px-4 md:px-8 py-12 scroll-mt-24">
       {/* Header */}
       <div className="max-w-7xl mx-auto flex justify-between items-center mb-8">
-        <div className="flex items-center gap-3">
-          <h2 className="text-white text-lg md:text-3xl font-black uppercase tracking-wider">
-            OUR <span className="text-orange-500">MENU</span>
-          </h2>
-          <div className="h-[3px] w-20 bg-gradient-to-r from-orange-500 to-transparent rounded-full"></div>
+        <div>
+          {eyebrow && (
+            <p className="mb-2 text-[10px] md:text-xs font-black uppercase tracking-[0.25em] text-[#32b768]">
+              {eyebrow}
+            </p>
+          )}
+          <div className="flex items-center gap-3">
+            <h2 className="text-white text-lg md:text-3xl font-black uppercase tracking-wider">
+              {title} <span className="text-orange-500">{accent}</span>
+            </h2>
+            <div className="h-[3px] w-20 bg-gradient-to-r from-orange-500 to-transparent rounded-full"></div>
+          </div>
         </div>
 
         {/* Cart Counter */}
+        {showCartButton && (
         <button className="relative p-3 bg-zinc-900/80 backdrop-blur-md rounded-2xl border border-zinc-800 text-orange-500 hover:bg-orange-500 hover:text-black transition-all duration-300 shadow-lg group">
           <ShoppingBag
             size={22}
@@ -125,6 +150,7 @@ export default function CategoryGrid() {
             </span>
           )}
         </button>
+        )}
       </div>
 
       {/* Menu Grid Loading Skeleton */}

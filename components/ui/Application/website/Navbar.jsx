@@ -17,7 +17,6 @@ import axios from "axios";
 import { AnimatePresence, motion } from "framer-motion";
 
 import logo from "@/public/assets/logo-transparent.png";
-import userIcon from "@/public/assets/user.png";
 
 import {
   USER_DASHBOARD,
@@ -76,6 +75,13 @@ const Navbar = () => {
   const [openMenu, setOpenMenu] = useState(false);
 
   const auth = useSelector((store) => store.authStore.auth);
+  // auth is the login response ({ data: { user } }) or, after a profile
+  // update, the user itself — read the photo from either shape
+  const avatarUrl =
+    auth?.avatar?.url ||
+    auth?.data?.user?.avatar?.url ||
+    auth?.user?.avatar?.url ||
+    "";
 
   const router = useRouter();
   const dispatch = useDispatch();
@@ -133,28 +139,36 @@ const Navbar = () => {
           </nav>
 
           {/* RIGHT SIDE: Cart, User & Order Action */}
-          <div className="flex items-center gap-2.5 sm:gap-4">
+          <div className="flex items-center gap-0.5">
             {/* Cart Drawer Icon */}
-            <div className="flex items-center justify-center text-white transition hover:text-[#ff6b00]">
-              <Cart />
-            </div>
+            <Cart />
 
             {/* Desktop User Avatar/Login */}
             {!auth ? (
               <Link
                 href={WEBSITE_LOGIN}
-                className="hidden lg:flex h-10 w-10 items-center justify-center rounded-full border border-[#2a2a2a] text-white transition-colors duration-200 hover:border-[#ff6b00] hover:text-[#ff6b00]"
+                className="hidden lg:flex h-9 w-8 items-center justify-center rounded-md text-white transition-colors duration-200 hover:text-[#ff6b00]"
               >
-                <User size={18} />
+                <User size={22} strokeWidth={2.5} />
               </Link>
-            ) : (
-              <Link href={USER_DASHBOARD} className="hidden lg:flex">
-                <Avatar className="h-10 w-10 border border-[#2a2a2a] transition-colors duration-200 hover:border-[#ff6b00]">
+            ) : avatarUrl ? (
+              <Link href={USER_DASHBOARD} className="hidden lg:flex h-9 w-9 items-center justify-center">
+                <Avatar className="h-7 w-7 border border-[#2a2a2a] transition-colors duration-200 hover:border-[#ff6b00]">
                   <AvatarImage
-                    src={auth?.avatar?.url || userIcon.src}
+                    src={avatarUrl}
                     alt={auth?.name || "User Avatar"}
                   />
                 </Avatar>
+              </Link>
+            ) : (
+              // Logged in without a photo: same small outlined icon as the
+              // login button, instead of the large grey placeholder image
+              <Link
+                href={USER_DASHBOARD}
+                aria-label={auth?.name || "My account"}
+                className="hidden lg:flex h-9 w-8 items-center justify-center rounded-md text-white transition-colors duration-200 hover:text-[#ff6b00]"
+              >
+                <User size={22} strokeWidth={2.5} />
               </Link>
             )}
           </div>

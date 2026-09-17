@@ -49,6 +49,15 @@ const categorySchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+
+    // true = shown in the homepage "Bangladeshi Special" section (with its
+    // products) INSTEAD of the "OUR MENU" grid and shop filters, e.g.
+    // Dhaka Flavours. Unticked (default) categories go to OUR MENU.
+    isBangladeshiSpecial: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
   },
   { timestamps: true },
 );

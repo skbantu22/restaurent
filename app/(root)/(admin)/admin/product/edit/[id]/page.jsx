@@ -30,11 +30,23 @@ import { ADMIN_CATEGORY_SHOW, ADMIN_DASHBOARD } from "@/Route/Adminpannelroute";
 import { zSchema } from "@/lib/zodschema";
 import { showToast } from "@/lib/showToast";
 import useFetch from "@/hooks/useFetch";
+import { z } from "zod";
 
 const breadcrumbData = [
   { href: ADMIN_DASHBOARD, label: "Home" },
   { href: ADMIN_CATEGORY_SHOW, label: "Products" },
   { href: "#", label: "Edit Product" },
+];
+
+// Custom Meal builder base tag — lets this product show up under
+// "Select Beef/Chicken/Plant Based Items" in the meal builder
+// (components/ui/Application/website/customorders.jsx) regardless of
+// which display category it's filed under.
+const MEAL_BUILDER_OPTIONS = [
+  { label: "None", value: "" },
+  { label: "Beef", value: "beef" },
+  { label: "Chicken", value: "chicken" },
+  { label: "Plant Based", value: "plant" },
 ];
 
 // Read-only summary of the product's active Recipe/BOM cost, if any.
@@ -112,25 +124,29 @@ const EditProduct = ({ params }) => {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState([]);
-  const [categoryOption, setCategoryOption] = useState([]);
+  const [bangladeshiSpecial, setBangladeshiSpecial] = useState(false);
   const [subCategoryOption, setSubCategoryOption] = useState([]);
 
   const prevCategoryRef = useRef("");
   const productSubRef = useRef("");
 
-  const formSchema = zSchema.pick({
-    _id: true,
-    name: true,
-    slug: true,
-    category: true,
-    subcategory: true,
-    mrp: true,
-    sellingPrice: true,
-    discountPercentage: true,
-    description: true,
-    media: true,
-    freeDelivery: true,
-  });
+  const formSchema = zSchema
+    .pick({
+      _id: true,
+      name: true,
+      slug: true,
+      category: true,
+      subcategory: true,
+      mrp: true,
+      sellingPrice: true,
+      discountPercentage: true,
+      description: true,
+      media: true,
+      freeDelivery: true,
+    })
+    .extend({
+      mealBuilderType: z.enum(["", "beef", "chicken", "plant"]).optional(),
+    });
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -146,6 +162,7 @@ const EditProduct = ({ params }) => {
       description: "",
       media: [],
       freeDelivery: false,
+      mealBuilderType: "",
     },
   });
 
@@ -168,13 +185,28 @@ const EditProduct = ({ params }) => {
 
   const { data: getSubCategory } = useFetch(subUrl);
 
+  // Bangladeshi Special tick: switches the category list between
+  // Bangladeshi Special categories (e.g. Dhaka Flavours) and normal menu
+  // categories. Starts from whatever the product's current category is.
   useEffect(() => {
-    if (getCategory?.success) {
-      setCategoryOption(
-        getCategory.data.map((cat) => ({ label: cat.name, value: cat._id })),
-      );
-    }
-  }, [getCategory]);
+    if (!getCategory?.success || !getProduct?.success) return;
+    const product = getProduct.data;
+    const categoryId =
+      typeof product?.category === "object"
+        ? product?.category?._id
+        : product?.category;
+    const current = getCategory.data.find(
+      (cat) => String(cat._id) === String(categoryId),
+    );
+    setBangladeshiSpecial(Boolean(current?.isBangladeshiSpecial));
+  }, [getCategory, getProduct]);
+
+  const categoryOption = useMemo(() => {
+    if (!getCategory?.success) return [];
+    return getCategory.data
+      .filter((cat) => Boolean(cat.isBangladeshiSpecial) === bangladeshiSpecial)
+      .map((cat) => ({ label: cat.name, value: cat._id }));
+  }, [getCategory, bangladeshiSpecial]);
 
   useEffect(() => {
     if (getProduct?.success) {
@@ -201,6 +233,7 @@ const EditProduct = ({ params }) => {
         sellingPrice: product?.sellingPrice || "",
         discountPercentage: product?.discountPercentage || "",
         description: product?.description || "",
+        mealBuilderType: product?.mealBuilderType || "",
       });
 
       if (product?.media?.length) {
@@ -443,13 +476,38 @@ const EditProduct = ({ params }) => {
                       Discount: {form.watch("discountPercentage") || 0}% OFF
                     </div>
 
+                    {/* Bangladeshi Special tick */}
+                    <label className="flex flex-row items-center justify-between border-2 border-black p-3 bg-zinc-50 cursor-pointer">
+                      <div className="space-y-0.5">
+                        <span className="block text-xs font-black uppercase">
+                          Bangladeshi Special 🇧🇩
+                        </span>
+                        <span className="block text-[10px] text-zinc-500 font-medium">
+                          Ticked: goes to the Bangladeshi Special section.
+                          Unticked: goes to Our Menu.
+                        </span>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={bangladeshiSpecial}
+                        onChange={(e) => {
+                          setBangladeshiSpecial(e.target.checked);
+                          // the category list changes, so clear the old pick
+                          form.setValue("category", "", { shouldValidate: false });
+                        }}
+                        className="w-5 h-5 accent-black cursor-pointer border-2 border-black"
+                      />
+                    </label>
+
                     <FormField
                       control={form.control}
                       name="category"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-[10px] font-black uppercase">
-                            Category
+                            {bangladeshiSpecial
+                              ? "Bangladeshi Special Category"
+                              : "Category"}
                           </FormLabel>
                           <Select
                             options={categoryOption}
@@ -460,6 +518,13 @@ const EditProduct = ({ params }) => {
                               )
                             }
                           />
+                          {bangladeshiSpecial && categoryOption.length === 0 && (
+                            <p className="text-[10px] text-red-600 font-medium">
+                              No Bangladeshi Special category yet. Create one in
+                              Category with the Bangladeshi Special tick.
+                            </p>
+                          )}
+                          <FormMessage />
                         </FormItem>
                       )}
                     />
@@ -482,6 +547,32 @@ const EditProduct = ({ params }) => {
                             }
                             disabled={!watchedCategoryId}
                           />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="mealBuilderType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-[10px] font-black uppercase">
+                            Custom Meal Builder
+                          </FormLabel>
+                          <Select
+                            options={MEAL_BUILDER_OPTIONS}
+                            placeholder="None"
+                            selected={field.value}
+                            setSelected={(val) =>
+                              field.onChange(
+                                typeof val === "string" ? val : val?.value,
+                              )
+                            }
+                          />
+                          <p className="text-[10px] text-zinc-500 font-medium">
+                            Show this item under Select Beef/Chicken/Plant
+                            Based Items in the Custom Meal builder
+                          </p>
                         </FormItem>
                       )}
                     />

@@ -3,6 +3,7 @@ import { response } from "@/lib/helperfunction";
 import { zSchema } from "@/lib/zodschema";
 import CategoryModel from "@/models/category.model";
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 export async function PUT(request) {
   try {
@@ -10,13 +11,17 @@ export async function PUT(request) {
 
     const payload = await request.json();
 
-    const schema = zSchema.pick({
-      _id: true,
-      name: true,
-      slug: true,
-      description: true,
-      media: true,
-    });
+    const schema = zSchema
+      .pick({
+        _id: true,
+        name: true,
+        slug: true,
+        description: true,
+        media: true,
+      })
+      .extend({
+        isBangladeshiSpecial: z.boolean().optional(),
+      });
 
     const validate = schema.safeParse(payload);
 
@@ -31,7 +36,8 @@ export async function PUT(request) {
       );
     }
 
-    const { _id, name, slug, description, media } = validate.data;
+    const { _id, name, slug, description, media, isBangladeshiSpecial } =
+      validate.data;
 
     const getCategory = await CategoryModel.findOne({ deletedAt: null, _id });
 
@@ -43,6 +49,9 @@ export async function PUT(request) {
     getCategory.slug = slug;
     getCategory.description = description;
     getCategory.media = media;
+    if (typeof isBangladeshiSpecial === "boolean") {
+      getCategory.isBangladeshiSpecial = isBangladeshiSpecial;
+    }
 
     await getCategory.save();
 

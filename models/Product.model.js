@@ -31,7 +31,6 @@ const productSchema = new mongoose.Schema(
 
     // 🟢 1. isMostLoved ফিল্ড যুক্ত করা হলো (Default: false)
     isMostLoved: { type: Boolean, default: false, index: true },
-
     // 🟢 2. Dynamic Badge ফিল্ড যুক্ত করা হলো (e.g. "must try", "popular")
     badge: { type: String, default: "", trim: true },
 
@@ -40,6 +39,18 @@ const productSchema = new mongoose.Schema(
       type: [String],
       enum: ["mega", "new", "top", "free", "combo", "chef-special"],
       default: [],
+    },
+
+    // Explicit admin-set tag for the Custom Meal builder's "Select
+    // Beef/Chicken/Plant Based Items" step (components/ui/Application/
+    // website/customorders.jsx). Additive to category-based matching in
+    // /api/product/filter — a product qualifies if EITHER its category
+    // maps to that base OR this field is set, so existing correctly
+    // categorised burgers keep working without needing this set.
+    mealBuilderType: {
+      type: String,
+      enum: ["", "beef", "chicken", "plant"],
+      default: "",
     },
 
     freeDelivery: { type: Boolean, default: false },

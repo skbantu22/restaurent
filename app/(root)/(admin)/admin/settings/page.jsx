@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { showToast } from "@/lib/showToast";
+import ProfileSettings from "@/components/ui/Application/Admin/ProfileSettings";
 
 const TABS = [
+  { key: "profile", label: "My Profile" },
   { key: "general", label: "General" },
   { key: "business", label: "Business" },
   { key: "orders", label: "Orders & Receipt" },
@@ -55,6 +57,12 @@ const inputClass =
 
 export default function RestaurantSettingsPage() {
   const [tab, setTab] = useState("general");
+
+  // Deep link: /admin/settings?tab=profile (used by the top-bar avatar menu)
+  useEffect(() => {
+    const requested = new URLSearchParams(window.location.search).get("tab");
+    if (requested && TABS.some((t) => t.key === requested)) setTab(requested);
+  }, []);
   const [form, setForm] = useState(DEFAULT_FORM);
   const [marketingForm, setMarketingForm] = useState(DEFAULT_MARKETING_FORM);
   const [loading, setLoading] = useState(true);
@@ -164,10 +172,13 @@ export default function RestaurantSettingsPage() {
 
   return (
     <div className="max-w-3xl py-4">
-      <h1 className="text-2xl font-bold mb-1">Restaurant Settings</h1>
+      <h1 className="text-2xl font-bold mb-1">
+        {tab === "profile" ? "My Profile" : "Restaurant Settings"}
+      </h1>
       <p className="text-sm text-muted-foreground mb-6">
-        Configure your restaurant&apos;s identity and business rules. These values
-        are used across the POS, website checkout, receipts, and order notifications.
+        {tab === "profile"
+          ? "Update your profile picture, name, contact details and password."
+          : "Configure your restaurant's identity and business rules. These values are used across the POS, website checkout, receipts, and order notifications."}
       </p>
 
       <div className="flex gap-2 border-b mb-6 flex-wrap">
@@ -185,6 +196,8 @@ export default function RestaurantSettingsPage() {
           </button>
         ))}
       </div>
+
+      {tab === "profile" && <ProfileSettings />}
 
       {tab === "general" && (
         <div>
@@ -432,13 +445,15 @@ export default function RestaurantSettingsPage() {
         </div>
       )}
 
-      <button
-        onClick={tab === "marketing" ? handleSaveMarketing : handleSave}
-        disabled={saving}
-        className="bg-black text-white dark:bg-white dark:text-black px-5 py-2 rounded-md mt-4 disabled:opacity-60"
-      >
-        {saving ? "Saving..." : "Save Settings"}
-      </button>
+      {tab !== "profile" && (
+        <button
+          onClick={tab === "marketing" ? handleSaveMarketing : handleSave}
+          disabled={saving}
+          className="bg-black text-white dark:bg-white dark:text-black px-5 py-2 rounded-md mt-4 disabled:opacity-60"
+        >
+          {saving ? "Saving..." : "Save Settings"}
+        </button>
+      )}
     </div>
   );
 }

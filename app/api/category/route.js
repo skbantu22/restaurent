@@ -33,6 +33,16 @@ export async function GET(request) {
       matchQuery.deletedAt = null;
     }
 
+    // Storefront OUR MENU: skip Bangladeshi Special categories
+    if (searchParams.get("menu") === "1") {
+      matchQuery.isBangladeshiSpecial = { $ne: true };
+    }
+
+    // Homepage Bangladeshi Special section: only those categories
+    if (searchParams.get("special") === "1") {
+      matchQuery.isBangladeshiSpecial = true;
+    }
+
     if (globalFilter) {
       matchQuery.$or = [
         { name: { $regex: globalFilter, $options: "i" } },

@@ -45,6 +45,11 @@ export async function POST(request) {
             z.boolean(),
           )
           .default(false),
+
+        mealBuilderType: z
+          .enum(["", "beef", "chicken", "plant"])
+          .optional()
+          .default(""),
       });
 
     const validate = schema.safeParse(payload);
@@ -73,6 +78,8 @@ export async function POST(request) {
       badge: productData.badge,
 
       isMostLoved: Boolean(productData.isMostLoved),
+
+      mealBuilderType: productData.mealBuilderType || "",
     });
 
     return response(true, 201, "Product added successfully.", newProduct);

@@ -38,6 +38,7 @@ import UploadMedia from "@/components/ui/Application/Admin/uploadmedia";
 
 // Utilities & Config
 import { zSchema } from "@/lib/zodschema";
+import { z } from "zod";
 import { showToast } from "@/lib/showToast";
 
 const breadcrumbData = [
@@ -54,12 +55,16 @@ const AddCategory = () => {
   const [resetKey, setResetKey] = useState(0);
 
   // Zod Schema (matching Product schema structure)
-  const formSchema = zSchema.pick({
-    name: true,
-    slug: true,
-    description: true,
-    media: true,
-  });
+  const formSchema = zSchema
+    .pick({
+      name: true,
+      slug: true,
+      description: true,
+      media: true,
+    })
+    .extend({
+      isBangladeshiSpecial: z.boolean().default(false),
+    });
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -68,6 +73,7 @@ const AddCategory = () => {
       slug: "",
       description: "",
       media: [],
+      isBangladeshiSpecial: false,
     },
   });
 
@@ -115,6 +121,7 @@ const AddCategory = () => {
         slug: "",
         description: "",
         media: [],
+        isBangladeshiSpecial: false,
       });
       setSelectedMedia([]);
       setResetKey((p) => p + 1);
@@ -242,6 +249,34 @@ const AddCategory = () => {
                         </div>
                       </FormControl>
                       <FormMessage className="text-[10px] uppercase font-bold" />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Bangladeshi Special */}
+                <FormField
+                  control={form.control}
+                  name="isBangladeshiSpecial"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between border-2 border-black p-3 bg-zinc-50 space-y-0">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-xs font-black uppercase cursor-pointer">
+                          Bangladeshi Special 🇧🇩
+                        </FormLabel>
+                        <p className="text-[10px] text-zinc-500 font-medium">
+                          Ticked: this category and its products show in the
+                          Bangladeshi Special section. Unticked: they show in
+                          Our Menu.
+                        </p>
+                      </div>
+                      <FormControl>
+                        <input
+                          type="checkbox"
+                          checked={field.value}
+                          onChange={(e) => field.onChange(e.target.checked)}
+                          className="w-5 h-5 accent-black cursor-pointer border-2 border-black"
+                        />
+                      </FormControl>
                     </FormItem>
                   )}
                 />

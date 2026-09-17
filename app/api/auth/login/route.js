@@ -118,6 +118,8 @@ export async function POST(request) {
         phone: getUser.phone,
         address: getUser.address,
         city: getUser.city,
+        // profile photo, so the navbar/admin avatar can show it right after login
+        avatar: getUser.avatar?.url ? { url: getUser.avatar.url } : null,
         // ✅ IMPORTANT
       },
     };

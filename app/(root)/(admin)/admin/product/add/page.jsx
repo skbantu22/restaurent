@@ -50,6 +50,17 @@ const BADGE_OPTIONS = [
   { label: "MEGA", value: "MEGA" },
 ];
 
+// Custom Meal builder base tag — lets this product show up under
+// "Select Beef/Chicken/Plant Based Items" in the meal builder
+// (components/ui/Application/website/customorders.jsx) regardless of
+// which display category it's filed under.
+const MEAL_BUILDER_OPTIONS = [
+  { label: "None", value: "" },
+  { label: "Beef", value: "beef" },
+  { label: "Chicken", value: "chicken" },
+  { label: "Plant Based", value: "plant" },
+];
+
 const AddProduct = () => {
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
@@ -75,6 +86,7 @@ const AddProduct = () => {
       subcategory: z.string().optional().or(z.literal("")),
       badge: z.string().optional().or(z.literal("")),
       isMostLoved: z.boolean().default(false),
+      mealBuilderType: z.enum(["", "beef", "chicken", "plant"]).optional(),
     });
 
   const form = useForm({
@@ -92,6 +104,7 @@ const AddProduct = () => {
       freeDelivery: false,
       badge: "",
       isMostLoved: false,
+      mealBuilderType: "",
       calories: "",
     },
   });
@@ -100,15 +113,22 @@ const AddProduct = () => {
   const { data: getCategory } = useFetch(
     "/api/category?deleteType=SD&size=10000",
   );
+  // Bangladeshi Special tick: switches the category list between
+  // Bangladeshi Special categories (e.g. Dhaka Flavours) and normal menu
+  // categories. The product lands wherever its category is shown.
+  const [bangladeshiSpecial, setBangladeshiSpecial] = useState(false);
+
   const categoryOption = useMemo(() => {
     if (getCategory?.success) {
-      return getCategory.data.map((cat) => ({
-        label: cat.name,
-        value: cat._id,
-      }));
+      return getCategory.data
+        .filter((cat) => Boolean(cat.isBangladeshiSpecial) === bangladeshiSpecial)
+        .map((cat) => ({
+          label: cat.name,
+          value: cat._id,
+        }));
     }
     return [];
-  }, [getCategory]);
+  }, [getCategory, bangladeshiSpecial]);
 
   // Subcategory Fetching based on Category Selection
   const watchedCategoryId = form.watch("category");
@@ -424,6 +444,29 @@ const AddProduct = () => {
                       Discount: {form.watch("discountPercentage") || 0}% OFF
                     </div>
 
+                    {/* Bangladeshi Special tick */}
+                    <label className="flex flex-row items-center justify-between border-2 border-black p-3 bg-zinc-50 cursor-pointer">
+                      <div className="space-y-0.5">
+                        <span className="block text-xs font-black uppercase">
+                          Bangladeshi Special 🇧🇩
+                        </span>
+                        <span className="block text-[10px] text-zinc-500 font-medium">
+                          Ticked: goes to the Bangladeshi Special section.
+                          Unticked: goes to Our Menu.
+                        </span>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={bangladeshiSpecial}
+                        onChange={(e) => {
+                          setBangladeshiSpecial(e.target.checked);
+                          // the category list changes, so clear the old pick
+                          form.setValue("category", "", { shouldValidate: false });
+                        }}
+                        className="w-5 h-5 accent-black cursor-pointer border-2 border-black"
+                      />
+                    </label>
+
                     {/* Category */}
                     <FormField
                       control={form.control}
@@ -431,7 +474,9 @@ const AddProduct = () => {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-[10px] font-black uppercase">
-                            Category
+                            {bangladeshiSpecial
+                              ? "Bangladeshi Special Category"
+                              : "Category"}
                           </FormLabel>
                           <Select
                             options={categoryOption}
@@ -442,6 +487,12 @@ const AddProduct = () => {
                               )
                             }
                           />
+                          {bangladeshiSpecial && categoryOption.length === 0 && (
+                            <p className="text-[10px] text-red-600 font-medium">
+                              No Bangladeshi Special category yet. Create one in
+                              Category with the Bangladeshi Special tick.
+                            </p>
+                          )}
                           <FormMessage />
                         </FormItem>
                       )}
@@ -467,6 +518,34 @@ const AddProduct = () => {
                               )
                             }
                           />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Custom Meal Builder Select */}
+                    <FormField
+                      control={form.control}
+                      name="mealBuilderType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-[10px] font-black uppercase">
+                            Custom Meal Builder
+                          </FormLabel>
+                          <Select
+                            options={MEAL_BUILDER_OPTIONS}
+                            placeholder="None"
+                            selected={field.value}
+                            setSelected={(val) =>
+                              field.onChange(
+                                typeof val === "string" ? val : val?.value,
+                              )
+                            }
+                          />
+                          <p className="text-[10px] text-zinc-500 font-medium">
+                            Show this item under Select Beef/Chicken/Plant
+                            Based Items in the Custom Meal builder
+                          </p>
                           <FormMessage />
                         </FormItem>
                       )}
