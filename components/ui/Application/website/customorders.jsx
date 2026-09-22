@@ -134,10 +134,22 @@ export default function PremiumMealBuilder() {
   // blocks a double tap adding the same meal twice
   const [justAdded, setJustAdded] = useState(false);
   const [cartProducts, setCartProducts] = useState([]);
-  function decodeHtml(html = "") {
+  // Product descriptions are stored HTML-encoded (sometimes twice), so a
+  // single decode still left "<p>…</p><p>&nbsp;</p>" showing as text.
+  // Decode until stable, then drop tags/&nbsp; and tidy the spaces.
+  function toPlainText(html = "") {
+    let text = String(html || "");
     const txt = document.createElement("textarea");
-    txt.innerHTML = html;
-    return txt.value;
+    for (let i = 0; i < 3; i++) {
+      txt.innerHTML = text;
+      if (txt.value === text) break;
+      text = txt.value;
+    }
+    return text
+      .replace(/<[^>]*>/g, " ")
+      .replace(/&nbsp;| /g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
   }
   const [categoryProducts, setCategoryProducts] = useState({
     beef: [],
@@ -780,26 +792,26 @@ export default function PremiumMealBuilder() {
                         className="flex items-center justify-between gap-4 bg-zinc-900/60 p-3.5 rounded-none outline outline-1 outline-zinc-800"
                       >
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="relative w-14 h-14 rounded-none overflow-hidden shrink-0 bg-zinc-950 outline outline-1 outline-zinc-800">
+                          <div className="relative w-20 h-20 lg:w-24 lg:h-24 rounded-none overflow-hidden shrink-0 bg-zinc-950 outline outline-1 outline-zinc-800">
                             <Image
                               src={imageUrl}
                               alt={prod.name || "Product image"}
                               fill
+                              sizes="96px"
                               className="object-cover"
                             />
                           </div>
                           <div className="min-w-0">
-                            <h4 className="text-white font-bold text-sm truncate">
+                            <h4 className="text-white font-extrabold text-base lg:text-lg leading-tight truncate">
                               {prod.name}
                             </h4>
-                            <div
-                              className="mt-1 text-[11px] text-zinc-400 leading-relaxed line-clamp-2"
-                              dangerouslySetInnerHTML={{
-                                __html: decodeHtml(prod.description || ""),
-                              }}
-                            />
-                            <div className="flex items-center gap-3 mt-1">
-                              <p className="text-[#7ac943] font-black text-sm lg:text-lg">
+                            {toPlainText(prod.description) && (
+                              <p className="mt-1 text-xs lg:text-sm font-semibold text-zinc-300 leading-snug line-clamp-2">
+                                {toPlainText(prod.description)}
+                              </p>
+                            )}
+                            <div className="flex items-center gap-3 mt-1.5">
+                              <p className="text-[#7ac943] font-black text-base lg:text-lg">
                                 £{prod.sellingPrice || prod.price}
                               </p>
                               {prod.calories && (

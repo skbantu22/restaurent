@@ -144,7 +144,7 @@ export default function BurgerHero() {
           <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-y-2 gap-x-4 mt-8 sm:mt-10 lg:mt-8 text-[11px] sm:text-xs font-bold text-gray-400">
             <div className="flex items-center gap-5">
               <Image
-                src="/assets/uber-eats.png"
+                src="/assets/uber-eats-logo.png"
                 alt="Uber Eats"
                 width={132}
                 height={132}

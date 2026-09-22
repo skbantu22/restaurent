@@ -160,7 +160,7 @@ export default function Footer() {
             <div className="flex items-center gap-5 flex-wrap">
               {/* UBER */}
               <Image
-                src="/assets/uber-eats.png"
+                src="/assets/uber-eats-logo.png"
                 alt="Uber Eats"
                 width={192}
                 height={192}
