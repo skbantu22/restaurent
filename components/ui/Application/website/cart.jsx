@@ -200,7 +200,7 @@ const Cart = ({ active }) => {
           ) : (
             <ShoppingCart
               strokeWidth={2.5}
-              className="h-5 w-5 lg:h-[26px] lg:w-[26px]"
+              className="h-[22px] w-[22px] lg:h-[26px] lg:w-[26px]"
             />
           )}
           {count > 0 && (

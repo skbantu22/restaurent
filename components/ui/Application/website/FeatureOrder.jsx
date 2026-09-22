@@ -94,7 +94,7 @@ export default function MostLovedMenu() {
               Our Most Loved 🔥
             </h2>
           </div>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
             {[...Array(5)].map((_, i) => (
               <div
                 key={i}
@@ -124,7 +124,7 @@ export default function MostLovedMenu() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
           {products.map((item) => {
             const imageUrl =
               item.media && item.media.length > 0

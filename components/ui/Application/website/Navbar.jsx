@@ -143,17 +143,17 @@ const Navbar = () => {
             {/* Cart Drawer Icon */}
             <Cart />
 
-            {/* Desktop User Avatar/Login */}
+            {/* User Avatar/Login (phone + desktop) */}
             {!auth ? (
               <Link
                 href={WEBSITE_LOGIN}
-                className="hidden lg:flex h-11 w-10 items-center justify-center rounded-md text-white transition-colors duration-200 hover:text-[#ff6b00]"
+                className="flex h-11 w-11 lg:w-10 items-center justify-center rounded-md text-white transition-colors duration-200 hover:text-[#ff6b00]"
               >
-                <User size={27} strokeWidth={2.4} />
+                <User strokeWidth={2.4} className="h-[22px] w-[22px] lg:h-[27px] lg:w-[27px]" />
               </Link>
             ) : avatarUrl ? (
-              <Link href={USER_DASHBOARD} className="hidden lg:flex h-11 w-10 items-center justify-center">
-                <Avatar className="h-9 w-9 border border-[#2a2a2a] transition-colors duration-200 hover:border-[#ff6b00]">
+              <Link href={USER_DASHBOARD} className="flex h-11 w-11 lg:w-10 items-center justify-center">
+                <Avatar className="h-8 w-8 lg:h-9 lg:w-9 border border-[#2a2a2a] transition-colors duration-200 hover:border-[#ff6b00]">
                   <AvatarImage
                     src={avatarUrl}
                     alt={auth?.name || "User Avatar"}
@@ -166,9 +166,9 @@ const Navbar = () => {
               <Link
                 href={USER_DASHBOARD}
                 aria-label={auth?.name || "My account"}
-                className="hidden lg:flex h-11 w-10 items-center justify-center rounded-md text-white transition-colors duration-200 hover:text-[#ff6b00]"
+                className="flex h-11 w-11 lg:w-10 items-center justify-center rounded-md text-white transition-colors duration-200 hover:text-[#ff6b00]"
               >
-                <User size={27} strokeWidth={2.4} />
+                <User strokeWidth={2.4} className="h-[22px] w-[22px] lg:h-[27px] lg:w-[27px]" />
               </Link>
             )}
           </div>

@@ -16,7 +16,7 @@ import {
 const ICONS = {
   beef: (
     <svg
-      className="w-16 h-16 md:w-20 md:h-20 transition-transform group-hover:scale-110 duration-300"
+      className="w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 transition-transform group-hover:scale-110 duration-300"
       viewBox="0 0 64 64"
       fill="none"
       stroke="currentColor"
@@ -35,7 +35,7 @@ const ICONS = {
   ),
   chicken: (
     <svg
-      className="w-16 h-16 md:w-20 md:h-20 transition-transform group-hover:scale-110 duration-300"
+      className="w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 transition-transform group-hover:scale-110 duration-300"
       viewBox="0 0 64 64"
       fill="none"
       stroke="currentColor"
@@ -50,7 +50,7 @@ const ICONS = {
   ),
   plant: (
     <svg
-      className="w-16 h-16 md:w-20 md:h-20 transition-transform group-hover:scale-110 duration-300"
+      className="w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 transition-transform group-hover:scale-110 duration-300"
       viewBox="0 0 64 64"
       fill="none"
       stroke="currentColor"
@@ -469,7 +469,7 @@ export default function PremiumMealBuilder() {
               </h2>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 relative z-10">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-2 gap-4 relative z-10">
               {EXTRA_OPTIONS.map((item) => {
                 const isSelected = extras.includes(item.id);
                 return (
@@ -481,7 +481,7 @@ export default function PremiumMealBuilder() {
                     }`}
                   >
                     <div
-                      className={`relative w-full h-28 lg:h-32 flex items-center justify-center transition-all duration-300 rounded-none outline outline-1 ${
+                      className={`relative w-full h-28 lg:h-28 flex items-center justify-center transition-all duration-300 rounded-none outline outline-1 ${
                         isSelected
                           ? "bg-[#7ac943]/10 outline-[#7ac943] shadow-[0_0_20px_rgba(122,201,67,0.3)]"
                           : "outline-white/5"
@@ -492,7 +492,7 @@ export default function PremiumMealBuilder() {
                         alt={item.label}
                         fill
                         sizes="(max-width: 1024px) 40vw, 160px"
-                        className="object-contain p-2"
+                        className="object-contain p-2 lg:p-4"
                       />
                     </div>
                     <span
@@ -524,7 +524,7 @@ export default function PremiumMealBuilder() {
               </h2>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 relative z-10">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-2 gap-4 relative z-10">
               {DRINK_OPTIONS.map((item) => {
                 const active = drinks.includes(item.id);
                 return (
