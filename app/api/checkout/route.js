@@ -209,8 +209,14 @@ export async function POST(req) {
           );
 
           // Custom Meal deal: 20% off the combined selections, applied
-          // here rather than trusting whatever price the client sent.
-          const bundlePrice = customMealPrice(bundleTotal);
+          // here rather than trusting whatever price the client sent —
+          // and only for a complete meal (burger + side + drink), the
+          // same rule the builder enforces before adding to cart.
+          const has = (type) => nestedClean.some((c) => c.itemType === type);
+          const isCompleteMeal = has("product") && has("extra") && has("drink");
+          const bundlePrice = isCompleteMeal
+            ? customMealPrice(bundleTotal)
+            : bundleTotal;
 
           return {
             itemType: "bundle",

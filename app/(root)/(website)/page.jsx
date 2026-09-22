@@ -11,8 +11,8 @@ import TrustSection from "@/components/ui/Application/website/TrustSection";
 import BurgerHero from "@/components/ui/Application/website/Bigbanner";
 import WhySmashed from "@/components/ui/Application/website/banner2";
 import FooterPromo from "@/components/ui/Application/website/Banner3";
-import BurgerBanner from "@/components/ui/Application/website/ownway";
 import MostLovedMenu from "@/components/ui/Application/website/FeatureOrder";
+import BurgerBanner from "@/components/ui/Application/website/ownway";
 import PremiumMealBuilder from "@/components/ui/Application/website/customorders";
 
 // ✅ Lazy load heavy sections
@@ -42,7 +42,7 @@ const Home = () => {
 
       <BurgerBanner />
 
-      <section id="Order-now2">
+      <section id="Order-now2" className="scroll-mt-24">
         <PremiumMealBuilder />
       </section>
 

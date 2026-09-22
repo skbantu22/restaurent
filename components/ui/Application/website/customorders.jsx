@@ -75,6 +75,12 @@ const BASE_OPTIONS = [
 // ---------------- SIDES ----------------
 const EXTRA_OPTIONS = [
   {
+    id: "classic-fries",
+    label: "Classic Fries",
+    price: 3.5,
+    img: "/assets/Custom/classic-fries.jpg",
+  },
+  {
     id: "seasoned-fries",
     label: "Signature Seasoned Fries",
     price: 3.49,
@@ -243,15 +249,15 @@ export default function PremiumMealBuilder() {
     selectedExtras.length + selectedDrinks.length + cartProducts.length;
   const hasSelection = totalItems > 0 || !!base;
 
-  // Extras and drinks are optional add-ons (capped at one each by
-  // selectExtra/selectDrink replacing the selection) — the only real
-  // requirements are a category and an actual item picked from it.
-  // Previously this also required exactly one extra AND exactly one
-  // drink, so choosing a base + a burger alone left "Add to Cart"
-  // silently disabled.
+  // A custom meal is the full set — burger + side + drink (one of each;
+  // selectExtra/selectDrink replace the pick) — and the 20% deal only
+  // applies to that, so all three are required. The Add to Cart button
+  // stays clickable and tells the customer what is still missing.
   const missingSteps = [];
   if (!base) missingSteps.push("a category");
   if (cartProducts.length === 0) missingSteps.push("an item from your chosen category");
+  if (selectedExtras.length === 0) missingSteps.push("a side");
+  if (selectedDrinks.length === 0) missingSteps.push("a drink");
   const canCheckout = missingSteps.length === 0;
 
   const handleBaseClick = (baseId) => {
