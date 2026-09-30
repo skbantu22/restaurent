@@ -477,7 +477,7 @@ export default function PremiumMealBuilder() {
               </h2>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-2 gap-4 relative z-10">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-3 relative z-10">
               {EXTRA_OPTIONS.map((item) => {
                 const isSelected = extras.includes(item.id);
                 return (
@@ -498,7 +498,7 @@ export default function PremiumMealBuilder() {
                         alt={item.label}
                         fill
                         sizes="(max-width: 1024px) 40vw, 200px"
-                        className="object-contain p-3 transition-transform duration-300 group-hover:scale-105"
+                        className="object-contain p-2.5 transition-transform duration-300 group-hover:scale-105"
                       />
                       {isSelected && (
                         <span className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-[#7ac943] text-black">
@@ -507,13 +507,13 @@ export default function PremiumMealBuilder() {
                       )}
                     </div>
                     <span
-                      className={`min-h-[2.2em] text-center text-xs lg:text-sm font-bold uppercase leading-tight tracking-wide ${
+                      className={`min-h-[2.4em] text-center text-[11px] lg:text-xs font-bold uppercase leading-tight tracking-wide ${
                         isSelected ? "text-[#7ac943]" : "text-white"
                       }`}
                     >
                       {item.label}
                     </span>
-                    <span className="rounded-full bg-orange-500/10 px-2.5 py-0.5 text-[11px] lg:text-xs font-bold text-orange-400">
+                    <span className="rounded-full bg-orange-500/10 px-2 py-0.5 text-[10px] lg:text-[11px] font-bold text-orange-400">
                       +£{item.price.toFixed(2)}
                     </span>
                   </button>
