@@ -105,7 +105,7 @@ const OrderDetails = async ({ params }) => {
           </tr>
           <tr className="font-semibold">
             <td colSpan={3} className="text-end p-3">
-              Shipping Fee:
+              Delivery Fee:
             </td>
             <td className="text-center p-3">
               {order.shippingFee.toLocaleString("en-BD", {

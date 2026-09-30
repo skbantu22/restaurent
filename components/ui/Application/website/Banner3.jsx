@@ -52,16 +52,6 @@ export default function FooterPromo() {
               </p>
             </div>
 
-            {/* PHONE MOCKUP */}
-            <div className="pointer-events-none absolute -bottom-6 right-0 hidden md:block opacity-90">
-              <Image
-                src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=400&q=80"
-                alt="phone app mockup"
-                width={200}
-                height={300}
-                className="h-auto w-[150px] lg:w-[200px] object-contain rounded-none"
-              />
-            </div>
           </div>
 
           {/* CENTER: Gallery & Socials */}

@@ -14,7 +14,7 @@ const footerData = [
       { label: "Mission & Vision", href: "/mission" },
       { label: "Privacy Policy", href: "/privacy" },
       { label: "Return/Exchange & Refund", href: "/returns" },
-      { label: "Shipping Policy", href: "/shipping" },
+      { label: "Delivery Policy", href: "/shipping" },
       { label: "Terms & Conditions", href: "/terms" },
     ] 
   },

@@ -408,7 +408,7 @@ export default function PremiumMealBuilder() {
         {/* MAIN GRID */}
         <div className="grid lg:grid-cols-3 border border-[#1f1f1f] rounded-none overflow-hidden">
           {/* BASE CATEGORIES */}
-          <div className="bg-[#050505] p-6 relative overflow-hidden border-b lg:border-b-0 lg:border-r border-[#1f1f1f]">
+          <div className="bg-[#050505] p-6 lg:p-8 relative overflow-hidden border-b lg:border-b-0 lg:border-r border-[#1f1f1f]">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(122,201,67,0.12),transparent_40%)] pointer-events-none" />
 
             <div className="flex items-center justify-center gap-4 mb-8 relative z-10">
@@ -427,24 +427,32 @@ export default function PremiumMealBuilder() {
                   <button
                     key={item.id}
                     onClick={() => {
+                      // Switching category drops the item picked from the
+                      // old one — otherwise the meal could be labelled
+                      // "Custom Meal: Plant Based" while still holding the
+                      // beef burger chosen a moment earlier.
+                      if (base !== item.id) setCartProducts([]);
                       setBase(item.id);
                       handleBaseClick(item.id);
                     }}
-                    className={`group flex w-full flex-col items-center gap-2 transition-all duration-300 hover:scale-105 ${
-                      active ? "scale-105" : ""
-                    }`}
+                    className="group flex w-full flex-col items-center gap-2.5 transition-transform duration-300 hover:-translate-y-1"
                   >
                     <div
-                      className={`relative w-full h-28 lg:h-32 flex items-center justify-center transition-all duration-300 rounded-none outline outline-1 ${
+                      className={`relative w-full aspect-square flex items-center justify-center rounded-xl border transition-all duration-300 ${
                         active
-                          ? "bg-[#7ac943]/10 outline-[#7ac943] shadow-[0_0_20px_rgba(122,201,67,0.3)] text-[#7ac943]"
-                          : "outline-white/5 text-white group-hover:text-[#7ac943]"
+                          ? "border-[#7ac943] bg-[#7ac943]/10 text-[#7ac943] shadow-[0_0_24px_rgba(122,201,67,0.25)]"
+                          : "border-white/10 bg-white/[0.03] text-white group-hover:border-[#7ac943]/50 group-hover:text-[#7ac943]"
                       }`}
                     >
                       {item.icon}
+                      {active && (
+                        <span className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-[#7ac943] text-black">
+                          <Check size={14} strokeWidth={3} />
+                        </span>
+                      )}
                     </div>
                     <span
-                      className={`text-[11px] lg:text-base font-black uppercase leading-none tracking-wider text-center ${
+                      className={`min-h-[2.2em] text-center text-xs lg:text-sm font-bold uppercase leading-tight tracking-wide ${
                         active ? "text-[#7ac943]" : "text-white"
                       }`}
                     >
@@ -457,7 +465,7 @@ export default function PremiumMealBuilder() {
           </div>
 
           {/* EXTRAS */}
-          <div className="bg-[#050505] p-6 relative overflow-hidden border-b lg:border-b-0 lg:border-r border-[#1f1f1f]">
+          <div className="bg-[#050505] p-6 lg:p-8 relative overflow-hidden border-b lg:border-b-0 lg:border-r border-[#1f1f1f]">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(122,201,67,0.12),transparent_40%)] pointer-events-none" />
 
             <div className="flex items-center justify-center gap-4 mb-5 relative z-10">
@@ -476,33 +484,36 @@ export default function PremiumMealBuilder() {
                   <button
                     key={item.id}
                     onClick={() => selectExtra(item.id)}
-                    className={`group flex w-full flex-col items-center gap-2 transition-all duration-300 hover:scale-105 ${
-                      isSelected ? "scale-105" : ""
-                    }`}
+                    className="group flex w-full flex-col items-center gap-2.5 transition-transform duration-300 hover:-translate-y-1"
                   >
                     <div
-                      className={`relative w-full h-28 lg:h-28 flex items-center justify-center transition-all duration-300 rounded-none outline outline-1 ${
+                      className={`relative w-full aspect-square overflow-hidden rounded-xl border transition-all duration-300 ${
                         isSelected
-                          ? "bg-[#7ac943]/10 outline-[#7ac943] shadow-[0_0_20px_rgba(122,201,67,0.3)]"
-                          : "outline-white/5"
+                          ? "border-[#7ac943] bg-[#7ac943]/10 shadow-[0_0_24px_rgba(122,201,67,0.25)]"
+                          : "border-white/10 bg-white/[0.03] group-hover:border-[#7ac943]/50"
                       }`}
                     >
                       <Image
                         src={item.img}
                         alt={item.label}
                         fill
-                        sizes="(max-width: 1024px) 40vw, 160px"
-                        className="object-contain p-2 lg:p-4"
+                        sizes="(max-width: 1024px) 40vw, 200px"
+                        className="object-contain p-3 transition-transform duration-300 group-hover:scale-105"
                       />
+                      {isSelected && (
+                        <span className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-[#7ac943] text-black">
+                          <Check size={14} strokeWidth={3} />
+                        </span>
+                      )}
                     </div>
                     <span
-                      className={`text-[11px] lg:text-base font-black uppercase leading-none tracking-wider text-center ${
+                      className={`min-h-[2.2em] text-center text-xs lg:text-sm font-bold uppercase leading-tight tracking-wide ${
                         isSelected ? "text-[#7ac943]" : "text-white"
                       }`}
                     >
                       {item.label}
                     </span>
-                    <span className="text-[10px] lg:text-base text-orange-500 font-semibold">
+                    <span className="rounded-full bg-orange-500/10 px-2.5 py-0.5 text-[11px] lg:text-xs font-bold text-orange-400">
                       +£{item.price.toFixed(2)}
                     </span>
                   </button>
@@ -512,7 +523,7 @@ export default function PremiumMealBuilder() {
           </div>
 
           {/* DRINKS */}
-          <div className="bg-[#050505] p-6 relative overflow-hidden">
+          <div className="bg-[#050505] p-6 lg:p-8 relative overflow-hidden">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(122,201,67,0.12),transparent_40%)] pointer-events-none" />
 
             <div className="flex items-center justify-center gap-4 mb-5 relative z-10">
@@ -531,33 +542,36 @@ export default function PremiumMealBuilder() {
                   <button
                     key={item.id}
                     onClick={() => selectDrink(item.id)}
-                    className={`group flex w-full flex-col items-center gap-2 transition-all duration-300 hover:scale-105 ${
-                      active ? "scale-105" : ""
-                    }`}
+                    className="group flex w-full flex-col items-center gap-2.5 transition-transform duration-300 hover:-translate-y-1"
                   >
                     <div
-                      className={`relative w-full h-28 lg:h-32 flex items-center justify-center transition-all duration-300 rounded-none outline outline-1 ${
+                      className={`relative w-full aspect-square overflow-hidden rounded-xl border transition-all duration-300 ${
                         active
-                          ? "bg-[#7ac943]/10 outline-[#7ac943] shadow-[0_0_20px_rgba(122,201,67,0.3)]"
-                          : "outline-white/5"
+                          ? "border-[#7ac943] bg-[#7ac943]/10 shadow-[0_0_24px_rgba(122,201,67,0.25)]"
+                          : "border-white/10 bg-white/[0.03] group-hover:border-[#7ac943]/50"
                       }`}
                     >
                       <Image
                         src={item.img}
                         alt={item.label}
                         fill
-                        sizes="(max-width: 1024px) 40vw, 160px"
-                        className="object-contain p-2"
+                        sizes="(max-width: 1024px) 40vw, 200px"
+                        className="object-contain p-4 transition-transform duration-300 group-hover:scale-105"
                       />
+                      {active && (
+                        <span className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-[#7ac943] text-black">
+                          <Check size={14} strokeWidth={3} />
+                        </span>
+                      )}
                     </div>
                     <span
-                      className={`text-[11px] lg:text-base font-black uppercase leading-none tracking-wider text-center ${
+                      className={`min-h-[2.2em] text-center text-xs lg:text-sm font-bold uppercase leading-tight tracking-wide ${
                         active ? "text-[#7ac943]" : "text-white"
                       }`}
                     >
                       {item.label}
                     </span>
-                    <span className="text-[10px] lg:text-base text-orange-500 font-semibold">
+                    <span className="rounded-full bg-orange-500/10 px-2.5 py-0.5 text-[11px] lg:text-xs font-bold text-orange-400">
                       +£{item.price.toFixed(2)}
                     </span>
                   </button>

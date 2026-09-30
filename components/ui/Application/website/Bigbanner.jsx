@@ -113,7 +113,7 @@ export default function BurgerHero() {
           {/* Action Buttons Group */}
           <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 sm:gap-4 mt-6 sm:mt-8 w-full sm:w-auto">
             <button
-              onClick={() => scrollToSection("Order-now")}
+              onClick={() => scrollToSection("our-menu")}
               className="w-full sm:w-auto px-6 py-3.5 sm:px-8 sm:py-4 bg-[#ff5a00] hover:bg-[#e04f00] text-white font-extrabold rounded-none text-xs md:text-sm tracking-wider flex items-center justify-center gap-2 transition-colors uppercase shadow-[0_4px_20px_rgba(255,90,0,0.2)]"
             >
               ORDER NOW <span>→</span>

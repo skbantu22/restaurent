@@ -336,7 +336,7 @@ const Cart = ({ active }) => {
             </div>
 
             <p className="text-xs text-gray-500">
-              Shipping and taxes calculated at checkout.
+              Delivery and taxes calculated at checkout.
             </p>
 
             <Link

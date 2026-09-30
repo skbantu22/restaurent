@@ -738,7 +738,7 @@ export default function CheckoutPage() {
               )}
               {orderType === "delivery" && (
                 <div className="flex justify-between">
-                  <span>SHIPPING</span>
+                  <span>DELIVERY</span>
                   <span className="text-zinc-900">
                     {formatCurrency(shippingCost)}
                   </span>
